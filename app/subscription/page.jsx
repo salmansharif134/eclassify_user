@@ -2,7 +2,7 @@ import Subscription from "@/components/PagesComponent/Subscription/Subscription"
 import axios from "axios";
 
 export const generateMetadata = async () => {
-  if (process.env.NEXT_PUBLIC_SEO === "false") return;
+  if (process.env.NEXT_PUBLIC_SEO !== "true") return;
   const fetchUrl = `${process.env.NEXT_PUBLIC_API_URL}${process.env.NEXT_PUBLIC_END_POINT}seo-settings?page=subscription`;
   try {
     const response = await axios.get(fetchUrl);
