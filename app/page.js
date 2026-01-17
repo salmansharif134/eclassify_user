@@ -21,7 +21,11 @@ export const generateMetadata = async ({ searchParams }) => {
     );
     
     if (!res.ok || !res.headers.get('content-type')?.includes('application/json')) {
-      return null;
+      return {
+        title: process.env.NEXT_PUBLIC_META_TITLE,
+        description: process.env.NEXT_PUBLIC_META_DESCRIPTION,
+        keywords: process.env.NEXT_PUBLIC_META_kEYWORDS,
+      };
     }
     
     const data = await res.json();
@@ -40,7 +44,11 @@ export const generateMetadata = async ({ searchParams }) => {
     };
   } catch (error) {
     console.error("Error fetching MetaData:", error);
-    return null;
+    return {
+      title: process.env.NEXT_PUBLIC_META_TITLE,
+      description: process.env.NEXT_PUBLIC_META_DESCRIPTION,
+      keywords: process.env.NEXT_PUBLIC_META_kEYWORDS,
+    };
   }
 };
 

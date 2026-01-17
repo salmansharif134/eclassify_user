@@ -24,7 +24,11 @@ export const generateMetadata = async () => {
     };
   } catch (error) {
     console.error("Error fetching MetaData:", error);
-    return null;
+    return {
+      title: process.env.NEXT_PUBLIC_META_TITLE,
+      description: process.env.NEXT_PUBLIC_META_DESCRIPTION,
+      keywords: process.env.NEXT_PUBLIC_META_kEYWORDS,
+    };
   }
 };
 

@@ -1,7 +1,6 @@
+"use client";
 import Layout from "@/components/Layout/Layout";
 import SellerSignupWizard from "@/components/PagesComponent/SellerSignup/SellerSignupWizard";
-import { useNavigate } from "@/components/Common/useNavigate";
-import { useEffect } from "react";
 
 export default function SellerSignupPage() {
   return (
