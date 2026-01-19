@@ -1,5 +1,5 @@
 "use client";
-import { handleFirebaseAuthError, t } from "@/utils";
+import { t } from "@/utils";
 import {
   Dialog,
   DialogContent,
@@ -18,12 +18,9 @@ import "react-phone-input-2/lib/style.css";
 import { Button } from "../ui/button";
 import { FcGoogle } from "react-icons/fc";
 import { MdOutlineEmail, MdOutlineLocalPhone } from "react-icons/md";
-import {
-  getAuth,
-  GoogleAuthProvider,
-  RecaptchaVerifier,
-  signInWithPopup,
-} from "firebase/auth";
+import { RecaptchaVerifier, getAuth } from "firebase/auth";
+import { GoogleLogin } from "@react-oauth/google";
+import axios from "axios";
 import { toast } from "sonner";
 import { userSignUpApi } from "@/utils/api";
 import { loadUpdateData } from "@/redux/reducer/authSlice";
@@ -142,36 +139,43 @@ const LoginModal = ({ IsLoginOpen, setIsRegisterModalOpen }) => {
     }
   };
 
-  const handleGoogleSignup = async () => {
-    const provider = new GoogleAuthProvider();
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
     try {
-      const res = await signInWithPopup(auth, provider);
-      const user = res.user;
-      try {
-        const response = await userSignUpApi.userSignup({
-          name: user.displayName ? user.displayName : "",
-          email: user?.email,
-          firebase_id: user?.uid, // Accessing UID directly from the user object
-          fcm_id: fetchFCM ? fetchFCM : "",
-          type: "google",
-        });
+      setLoginStates({ ...loginStates, showLoader: true });
 
-        const data = response.data;
-        if (data.error === true) {
-          toast.error(data.message);
-        } else {
-          loadUpdateData(data);
-          toast.success(data.message);
+      // Send Google token to Laravel backend
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}api/auth/google`,
+        {
+          token: credentialResponse.credential,
+          fcm_id: fetchFCM ? fetchFCM : "",
         }
+      );
+
+      const data = response.data;
+      if (data.error === true) {
+        toast.error(data.message);
+      } else {
+        // Store token from backend
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+        }
+        loadUpdateData(data);
+        toast.success(data.message || "Logged in successfully");
         OnHide();
-      } catch (error) {
-        console.error("Error:", error);
-        toast.error("Failed to complete signup");
       }
     } catch (error) {
-      const errorCode = error.code;
-      handleFirebaseAuthError(errorCode);
+      console.error("Google Login Error:", error);
+      toast.error(
+        error.response?.data?.message || "Google login failed. Please try again."
+      );
+    } finally {
+      setLoginStates({ ...loginStates, showLoader: false });
     }
+  };
+
+  const handleGoogleLoginError = () => {
+    toast.error("Google login failed. Please try again.");
   };
 
   const handleCreateAnAccount = () => {
@@ -286,15 +290,15 @@ const LoginModal = ({ IsLoginOpen, setIsRegisterModalOpen }) => {
 
               <div className="flex flex-col gap-4">
                 {google_authentication === 1 && (
-                  <Button
-                    variant="outline"
-                    size="big"
-                    className="flex items-center justify-center py-4 text-base"
-                    onClick={handleGoogleSignup}
-                  >
-                    <FcGoogle className="!size-6" />
-                    <span>{t("google")}</span>
-                  </Button>
+                  <div className="flex justify-center">
+                    <GoogleLogin
+                      onSuccess={handleGoogleLoginSuccess}
+                      onError={handleGoogleLoginError}
+                      text="signin_with"
+                      theme="outline"
+                      size="large"
+                    />
+                  </div>
                 )}
 
                 {IsLoginWithEmail && mobile_authentication === 1 ? (

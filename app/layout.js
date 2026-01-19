@@ -2,6 +2,7 @@ import { Manrope } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/redux/store/providers";
 import { Toaster } from "@/components/ui/sonner";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 // import Script from "next/script";
 
 const manrope = Manrope({
@@ -29,6 +30,8 @@ export const generateMetadata = () => {
 };
 
 export default function RootLayout({ children }) {
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+
   return (
     <html
       lang="en"
@@ -40,10 +43,12 @@ export default function RootLayout({ children }) {
           crossOrigin="anonymous" strategy="afterInteractive" /> */}
       </head>
       <body className={`${manrope.className} !pointer-events-auto`}>
-        <Providers>
-          {children}
-          <Toaster position="top-center" />
-        </Providers>
+        <GoogleOAuthProvider clientId={googleClientId}>
+          <Providers>
+            {children}
+            <Toaster position="top-center" />
+          </Providers>
+        </GoogleOAuthProvider>
         <div id="recaptcha-container"></div>
       </body>
     </html>

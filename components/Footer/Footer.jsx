@@ -208,7 +208,7 @@ export default function Footer() {
       <div className="container">
         <div className="py-4 flex flex-wrap gap-3 justify-between items-center border-t-2 border-dashed border-gray-500">
           <p className="footerLabel">
-            {t("copyright")} © {settings?.company_name} {currentYear}.{" "}
+            {t("copyright")} © {"MustangIP"} {currentYear}.{" "}
             {t("allRightsReserved")}
           </p>
           <div className="flex flex-wrap gap-4 whitespace-nowrap">
