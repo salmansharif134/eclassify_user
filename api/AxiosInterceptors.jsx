@@ -4,7 +4,7 @@ import { store } from "@/redux/store";
 import axios from "axios";
 
 const Api = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_API_URL}${process.env.NEXT_PUBLIC_END_POINT}`,
+  baseURL: `${process.env.NEXT_PUBLIC_END_POINT}`,
 });
 
 let isUnauthorizedToastShown = false;
@@ -16,6 +16,9 @@ Api.interceptors.request.use(function (config) {
   if (typeof window !== "undefined") {
     const state = store.getState();
     token = state?.UserSignup?.data?.token;
+    if (!token) {
+      token = localStorage.getItem("token");
+    }
     langCode = state?.CurrentLanguage?.language?.code;
   }
 

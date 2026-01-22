@@ -205,6 +205,12 @@ const HomeMobileMenu = ({
             </p>
           </div>
 
+          <CustomLink
+            href="/seller-signup"
+            className="flex items-center justify-center gap-2 border border-primary py-2 px-3 text-primary rounded-md"
+          >
+            Become a Seller
+          </CustomLink>
           <button
             className="flex items-center justify-center gap-2 bg-primary py-2 px-3 text-white rounded-md"
             disabled={IsAdListingClicked}

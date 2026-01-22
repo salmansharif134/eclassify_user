@@ -20,9 +20,8 @@ import { FcGoogle } from "react-icons/fc";
 import { MdOutlineEmail, MdOutlineLocalPhone } from "react-icons/md";
 import { RecaptchaVerifier, getAuth } from "firebase/auth";
 import { GoogleLogin } from "@react-oauth/google";
-import axios from "axios";
 import { toast } from "sonner";
-import { userSignUpApi } from "@/utils/api";
+import { authApi } from "@/utils/api";
 import { loadUpdateData } from "@/redux/reducer/authSlice";
 import LoginWithEmailForm from "./LoginWithEmailForm";
 import LoginWithMobileForm from "./LoginWithMobileForm";
@@ -143,14 +142,10 @@ const LoginModal = ({ IsLoginOpen, setIsRegisterModalOpen }) => {
     try {
       setLoginStates({ ...loginStates, showLoader: true });
 
-      // Send Google token to Laravel backend
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}api/auth/google`,
-        {
-          token: credentialResponse.credential,
-          fcm_id: fetchFCM ? fetchFCM : "",
-        }
-      );
+      const response = await authApi.googleLogin({
+        token: credentialResponse.credential,
+        fcm_id: fetchFCM ? fetchFCM : "",
+      });
 
       const data = response.data;
       if (data.error === true) {

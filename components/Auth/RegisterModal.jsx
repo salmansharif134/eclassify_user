@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import { handleFirebaseAuthError, t } from "@/utils";
+import { t } from "@/utils";
 import {
   Fcmtoken,
   getOtpServiceProvider,
@@ -14,19 +14,14 @@ import {
 } from "@/redux/reducer/settingSlice";
 import { useSelector } from "react-redux";
 import {
-  createUserWithEmailAndPassword,
   getAuth,
-  GoogleAuthProvider,
   RecaptchaVerifier,
-  sendEmailVerification,
   signInWithPhoneNumber,
-  signInWithPopup,
 } from "firebase/auth";
 import { Button } from "../ui/button";
-import { getOtpApi, userSignUpApi } from "@/utils/api";
-import { loadUpdateData } from "@/redux/reducer/authSlice";
+import { authApi, getOtpApi } from "@/utils/api";
 import { toast } from "sonner";
-import { FcGoogle } from "react-icons/fc";
+import { GoogleLogin } from "@react-oauth/google";
 import OtpScreen from "./OtpScreen";
 import { isValidPhoneNumber } from "libphonenumber-js/max";
 import TermsAndPrivacyLinks from "./TermsAndPrivacyLinks";
@@ -201,35 +196,29 @@ const RegisterModal = ({
     }
   };
 
-  const handleGoogleSignup = async () => {
-    const provider = new GoogleAuthProvider();
+  const handleGoogleSignupSuccess = async (credentialResponse) => {
     try {
-      const response = await signInWithPopup(auth, provider);
-      const user = response.user;
-      try {
-        const response = await userSignUpApi.userSignup({
-          name: user.displayName ? user.displayName : "",
-          email: user?.email,
-          firebase_id: user.uid, // Accessing UID directly from the user object
-          fcm_id: fetchFCM ? fetchFCM : "",
-          type: "google",
-        });
-
-        const data = response.data;
-        loadUpdateData(data);
-        if (data.error === true) {
-          toast.error(data.message);
-        } else {
-          toast.success(data.message);
-        }
+      setShowLoader(true);
+      const response = await authApi.googleLogin({
+        token: credentialResponse.credential,
+        fcm_id: fetchFCM ? fetchFCM : "",
+      });
+      const data = response.data;
+      if (data?.error === true) {
+        toast.error(data?.message);
+      } else {
+        toast.success(data?.message);
         OnHide();
-      } catch (error) {
-        console.error("Error:", error);
       }
     } catch (error) {
-      const errorCode = error.code;
-      handleFirebaseAuthError(errorCode);
+      toast.error(error?.response?.data?.message || t("somethingWentWrong"));
+    } finally {
+      setShowLoader(false);
     }
+  };
+
+  const handleGoogleSignupError = () => {
+    toast.error(t("somethingWentWrong"));
   };
 
   const sendOtpWithTwillio = async (PhoneNumber) => {
@@ -304,30 +293,19 @@ const RegisterModal = ({
     }
     try {
       setShowLoader(true);
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
-      await sendEmailVerification(user);
       try {
-        const response = await userSignUpApi.userSignup({
+        await authApi.register({
           name: username ? username : "",
           email: email ? email : "",
-          firebase_id: user?.uid,
-          type: "email",
-          registration: true,
+          password,
         });
         OnHide();
         setIsMailSentSuccess(true);
       } catch (error) {
-        console.log("error", error);
+        toast.error(error?.response?.data?.message || t("somethingWentWrong"));
       }
     } catch (error) {
-      const errorCode = error.code;
-      console.log(error);
-      handleFirebaseAuthError(errorCode);
+      toast.error(error?.response?.data?.message || t("somethingWentWrong"));
     } finally {
       setShowLoader(false);
     }
@@ -488,15 +466,15 @@ const RegisterModal = ({
             )}
 
             {IsLoginScreen && google_authentication === 1 && (
-              <Button
-                variant="outline"
-                size="big"
-                className="flex items-center justify-center py-4 text-base"
-                onClick={handleGoogleSignup}
-              >
-                <FcGoogle className="!size-6" />
-                <span>{t("google")}</span>
-              </Button>
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSignupSuccess}
+                  onError={handleGoogleSignupError}
+                  text="signup_with"
+                  theme="outline"
+                  size="large"
+                />
+              </div>
             )}
 
             {IsLoginScreen && (

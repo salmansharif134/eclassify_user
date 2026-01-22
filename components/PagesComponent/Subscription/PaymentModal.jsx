@@ -6,18 +6,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { t } from "@/utils";
-import RazorpayPayment from "./RazorpayPayment";
-import PayStackPayment from "./PayStackPayment";
-import FlutterwavePayment from "./FlutterwavePayment";
-import PhonepePayment from "./PhonepePayment";
 import StripePayment from "./StripePayment";
 import StripeLogo from "../../../public/assets/ic_stripe.png";
 import { FaAngleRight } from "react-icons/fa";
 import PaymentModalLoading from "./PaymentModalLoading";
 import { toast } from "sonner";
-import BankTransferPayment from "./BankTransferPayment";
 import CustomImage from "@/components/Common/CustomImage";
-import PaypalPayment from "./PaypalPayment";
 
 const PaymentModal = ({
   showPaymentModal,
@@ -27,12 +21,19 @@ const PaymentModal = ({
   setAdPackages,
   packageSettings,
   isLoading,
+  onPaymentSuccess,
+  allowedMethods,
 }) => {
   const [showStripePayment, setShowStripePayment] = useState(false);
-  const isBankTransferActive =
-    Number(packageSettings?.bankTransfer?.status) === 1;
+  const isMethodAllowed = (method) =>
+    !allowedMethods || allowedMethods.includes(method);
 
   const updateActivePackage = () => {
+    if (typeof onPaymentSuccess === "function") {
+      onPaymentSuccess();
+      toast.success(t("paymentSuccess"));
+      return;
+    }
     if (selectedPackage.type === "advertisement") {
       setAdPackages((prev) => {
         return prev.map((item) => {
@@ -109,7 +110,8 @@ const PaymentModal = ({
             />
           ) : (
             <div className="flex flex-col gap-4 mt-2">
-              {packageSettings?.Stripe?.status == 1 && (
+              {packageSettings?.Stripe?.status == 1 &&
+                isMethodAllowed("Stripe") && (
                 <button
                   onClick={() => setShowStripePayment(true)}
                   className="w-full p-2"
@@ -130,34 +132,6 @@ const PaymentModal = ({
                     <FaAngleRight size={18} className="rtl:scale-x-[-1]" />
                   </div>
                 </button>
-              )}
-              {packageSettings?.Razorpay?.status == 1 && (
-                <RazorpayPayment
-                  packageSettings={packageSettings}
-                  selectedPackage={selectedPackage}
-                  setShowPaymentModal={setShowPaymentModal}
-                  updateActivePackage={updateActivePackage}
-                />
-              )}
-              {packageSettings?.Paystack?.status == 1 && (
-                <PayStackPayment
-                  packageSettings={packageSettings}
-                  selectedPackage={selectedPackage}
-                />
-              )}
-              {packageSettings?.flutterwave?.status == 1 && (
-                <FlutterwavePayment selectedPackage={selectedPackage} />
-              )}
-              {packageSettings?.PhonePe?.status == 1 && (
-                <PhonepePayment selectedPackage={selectedPackage} />
-              )}
-
-              {packageSettings?.Paypal?.status == 1 && (
-                <PaypalPayment selectedPackage={selectedPackage} />
-              )}
-
-              {isBankTransferActive && (
-                <BankTransferPayment closePaymentModal={PaymentModalClose} />
               )}
             </div>
           )}

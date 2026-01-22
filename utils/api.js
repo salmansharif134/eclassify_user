@@ -41,6 +41,8 @@ export const BLOCKED_USERS = "blocked-users";
 export const ASSIGN_FREE_PACKAGE = "assign-free-package";
 export const GET_PAYMENT_SETTINGS = "get-payment-settings";
 export const PAYMENT_INTENT = "payment-intent";
+export const SELLER_CALCULATE_ORDER_TOTAL = "sellers/calculate-order-total";
+export const SELLER_CREATE_PAYMENT_INTENT = "sellers/create-payment-intent";
 export const PAYMENT_TRANSACTIONS = "payment-transactions";
 export const TIPS = "tips";
 export const ITEM_OFFER = "item-offer";
@@ -65,12 +67,35 @@ export const GET_LOCATION = "get-location";
 export const GET_USER_INFO = "get-user-info";
 export const LOGOUT = "logout";
 export const SET_ITEM_TOTAL_CLICK = "set-item-total-click";
+export const AUTH_LOGIN = "auth/login";
+export const AUTH_REGISTER = "auth/register";
+export const AUTH_GOOGLE = "auth/google";
+export const AUTH_FORGOT_PASSWORD = "auth/forgot-password";
+export const AUTH_RESEND_VERIFICATION = "auth/email/resend";
 export const PATENT_LOOKUP = "patents/lookup";
 export const SELLER_SIGNUP = "sellers/register";
 export const GET_SERVICES = "services";
 export const CREATE_SERVICE_ORDER = "service-orders/create";
 export const GET_SELLER_DASHBOARD = "sellers/dashboard";
 export const ADD_PATENT = "sellers/patents";
+
+export const authApi = {
+  login: ({ email, password, fcm_id } = {}) => {
+    return Api.post(AUTH_LOGIN, { email, password, fcm_id });
+  },
+  register: ({ name, email, password } = {}) => {
+    return Api.post(AUTH_REGISTER, { name, email, password });
+  },
+  googleLogin: ({ token, fcm_id } = {}) => {
+    return Api.post(AUTH_GOOGLE, { token, fcm_id });
+  },
+  forgotPassword: ({ email } = {}) => {
+    return Api.post(AUTH_FORGOT_PASSWORD, { email });
+  },
+  resendVerification: ({ email } = {}) => {
+    return Api.post(AUTH_RESEND_VERIFICATION, { email });
+  },
+};
 
 // 1. SETTINGS API
 export const settingsApi = {
@@ -589,6 +614,21 @@ export const createPaymentIntentApi = {
       headers: {
         "Content-Type": "multipart/form-data",
       },
+    });
+  },
+};
+export const sellerOrderApi = {
+  calculateOrderTotal: ({ membership_plan, selected_services } = {}) => {
+    return Api.post(SELLER_CALCULATE_ORDER_TOTAL, {
+      membership_plan,
+      selected_services,
+    });
+  },
+  createPaymentIntent: ({ membership_plan, selected_services, payment_method } = {}) => {
+    return Api.post(SELLER_CREATE_PAYMENT_INTENT, {
+      membership_plan,
+      selected_services,
+      payment_method,
     });
   },
 };

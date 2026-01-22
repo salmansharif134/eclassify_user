@@ -128,7 +128,13 @@ const LandingHeader = () => {
                 </li>
               </ul>
             </div>
-            <div className="hidden lg:flex">
+            <div className="hidden lg:flex items-center gap-4">
+              <CustomLink
+                href="/seller-signup"
+                className="text-sm sm:text-base font-medium text-primary hover:underline"
+              >
+                Become a Seller
+              </CustomLink>
               <LanguageDropdown />
             </div>
           </div>

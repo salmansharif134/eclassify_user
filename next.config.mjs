@@ -2,14 +2,22 @@
 const nextConfig = {
   reactStrictMode: false,
   htmlLimitedBots: /.*/,
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8000/api/:path*',
+      },
+    ];
+  },
   images: {
     unoptimized: true,
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "eclassify.thewrteam.in",
-        port: "", // You can leave this empty if there is no specific port
-        pathname: "/**",
+        protocol: 'https',
+        hostname: 'eclassify.thewrteam.in',
+        port: '',
+        pathname: '/**',
       },
     ],
   },

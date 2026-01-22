@@ -47,9 +47,20 @@ const FirebaseData = () => {
       return null;
     }
   };
+  const isValidVapidKey = (key) => {
+    if (!key || typeof key !== "string") return false;
+    // Allow URL-safe base64 chars; Firebase expects base64url-encoded key
+    return /^[A-Za-z0-9_-]+$/.test(key);
+  };
+
   const fetchToken = async (setFcmToken) => {
     try {
       if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+        const vapidKey = process.env.NEXT_PUBLIC_VAPID_KEY;
+        if (!isValidVapidKey(vapidKey)) {
+          console.error("Invalid or missing VAPID key. Skipping FCM token.");
+          return;
+        }
         const messaging = await messagingInstance();
         if (!messaging) {
           console.error("Messaging not supported.");
@@ -58,7 +69,7 @@ const FirebaseData = () => {
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
           getToken(messaging, {
-            vapidKey: process.env.NEXT_PUBLIC_VAPID_KEY,
+            vapidKey,
           })
             .then((currentToken) => {
               if (currentToken) {

@@ -235,11 +235,26 @@ const HomeHeader = () => {
             {/* Action buttons */}
             <div className="flex items-center gap-4">
               <CustomLink
+                href="/seller-signup"
+                className="text-sm sm:text-base font-medium text-primary hover:underline"
+              >
+                Become a Seller
+              </CustomLink>
+              <CustomLink
                 href="/free-evaluation"
                 className="text-sm sm:text-base font-medium text-primary hover:underline"
               >
                 FREE Evaluation
               </CustomLink>
+               {IsLoggedin && (
+                <button
+                  type="button"
+                  className="text-sm sm:text-base font-medium text-primary hover:underline"
+                  onClick={() => setIsLogout(true)}
+                >
+                  Logout
+                </button>
+              )} 
               <button
                 className="bg-primary px-2 xl:px-4 py-2 items-center text-white rounded-md flex gap-1"
                 disabled={IsAdListingClicked}

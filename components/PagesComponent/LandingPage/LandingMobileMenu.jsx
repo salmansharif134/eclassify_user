@@ -13,6 +13,7 @@ import { useSelector } from "react-redux";
 import LanguageDropdown from "../../Common/LanguageDropdown";
 import { CurrentLanguageData } from "@/redux/reducer/languageSlice";
 import CustomImage from "@/components/Common/CustomImage";
+import CustomLink from "@/components/Common/CustomLink";
 
 const LandingMobileMenu = ({ isOpen, setIsOpen, activeSection }) => {
   const CurrentLanguage = useSelector(CurrentLanguageData);
@@ -90,6 +91,14 @@ const LandingMobileMenu = ({ isOpen, setIsOpen, activeSection }) => {
               onClick={() => scrollToSection("ourBlogs")}
             >
               {t("blog")}
+            </li>
+            <li className="py-3 border-b border-dashed">
+              <CustomLink
+                href="/seller-signup"
+                className="block hover:text-primary"
+              >
+                Become a Seller
+              </CustomLink>
             </li>
             <li className="py-3">
               <LanguageDropdown />

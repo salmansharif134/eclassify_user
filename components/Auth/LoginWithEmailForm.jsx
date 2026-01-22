@@ -4,13 +4,8 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import useAutoFocus from "../Common/useAutoFocus";
 import { toast } from "sonner";
-import { handleFirebaseAuthError, t } from "@/utils";
-import {
-  getAuth,
-  sendPasswordResetEmail,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
-import { userSignUpApi } from "@/utils/api";
+import { t } from "@/utils";
+import { authApi } from "@/utils/api";
 import { useSelector } from "react-redux";
 import { Fcmtoken } from "@/redux/reducer/settingSlice";
 import { loadUpdateData } from "@/redux/reducer/authSlice";
@@ -19,7 +14,6 @@ import { useState } from "react";
 
 const LoginWithEmailForm = ({ OnHide }) => {
   const emailRef = useAutoFocus();
-  const auth = getAuth();
   const fetchFCM = useSelector(Fcmtoken);
   const [loginStates, setLoginStates] = useState({
     email: "",
@@ -29,24 +23,6 @@ const LoginWithEmailForm = ({ OnHide }) => {
   });
 
   const { email, password, IsPasswordVisible, showLoader } = loginStates;
-
-  const signin = async (email, password) => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      if (!userCredential?.user) {
-        toast.error(t("userNotFound"));
-        return null;
-      }
-      return userCredential;
-    } catch (error) {
-      console.error("Error signing in:", error);
-      throw error;
-    }
-  };
 
   const Signin = async (e) => {
     e.preventDefault();
@@ -67,36 +43,28 @@ const LoginWithEmailForm = ({ OnHide }) => {
 
     try {
       setLoginStates((prev) => ({ ...prev, showLoader: true }));
-      const userCredential = await signin(email, password);
-      const user = userCredential.user;
-      if (user.emailVerified) {
-        try {
-          const response = await userSignUpApi.userSignup({
-            name: user?.displayName || "",
-            email: user?.email,
-            firebase_id: user?.uid,
-            fcm_id: fetchFCM ? fetchFCM : "",
-            type: "email",
-          });
-          const data = response.data;
-          if (data.error === false) {
-            loadUpdateData(data);
-            toast.success(data.message);
-            OnHide();
-          } else {
-            toast.error(data.message);
-          }
-        } catch (error) {
-          console.error("Error:", error);
-        }
-        // Add your logic here for verified users
+      const response = await authApi.login({
+        email,
+        password,
+        fcm_id: fetchFCM ? fetchFCM : "",
+      });
+
+      const data = response.data;
+      if (data?.error === false || data?.error === "false") {
+        loadUpdateData(data);
+        toast.success(data.message);
+        OnHide();
       } else {
-        toast.error(t("verifyEmailFirst"));
+        toast.error(data?.message || t("somethingWentWrong"));
       }
     } catch (error) {
-      const errorCode = error.code;
-      console.log("Error code:", errorCode);
-      handleFirebaseAuthError(errorCode);
+      const serverMessage =
+        error?.response?.data?.message ||
+        (error?.response?.data
+          ? JSON.stringify(error.response.data)
+          : null);
+      console.error("Login error response:", error?.response || error);
+      toast.error(serverMessage || t("somethingWentWrong"));
     } finally {
       setLoginStates((prev) => ({ ...prev, showLoader: false }));
     }
@@ -104,14 +72,16 @@ const LoginWithEmailForm = ({ OnHide }) => {
 
   const handleForgotModal = async (e) => {
     e.preventDefault();
-    await sendPasswordResetEmail(auth, email)
-      .then(() => {
-        toast.success(t("resetPassword"));
-      })
-      .catch((error) => {
-        console.log("error", error);
-        handleFirebaseAuthError(error?.code);
-      });
+    if (!email) {
+      toast.error(t("emailRequired"));
+      return;
+    }
+    try {
+      await authApi.forgotPassword({ email });
+      toast.success(t("resetPassword"));
+    } catch (error) {
+      toast.error(error?.response?.data?.message || t("somethingWentWrong"));
+    }
   };
 
   return (
