@@ -1,7 +1,6 @@
 "use client";
-import SellerDashboard from "@/components/PagesComponent/SellerDashboard/SellerDashboard";
-import Checkauth from "@/HOC/Checkauth";
+import OverviewPage from "@/components/SellerHub/pages/OverviewPage";
 
-const SellerDashboardPage = Checkauth(SellerDashboard);
+const SellerDashboardPage = () => <OverviewPage />;
 
 export default SellerDashboardPage;

@@ -1,3 +1,3613 @@
+# Seller Dashboard Full Changes
+
+This file contains the full contents of all Seller Dashboard related files and supporting updates.
+
+## components/SellerHub/sellerHubData.js
+
+```
+export const salesSummary = {
+  totalSales: 124580.75,
+  orders: 842,
+  pendingShipments: 17,
+  returns: 6,
+};
+
+export const revenueSeries = {
+  daily: [
+    { name: "Mon", revenue: 1240, orders: 18 },
+    { name: "Tue", revenue: 1710, orders: 22 },
+    { name: "Wed", revenue: 980, orders: 14 },
+    { name: "Thu", revenue: 2210, orders: 26 },
+    { name: "Fri", revenue: 1890, orders: 25 },
+    { name: "Sat", revenue: 2050, orders: 28 },
+    { name: "Sun", revenue: 1420, orders: 19 },
+  ],
+  weekly: [
+    { name: "Week 1", revenue: 9120, orders: 118 },
+    { name: "Week 2", revenue: 10450, orders: 132 },
+    { name: "Week 3", revenue: 9870, orders: 121 },
+    { name: "Week 4", revenue: 11890, orders: 152 },
+  ],
+  monthly: [
+    { name: "Aug", revenue: 36420, orders: 461 },
+    { name: "Sep", revenue: 38110, orders: 498 },
+    { name: "Oct", revenue: 40280, orders: 526 },
+    { name: "Nov", revenue: 42890, orders: 553 },
+  ],
+};
+
+export const recentOrders = [
+  {
+    id: "ORD-10294",
+    buyer: "Avery Stone",
+    status: "Pending",
+    payment: "Paid",
+    total: 214.0,
+    date: "2026-01-18",
+  },
+  {
+    id: "ORD-10293",
+    buyer: "Maya Brooks",
+    status: "Shipped",
+    payment: "Paid",
+    total: 86.5,
+    date: "2026-01-17",
+  },
+  {
+    id: "ORD-10292",
+    buyer: "Jordan Lee",
+    status: "Delivered",
+    payment: "Paid",
+    total: 320.99,
+    date: "2026-01-17",
+  },
+  {
+    id: "ORD-10291",
+    buyer: "Riley Chen",
+    status: "Returned",
+    payment: "Refunded",
+    total: 119.0,
+    date: "2026-01-16",
+  },
+];
+
+export const topProducts = [
+  {
+    id: "SKU-4412",
+    title: "Wireless Noise-Canceling Headphones",
+    price: 149.99,
+    sold: 86,
+    revenue: 12899.14,
+  },
+  {
+    id: "SKU-2341",
+    title: "Smart Home Starter Kit",
+    price: 89.99,
+    sold: 74,
+    revenue: 6659.26,
+  },
+  {
+    id: "SKU-7822",
+    title: "Premium Leather Backpack",
+    price: 119.0,
+    sold: 63,
+    revenue: 7497.0,
+  },
+  {
+    id: "SKU-5218",
+    title: "Ergonomic Desk Chair",
+    price: 229.0,
+    sold: 41,
+    revenue: 9389.0,
+  },
+];
+
+export const performanceMetrics = [
+  { label: "Order defect rate", value: 0.7, target: 2 },
+  { label: "Late shipment rate", value: 1.4, target: 5 },
+  { label: "Cancellation rate", value: 0.5, target: 2 },
+];
+
+export const orders = [
+  {
+    id: "ORD-10294",
+    buyer: "Avery Stone",
+    status: "Pending",
+    payment: "Paid",
+    total: 214.0,
+    date: "2026-01-18",
+  },
+  {
+    id: "ORD-10293",
+    buyer: "Maya Brooks",
+    status: "Shipped",
+    payment: "Paid",
+    total: 86.5,
+    date: "2026-01-17",
+  },
+  {
+    id: "ORD-10292",
+    buyer: "Jordan Lee",
+    status: "Delivered",
+    payment: "Paid",
+    total: 320.99,
+    date: "2026-01-17",
+  },
+  {
+    id: "ORD-10291",
+    buyer: "Riley Chen",
+    status: "Returned",
+    payment: "Refunded",
+    total: 119.0,
+    date: "2026-01-16",
+  },
+  {
+    id: "ORD-10290",
+    buyer: "Taylor West",
+    status: "Delivered",
+    payment: "Paid",
+    total: 59.95,
+    date: "2026-01-15",
+  },
+];
+
+export const listings = [
+  {
+    id: "LST-1001",
+    title: "Wireless Noise-Canceling Headphones",
+    sku: "SKU-4412",
+    price: 149.99,
+    quantity: 32,
+    status: "Active",
+  },
+  {
+    id: "LST-1002",
+    title: "Smart Home Starter Kit",
+    sku: "SKU-2341",
+    price: 89.99,
+    quantity: 12,
+    status: "Active",
+  },
+  {
+    id: "LST-1003",
+    title: "Portable Photo Printer",
+    sku: "SKU-9951",
+    price: 129.0,
+    quantity: 0,
+    status: "Ended",
+  },
+  {
+    id: "LST-1004",
+    title: "Premium Leather Backpack",
+    sku: "SKU-7822",
+    price: 119.0,
+    quantity: 24,
+    status: "Draft",
+  },
+];
+
+export const inventory = [
+  {
+    id: "INV-2001",
+    title: "Wireless Noise-Canceling Headphones",
+    sku: "SKU-4412",
+    stock: 32,
+    reorderPoint: 15,
+    status: "Healthy",
+  },
+  {
+    id: "INV-2002",
+    title: "Smart Home Starter Kit",
+    sku: "SKU-2341",
+    stock: 12,
+    reorderPoint: 20,
+    status: "Low",
+  },
+  {
+    id: "INV-2003",
+    title: "Portable Photo Printer",
+    sku: "SKU-9951",
+    stock: 0,
+    reorderPoint: 10,
+    status: "Out",
+  },
+  {
+    id: "INV-2004",
+    title: "Ergonomic Desk Chair",
+    sku: "SKU-5218",
+    stock: 8,
+    reorderPoint: 12,
+    status: "Low",
+  },
+];
+
+export const payouts = [
+  {
+    id: "PAYOUT-901",
+    amount: 1120.5,
+    status: "Completed",
+    date: "2026-01-15",
+    method: "Bank transfer",
+  },
+  {
+    id: "PAYOUT-900",
+    amount: 980.0,
+    status: "Completed",
+    date: "2026-01-08",
+    method: "Bank transfer",
+  },
+  {
+    id: "PAYOUT-899",
+    amount: 1245.32,
+    status: "Processing",
+    date: "2026-01-01",
+    method: "Bank transfer",
+  },
+];
+
+export const transactions = [
+  {
+    id: "TX-3001",
+    type: "Order",
+    amount: 214.0,
+    status: "Paid",
+    date: "2026-01-18",
+  },
+  {
+    id: "TX-3000",
+    type: "Order",
+    amount: 86.5,
+    status: "Paid",
+    date: "2026-01-17",
+  },
+  {
+    id: "TX-2999",
+    type: "Refund",
+    amount: -119.0,
+    status: "Refunded",
+    date: "2026-01-16",
+  },
+];
+
+export const conversations = [
+  {
+    id: "MSG-001",
+    buyer: "Avery Stone",
+    subject: "Order ORD-10294",
+    preview: "Can you confirm the shipping ETA?",
+    unread: true,
+    lastMessageAt: "10:24 AM",
+    messages: [
+      {
+        id: "m1",
+        sender: "buyer",
+        text: "Can you confirm the shipping ETA?",
+        time: "10:24 AM",
+      },
+      {
+        id: "m2",
+        sender: "seller",
+        text: "Absolutely! It ships today and should arrive in 3-5 business days.",
+        time: "10:30 AM",
+      },
+    ],
+  },
+  {
+    id: "MSG-002",
+    buyer: "Maya Brooks",
+    subject: "Return request",
+    preview: "I submitted a return request.",
+    unread: false,
+    lastMessageAt: "Yesterday",
+    messages: [
+      {
+        id: "m3",
+        sender: "buyer",
+        text: "I submitted a return request.",
+        time: "Yesterday",
+      },
+      {
+        id: "m4",
+        sender: "seller",
+        text: "Thanks for the update. I just approved it and sent the label.",
+        time: "Yesterday",
+      },
+    ],
+  },
+];
+
+export const returnRequests = [
+  {
+    id: "RET-801",
+    orderId: "ORD-10291",
+    buyer: "Riley Chen",
+    reason: "Item not as described",
+    status: "Pending",
+    date: "2026-01-16",
+  },
+  {
+    id: "RET-800",
+    orderId: "ORD-10288",
+    buyer: "Morgan Fields",
+    reason: "Damaged in transit",
+    status: "Approved",
+    date: "2026-01-14",
+  },
+];
+
+export const campaigns = [
+  {
+    id: "CMP-120",
+    title: "Winter Clearance Sale",
+    status: "Active",
+    budget: 500,
+    spent: 312,
+    impressions: 18200,
+  },
+  {
+    id: "CMP-119",
+    title: "Sponsored Listings Boost",
+    status: "Paused",
+    budget: 300,
+    spent: 198,
+    impressions: 9600,
+  },
+];
+
+export const storeProfile = {
+  name: "Everlane Tech Shop",
+  email: "seller@everlane-tech.com",
+  phone: "+1 (415) 555-0144",
+  address: "440 Market Street, San Francisco, CA",
+  policy: "30-day returns, buyer pays shipping on returns.",
+};
+```
+
+## components/SellerHub/sellerHubNav.js
+
+```
+import {
+  BarChart3,
+  LayoutGrid,
+  Mail,
+  Megaphone,
+  Package,
+  RotateCcw,
+  Settings,
+  ShoppingCart,
+  Store,
+  Wallet,
+} from "lucide-react";
+
+export const sellerHubNav = [
+  { name: "Overview", href: "/seller-dashboard", icon: LayoutGrid },
+  { name: "Orders", href: "/seller-dashboard/orders", icon: ShoppingCart },
+  { name: "Listings", href: "/seller-dashboard/listings", icon: Store },
+  { name: "Inventory", href: "/seller-dashboard/inventory", icon: Package },
+  { name: "Performance", href: "/seller-dashboard/performance", icon: BarChart3 },
+  { name: "Marketing", href: "/seller-dashboard/marketing", icon: Megaphone },
+  { name: "Payments", href: "/seller-dashboard/payments", icon: Wallet },
+  { name: "Messages", href: "/seller-dashboard/messages", icon: Mail },
+  { name: "Returns", href: "/seller-dashboard/returns", icon: RotateCcw },
+  { name: "Settings", href: "/seller-dashboard/settings", icon: Settings },
+];
+```
+
+## components/SellerHub/statusUtils.js
+
+```
+import { Badge } from "@/components/ui/badge";
+
+export const getStatusBadge = (status) => {
+  const normalized = String(status || "").toLowerCase();
+  const classes = {
+    pending: "bg-amber-500 text-white",
+    shipped: "bg-blue-600 text-white",
+    delivered: "bg-emerald-600 text-white",
+    returned: "bg-rose-600 text-white",
+    paid: "bg-emerald-600 text-white",
+    refunded: "bg-rose-600 text-white",
+    active: "bg-emerald-600 text-white",
+    draft: "bg-slate-500 text-white",
+    ended: "bg-slate-700 text-white",
+    low: "bg-amber-500 text-white",
+    out: "bg-rose-600 text-white",
+    healthy: "bg-emerald-600 text-white",
+    processing: "bg-blue-600 text-white",
+    completed: "bg-emerald-600 text-white",
+    approved: "bg-emerald-600 text-white",
+    rejected: "bg-rose-600 text-white",
+    paused: "bg-slate-600 text-white",
+  };
+
+  const className = classes[normalized] || "bg-slate-600 text-white";
+  const label = status ? String(status) : "Unknown";
+
+  return <Badge className={className}>{label}</Badge>;
+};
+```
+
+## components/SellerHub/SellerHubHeader.jsx
+
+```
+"use client";
+
+import { Bell, Menu, MessageCircle, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const SellerHubHeader = ({ storeName, onToggleSidebar, onOpenMobile }) => {
+  return (
+    <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b bg-white px-4 py-3 shadow-sm md:px-6">
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={onOpenMobile}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hidden md:inline-flex"
+          onClick={onToggleSidebar}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        <div>
+          <p className="text-xs uppercase text-muted-foreground">Store</p>
+          <p className="text-lg font-semibold text-slate-900">{storeName}</p>
+        </div>
+      </div>
+
+      <div className="hidden max-w-md flex-1 md:flex">
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search orders, listings, buyers"
+            className="pl-9"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-rose-500" />
+        </Button>
+        <Button variant="ghost" size="icon" className="relative">
+          <MessageCircle className="h-5 w-5" />
+          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-blue-500" />
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <span className="hidden text-sm font-medium md:inline">
+                Account
+              </span>
+              <span className="h-8 w-8 rounded-full bg-slate-200" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuLabel>Seller Profile</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>View profile</DropdownMenuItem>
+            <DropdownMenuItem>Billing</DropdownMenuItem>
+            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Sign out</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </header>
+  );
+};
+
+export default SellerHubHeader;
+```
+
+## components/SellerHub/SellerHubSidebar.jsx
+
+```
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { sellerHubNav } from "./sellerHubNav";
+
+const SellerHubSidebar = ({
+  collapsed,
+  mobileOpen,
+  onCloseMobile,
+  storeName,
+}) => {
+  const pathname = usePathname();
+
+  const content = (
+    <div
+      className={cn(
+        "flex h-full flex-col border-r bg-white",
+        collapsed ? "w-20" : "w-64"
+      )}
+    >
+      <div className="flex items-center justify-between border-b px-4 py-4">
+        <div className="flex items-center gap-2">
+          <span className="h-8 w-8 rounded-lg bg-primary/10" />
+          {!collapsed && (
+            <div>
+              <p className="text-xs uppercase text-muted-foreground">
+                Seller Hub
+              </p>
+              <p className="text-sm font-semibold text-slate-900">
+                {storeName}
+              </p>
+            </div>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={onCloseMobile}
+        >
+          <X className="h-5 w-5" />
+        </Button>
+      </div>
+
+      <nav className="flex-1 space-y-1 px-3 py-4">
+        {sellerHubNav.map((item) => {
+          const Icon = item.icon;
+          const isActive =
+            pathname === item.href || pathname.startsWith(`${item.href}/`);
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-slate-600 hover:bg-slate-100"
+              )}
+            >
+              <Icon className="h-5 w-5" />
+              {!collapsed && <span>{item.name}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {!collapsed && (
+        <div className="border-t px-4 py-4 text-xs text-muted-foreground">
+          Seller Hub powered by Mustang IP
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+      <aside className="hidden md:flex">{content}</aside>
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 flex md:hidden">
+          <div className="fixed inset-0 bg-black/40" onClick={onCloseMobile} />
+          <div className="relative z-50">{content}</div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default SellerHubSidebar;
+```
+
+## components/SellerHub/SellerHubLayout.jsx
+
+```
+"use client";
+
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { userSignUpData } from "@/redux/reducer/authSlice";
+import SellerHubHeader from "./SellerHubHeader";
+import SellerHubSidebar from "./SellerHubSidebar";
+
+const SellerHubLayout = ({ children }) => {
+  const userData = useSelector(userSignUpData);
+  const storeName = userData?.name ? `${userData.name}'s Store` : "Seller Hub";
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <SellerHubHeader
+        storeName={storeName}
+        onToggleSidebar={() => setCollapsed((prev) => !prev)}
+        onOpenMobile={() => setMobileOpen(true)}
+      />
+      <div className="flex min-h-[calc(100vh-64px)]">
+        <SellerHubSidebar
+          storeName={storeName}
+          collapsed={collapsed}
+          mobileOpen={mobileOpen}
+          onCloseMobile={() => setMobileOpen(false)}
+        />
+        <main className="flex-1 px-4 py-6 md:px-6">{children}</main>
+      </div>
+    </div>
+  );
+};
+
+export default SellerHubLayout;
+```
+
+## components/SellerHub/SellerHubPageHeader.jsx
+
+```
+import { Button } from "@/components/ui/button";
+
+const SellerHubPageHeader = ({ title, description, actionLabel, onAction }) => {
+  return (
+    <div className="flex flex-col gap-4 border-b pb-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h1 className="text-2xl font-semibold text-slate-900">{title}</h1>
+        {description && (
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+        )}
+      </div>
+      {actionLabel && (
+        <Button onClick={onAction} className="self-start md:self-center">
+          {actionLabel}
+        </Button>
+      )}
+    </div>
+  );
+};
+
+export default SellerHubPageHeader;
+```
+
+## components/SellerHub/SalesChart.jsx
+
+```
+"use client";
+
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+const SalesChart = ({ data }) => {
+  return (
+    <div className="h-[280px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id="sellerHubRevenue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#2563eb" stopOpacity={0.4} />
+              <stop offset="95%" stopColor="#2563eb" stopOpacity={0.05} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="name" tickLine={false} axisLine={false} />
+          <YAxis tickLine={false} axisLine={false} />
+          <Tooltip
+            formatter={(value) => [`$${value}`, "Revenue"]}
+            contentStyle={{ borderRadius: 8, borderColor: "#e2e8f0" }}
+          />
+          <Area
+            type="monotone"
+            dataKey="revenue"
+            stroke="#2563eb"
+            fillOpacity={1}
+            fill="url(#sellerHubRevenue)"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export default SalesChart;
+```
+
+## components/SellerHub/pages/OverviewPage.jsx
+
+```
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import SellerHubPageHeader from "@/components/SellerHub/SellerHubPageHeader";
+import SalesChart from "@/components/SellerHub/SalesChart";
+import {
+  performanceMetrics,
+  recentOrders,
+  revenueSeries,
+  salesSummary,
+  topProducts,
+} from "@/components/SellerHub/sellerHubData";
+import { getStatusBadge } from "@/components/SellerHub/statusUtils";
+import { Progress } from "@/components/ui/progress";
+
+const SummaryCard = ({ label, value, helper }) => (
+  <Card>
+    <CardHeader className="pb-2">
+      <p className="text-sm text-muted-foreground">{label}</p>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-semibold text-slate-900">{value}</div>
+      {helper && <p className="text-xs text-muted-foreground">{helper}</p>}
+    </CardContent>
+  </Card>
+);
+
+const OverviewPage = () => {
+  return (
+    <div className="space-y-6">
+      <SellerHubPageHeader
+        title="Overview"
+        description="Track sales performance, orders, and buyer activity at a glance."
+      />
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <SummaryCard
+          label="Total Sales"
+          value={`$${salesSummary.totalSales.toLocaleString()}`}
+          helper="Last 30 days"
+        />
+        <SummaryCard label="Orders" value={salesSummary.orders} helper="All channels" />
+        <SummaryCard
+          label="Pending Shipments"
+          value={salesSummary.pendingShipments}
+          helper="Awaiting fulfillment"
+        />
+        <SummaryCard label="Returns" value={salesSummary.returns} helper="Open cases" />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <Tabs defaultValue="daily">
+            <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <CardTitle>Revenue</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Sales trends across your selected time frame.
+                </p>
+              </div>
+              <TabsList>
+                <TabsTrigger value="daily">Daily</TabsTrigger>
+                <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                <TabsTrigger value="monthly">Monthly</TabsTrigger>
+              </TabsList>
+            </CardHeader>
+            <CardContent>
+              <TabsContent value="daily">
+                <SalesChart data={revenueSeries.daily} />
+              </TabsContent>
+              <TabsContent value="weekly">
+                <SalesChart data={revenueSeries.weekly} />
+              </TabsContent>
+              <TabsContent value="monthly">
+                <SalesChart data={revenueSeries.monthly} />
+              </TabsContent>
+            </CardContent>
+          </Tabs>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Seller Performance</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Keep metrics under target for premium visibility.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {performanceMetrics.map((metric) => (
+              <div key={metric.label} className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-slate-700">{metric.label}</span>
+                  <span className="text-muted-foreground">
+                    {metric.value}% (target &lt; {metric.target}%)
+                  </span>
+                </div>
+                <Progress value={(metric.value / metric.target) * 100} />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Recent Orders</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Review latest orders and take action quickly.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Order ID</TableHead>
+                  <TableHead>Buyer</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Payment</TableHead>
+                  <TableHead>Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell>{order.buyer}</TableCell>
+                    <TableCell>{getStatusBadge(order.status)}</TableCell>
+                    <TableCell>{getStatusBadge(order.payment)}</TableCell>
+                    <TableCell>${order.total.toFixed(2)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Top-Selling Products</CardTitle>
+            <p className="text-sm text-muted-foreground">Best performers this month.</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {topProducts.map((product) => (
+              <div key={product.id} className="rounded-lg border p-3">
+                <p className="text-sm font-semibold text-slate-900">{product.title}</p>
+                <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{product.sold} sold</span>
+                  <span>${product.revenue.toLocaleString()}</span>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default OverviewPage;
+```
+
+## components/SellerHub/pages/OrdersPage.jsx
+
+```
+"use client";
+
+import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import SellerHubPageHeader from "@/components/SellerHub/SellerHubPageHeader";
+import { orders } from "@/components/SellerHub/sellerHubData";
+import { getStatusBadge } from "@/components/SellerHub/statusUtils";
+
+const OrdersPage = () => {
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [paymentFilter, setPaymentFilter] = useState("all");
+  const [query, setQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const matchesStatus =
+        statusFilter === "all" ||
+        order.status.toLowerCase() === statusFilter;
+      const matchesPayment =
+        paymentFilter === "all" ||
+        order.payment.toLowerCase() === paymentFilter;
+      const matchesQuery =
+        !query ||
+        order.id.toLowerCase().includes(query.toLowerCase()) ||
+        order.buyer.toLowerCase().includes(query.toLowerCase());
+      const matchesDate = !dateFilter || order.date === dateFilter;
+      return matchesStatus && matchesPayment && matchesQuery && matchesDate;
+    });
+  }, [paymentFilter, query, statusFilter, dateFilter]);
+
+  return (
+    <div className="space-y-6">
+      <SellerHubPageHeader
+        title="Orders"
+        description="Manage, ship, and track orders in one place."
+      />
+
+      <Card>
+        <CardContent className="grid gap-4 py-5 md:grid-cols-4">
+          <Input
+            placeholder="Search by order ID or buyer"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          <Input
+            type="date"
+            value={dateFilter}
+            onChange={(event) => setDateFilter(event.target.value)}
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Order status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="shipped">Shipped</SelectItem>
+              <SelectItem value="delivered">Delivered</SelectItem>
+              <SelectItem value="returned">Returned</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Payment status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All payments</SelectItem>
+              <SelectItem value="paid">Paid</SelectItem>
+              <SelectItem value="refunded">Refunded</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="py-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Order ID</TableHead>
+                <TableHead>Buyer</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Payment</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredOrders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-medium">{order.id}</TableCell>
+                  <TableCell>{order.buyer}</TableCell>
+                  <TableCell>{getStatusBadge(order.status)}</TableCell>
+                  <TableCell>{getStatusBadge(order.payment)}</TableCell>
+                  <TableCell>${order.total.toFixed(2)}</TableCell>
+                  <TableCell className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm">
+                      View
+                    </Button>
+                    <Button size="sm">Ship</Button>
+                    <Button variant="ghost" size="sm">
+                      Refund
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filteredOrders.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                    No orders match the selected filters.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+
+          <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+            <span>Showing {filteredOrders.length} orders</span>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                Previous
+              </Button>
+              <Button variant="outline" size="sm">
+                Next
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default OrdersPage;
+```
+
+## components/SellerHub/pages/ListingsPage.jsx
+
+```
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import SellerHubPageHeader from "@/components/SellerHub/SellerHubPageHeader";
+import { listings } from "@/components/SellerHub/sellerHubData";
+import { getStatusBadge } from "@/components/SellerHub/statusUtils";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+const ListingsPage = () => {
+  const router = useRouter();
+  const [selected, setSelected] = useState([]);
+
+  const toggleAll = (checked) => {
+    if (checked) {
+      setSelected(listings.map((item) => item.id));
+    } else {
+      setSelected([]);
+    }
+  };
+
+  const toggleOne = (id, checked) => {
+    if (checked) {
+      setSelected((prev) => [...prev, id]);
+    } else {
+      setSelected((prev) => prev.filter((item) => item !== id));
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <SellerHubPageHeader
+        title="Listings"
+        description="Create, manage, and optimize your product listings."
+        actionLabel="Add listing"
+        onAction={() => router.push("/seller-dashboard/listings/new")}
+      />
+
+      <Card>
+        <CardContent className="py-4">
+          {selected.length > 0 && (
+            <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md bg-slate-50 px-3 py-2 text-sm">
+              <span>{selected.length} selected</span>
+              <Button variant="outline" size="sm">
+                End listings
+              </Button>
+              <Button variant="outline" size="sm">
+                Duplicate
+              </Button>
+            </div>
+          )}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>
+                  <Checkbox
+                    checked={selected.length === listings.length}
+                    onCheckedChange={(checked) => toggleAll(checked === true)}
+                    aria-label="Select all listings"
+                  />
+                </TableHead>
+                <TableHead>Listing</TableHead>
+                <TableHead>SKU</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Qty</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {listings.map((listing) => (
+                <TableRow key={listing.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selected.includes(listing.id)}
+                      onCheckedChange={(checked) => toggleOne(listing.id, checked === true)}
+                      aria-label={`Select ${listing.title}`}
+                    />
+                  </TableCell>
+                  <TableCell className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-md bg-slate-100" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">{listing.title}</p>
+                      <p className="text-xs text-muted-foreground">{listing.id}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>{listing.sku}</TableCell>
+                  <TableCell>${listing.price.toFixed(2)}</TableCell>
+                  <TableCell>{listing.quantity}</TableCell>
+                  <TableCell>{getStatusBadge(listing.status)}</TableCell>
+                  <TableCell className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/seller-dashboard/listings/${listing.id}/edit`}>
+                        Edit
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      End listing
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      Duplicate
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default ListingsPage;
+```
+
+## components/SellerHub/pages/InventoryPage.jsx
+
+```
+"use client";
+
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import SellerHubPageHeader from "@/components/SellerHub/SellerHubPageHeader";
+import { inventory } from "@/components/SellerHub/sellerHubData";
+import { getStatusBadge } from "@/components/SellerHub/statusUtils";
+import { Button } from "@/components/ui/button";
+
+const InventoryPage = () => {
+  return (
+    <div className="space-y-6">
+      <SellerHubPageHeader
+        title="Inventory"
+        description="Monitor stock levels and prevent sell-outs."
+        actionLabel="Update inventory"
+        onAction={() => {}}
+      />
+
+      <Card>
+        <CardContent className="py-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>SKU</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Reorder point</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {inventory.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">{item.title}</TableCell>
+                  <TableCell>{item.sku}</TableCell>
+                  <TableCell>{item.stock}</TableCell>
+                  <TableCell>{item.reorderPoint}</TableCell>
+                  <TableCell>{getStatusBadge(item.status)}</TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm">
+                      Adjust stock
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default InventoryPage;
+```
+
+## components/SellerHub/pages/PerformancePage.jsx
+
+```
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import SellerHubPageHeader from "@/components/SellerHub/SellerHubPageHeader";
+import { performanceMetrics, revenueSeries } from "@/components/SellerHub/sellerHubData";
+import { Progress } from "@/components/ui/progress";
+import SalesChart from "@/components/SellerHub/SalesChart";
+
+const PerformancePage = () => {
+  return (
+    <div className="space-y-6">
+      <SellerHubPageHeader
+        title="Performance"
+        description="Track seller metrics and stay within marketplace targets."
+      />
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {performanceMetrics.map((metric) => (
+          <Card key={metric.label}>
+            <CardHeader>
+              <CardTitle className="text-base">{metric.label}</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Target: under {metric.target}%
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="text-2xl font-semibold">{metric.value}%</div>
+              <Progress value={(metric.value / metric.target) * 100} />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Order Volume Trend</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Recent revenue movement across the last 4 weeks.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <SalesChart data={revenueSeries.weekly} />
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default PerformancePage;
+```
+
+## components/SellerHub/pages/MarketingPage.jsx
+
+```
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import SellerHubPageHeader from "@/components/SellerHub/SellerHubPageHeader";
+import { campaigns } from "@/components/SellerHub/sellerHubData";
+import { getStatusBadge } from "@/components/SellerHub/statusUtils";
+import { Progress } from "@/components/ui/progress";
+
+const MarketingPage = () => {
+  return (
+    <div className="space-y-6">
+      <SellerHubPageHeader
+        title="Marketing"
+        description="Run promotions to boost visibility and sales."
+        actionLabel="Create campaign"
+        onAction={() => {}}
+      />
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recommended actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <p>Launch a sponsored listings boost for top-selling items.</p>
+            <p>Bundle inventory that has been in stock for 60+ days.</p>
+            <Button className="w-full">View insights</Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Buyer engagement</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Listing impressions</p>
+              <p className="text-2xl font-semibold text-slate-900">28,400</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Conversion rate</p>
+              <p className="text-2xl font-semibold text-slate-900">3.8%</p>
+            </div>
+            <Button variant="outline">View report</Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Promotions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Active offers</p>
+              <p className="text-2xl font-semibold text-slate-900">2</p>
+            </div>
+            <Button variant="outline">Manage offers</Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Campaigns</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 lg:grid-cols-2">
+          {campaigns.map((campaign) => (
+            <div key={campaign.id} className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">{campaign.id}</p>
+                  <p className="text-base font-semibold text-slate-900">{campaign.title}</p>
+                </div>
+                {getStatusBadge(campaign.status)}
+              </div>
+              <div className="mt-4 space-y-2 text-sm text-muted-foreground">
+                <div className="flex items-center justify-between">
+                  <span>Budget</span>
+                  <span>${campaign.budget}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Spent</span>
+                  <span>${campaign.spent}</span>
+                </div>
+                <Progress value={(campaign.spent / campaign.budget) * 100} />
+              </div>
+              <div className="mt-4 flex gap-2">
+                <Button variant="outline" size="sm">
+                  View details
+                </Button>
+                <Button variant="ghost" size="sm">
+                  Edit
+                </Button>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default MarketingPage;
+```
+
+## components/SellerHub/pages/PaymentsPage.jsx
+
+```
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import SellerHubPageHeader from "@/components/SellerHub/SellerHubPageHeader";
+import { payouts, transactions } from "@/components/SellerHub/sellerHubData";
+import { getStatusBadge } from "@/components/SellerHub/statusUtils";
+
+const PaymentsPage = () => {
+  return (
+    <div className="space-y-6">
+      <SellerHubPageHeader
+        title="Payments"
+        description="Review balances, payouts, and transaction activity."
+      />
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <p className="text-sm text-muted-foreground">Balance</p>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold">$3,482.75</div>
+            <p className="text-xs text-muted-foreground">Available for payout</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <p className="text-sm text-muted-foreground">Available funds</p>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold">$2,910.50</div>
+            <p className="text-xs text-muted-foreground">Next payout in 3 days</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <p className="text-sm text-muted-foreground">Pending</p>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold">$572.25</div>
+            <p className="text-xs text-muted-foreground">Orders in processing</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Payout history</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Payout ID</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Method</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {payouts.map((payout) => (
+                <TableRow key={payout.id}>
+                  <TableCell className="font-medium">{payout.id}</TableCell>
+                  <TableCell>{payout.date}</TableCell>
+                  <TableCell>{payout.method}</TableCell>
+                  <TableCell>{getStatusBadge(payout.status)}</TableCell>
+                  <TableCell>${payout.amount.toFixed(2)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Transaction ID</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transactions.map((transaction) => (
+                <TableRow key={transaction.id}>
+                  <TableCell className="font-medium">{transaction.id}</TableCell>
+                  <TableCell>{transaction.date}</TableCell>
+                  <TableCell>{transaction.type}</TableCell>
+                  <TableCell>{getStatusBadge(transaction.status)}</TableCell>
+                  <TableCell>${transaction.amount.toFixed(2)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default PaymentsPage;
+```
+
+## components/SellerHub/pages/MessagesPage.jsx
+
+```
+"use client";
+
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import SellerHubPageHeader from "@/components/SellerHub/SellerHubPageHeader";
+import { conversations } from "@/components/SellerHub/sellerHubData";
+
+const MessagesPage = () => {
+  const [activeId, setActiveId] = useState(conversations[0]?.id);
+  const activeConversation = conversations.find((c) => c.id === activeId);
+
+  return (
+    <div className="space-y-6">
+      <SellerHubPageHeader
+        title="Messages"
+        description="Stay connected with buyers and resolve questions fast."
+      />
+
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+        <Card>
+          <CardContent className="py-4">
+            <Input placeholder="Search conversations" />
+            <div className="mt-4 space-y-2">
+              {conversations.map((conversation) => (
+                <button
+                  key={conversation.id}
+                  onClick={() => setActiveId(conversation.id)}
+                  className={`w-full rounded-md border px-3 py-2 text-left transition ${
+                    activeId === conversation.id
+                      ? "border-primary/30 bg-primary/5"
+                      : "border-transparent hover:bg-slate-50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-slate-900">
+                      {conversation.buyer}
+                    </p>
+                    <span className="text-xs text-muted-foreground">
+                      {conversation.lastMessageAt}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{conversation.subject}</p>
+                  <p className="text-xs text-slate-600">{conversation.preview}</p>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="flex flex-col">
+          <CardContent className="flex-1 space-y-4 py-4">
+            {activeConversation?.messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${
+                  message.sender === "seller" ? "justify-end" : "justify-start"
+                }`}
+              >
+                <div
+                  className={`max-w-[70%] rounded-lg px-4 py-2 text-sm ${
+                    message.sender === "seller"
+                      ? "bg-primary text-white"
+                      : "bg-slate-100 text-slate-900"
+                  }`}
+                >
+                  <p>{message.text}</p>
+                  <span className="mt-1 block text-[10px] opacity-70">
+                    {message.time}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+          <div className="border-t p-4">
+            <div className="flex gap-2">
+              <Input placeholder="Type a message" />
+              <Button>Send</Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default MessagesPage;
+```
+
+## components/SellerHub/pages/ReturnsPage.jsx
+
+```
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import SellerHubPageHeader from "@/components/SellerHub/SellerHubPageHeader";
+import { returnRequests } from "@/components/SellerHub/sellerHubData";
+import { getStatusBadge } from "@/components/SellerHub/statusUtils";
+
+const ReturnsPage = () => {
+  return (
+    <div className="space-y-6">
+      <SellerHubPageHeader
+        title="Returns"
+        description="Approve or reject return requests and track status."
+      />
+
+      <Card>
+        <CardContent className="py-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Return ID</TableHead>
+                <TableHead>Order ID</TableHead>
+                <TableHead>Buyer</TableHead>
+                <TableHead>Reason</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {returnRequests.map((request) => (
+                <TableRow key={request.id}>
+                  <TableCell className="font-medium">{request.id}</TableCell>
+                  <TableCell>{request.orderId}</TableCell>
+                  <TableCell>{request.buyer}</TableCell>
+                  <TableCell>{request.reason}</TableCell>
+                  <TableCell>{getStatusBadge(request.status)}</TableCell>
+                  <TableCell className="flex flex-wrap gap-2">
+                    <Button size="sm">Approve</Button>
+                    <Button variant="outline" size="sm">
+                      Reject
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default ReturnsPage;
+```
+
+## components/SellerHub/pages/SettingsPage.jsx
+
+```
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import SellerHubPageHeader from "@/components/SellerHub/SellerHubPageHeader";
+import { storeProfile } from "@/components/SellerHub/sellerHubData";
+import { Button } from "@/components/ui/button";
+
+const SettingsPage = () => {
+  return (
+    <div className="space-y-6">
+      <SellerHubPageHeader
+        title="Settings"
+        description="Manage store profile, payment methods, shipping, and tax preferences."
+      />
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Store profile</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Input defaultValue={storeProfile.name} placeholder="Store name" />
+            <Input defaultValue={storeProfile.email} placeholder="Support email" />
+            <Input defaultValue={storeProfile.phone} placeholder="Phone number" />
+            <Input defaultValue={storeProfile.address} placeholder="Business address" />
+            <Textarea defaultValue={storeProfile.policy} placeholder="Return policy" rows={4} />
+            <Button>Save profile</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Payment methods</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Input placeholder="Bank account ending in 4821" />
+            <Input placeholder="Tax ID" />
+            <Button variant="outline">Update payout method</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Shipping preferences</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Input placeholder="Default carrier (e.g. UPS, FedEx)" />
+            <Input placeholder="Handling time (days)" />
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <p className="text-sm font-medium text-slate-900">
+                  Offer free shipping
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Highlight listings with free shipping.
+                </p>
+              </div>
+              <Switch />
+            </div>
+            <Button variant="outline">Save shipping</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Tax settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Input placeholder="Default tax rate (%)" />
+            <Input placeholder="Tax nexus states" />
+            <Button variant="outline">Save tax settings</Button>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default SettingsPage;
+```
+
+## components/SellerHub/pages/ListingFormPage.jsx
+
+```
+"use client";
+
+import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const ListingFormPage = ({ mode = "create" }) => {
+  const [step, setStep] = useState(0);
+  const steps = useMemo(
+    () => [
+      {
+        title: "Basic info",
+        description: "Product title, category, and description.",
+        content: (
+          <div className="space-y-4">
+            <Input placeholder="Product title" />
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="electronics">Electronics</SelectItem>
+                <SelectItem value="home">Home & living</SelectItem>
+                <SelectItem value="fashion">Fashion</SelectItem>
+              </SelectContent>
+            </Select>
+            <Textarea placeholder="Describe your product" rows={5} />
+          </div>
+        ),
+      },
+      {
+        title: "Pricing",
+        description: "Set price, promotions, and taxes.",
+        content: (
+          <div className="grid gap-4 md:grid-cols-2">
+            <Input placeholder="Price" />
+            <Input placeholder="Compare at price" />
+            <Input placeholder="Cost per item" />
+            <Input placeholder="Tax rate (%)" />
+          </div>
+        ),
+      },
+      {
+        title: "Inventory",
+        description: "Manage stock and SKU details.",
+        content: (
+          <div className="grid gap-4 md:grid-cols-2">
+            <Input placeholder="SKU" />
+            <Input placeholder="Quantity" />
+            <Input placeholder="Barcode (optional)" />
+            <Input placeholder="Warehouse location" />
+          </div>
+        ),
+      },
+      {
+        title: "Shipping",
+        description: "Delivery settings and package details.",
+        content: (
+          <div className="grid gap-4 md:grid-cols-2">
+            <Input placeholder="Weight (lbs)" />
+            <Input placeholder="Dimensions (L x W x H)" />
+            <Input placeholder="Handling time (days)" />
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Shipping profile" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="standard">Standard shipping</SelectItem>
+                <SelectItem value="expedited">Expedited shipping</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        ),
+      },
+      {
+        title: "Images",
+        description: "Upload high-quality images.",
+        content: (
+          <div className="space-y-3">
+            <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+              Drag and drop product images here, or click to upload.
+            </div>
+            <Input type="file" multiple />
+          </div>
+        ),
+      },
+    ],
+    []
+  );
+
+  const isLast = step === steps.length - 1;
+  const isFirst = step === 0;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold text-slate-900">
+          {mode === "edit" ? "Edit listing" : "Create listing"}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Complete each step to publish your product.
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Step {step + 1} of {steps.length}: {steps[step].title}
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            {steps[step].description}
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex gap-2">
+            {steps.map((item, index) => (
+              <div
+                key={item.title}
+                className={`h-2 flex-1 rounded-full ${
+                  index <= step ? "bg-primary" : "bg-slate-200"
+                }`}
+              />
+            ))}
+          </div>
+
+          {steps[step].content}
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-2">
+              <Button variant="outline" disabled={isFirst} onClick={() => setStep(step - 1)}>
+                Back
+              </Button>
+              <Button disabled={isLast} onClick={() => setStep(step + 1)}>
+                Next
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline">Save as draft</Button>
+              <Button>{mode === "edit" ? "Update listing" : "Publish"}</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default ListingFormPage;
+```
+
+## app/seller-dashboard/layout.jsx
+
+```
+"use client";
+
+import Checkauth from "@/HOC/Checkauth";
+import SellerHubLayout from "@/components/SellerHub/SellerHubLayout";
+
+const ProtectedSellerHubLayout = Checkauth(({ children }) => (
+  <SellerHubLayout>{children}</SellerHubLayout>
+));
+
+export default ProtectedSellerHubLayout;
+```
+
+## app/seller-dashboard/page.jsx
+
+```
+"use client";
+import OverviewPage from "@/components/SellerHub/pages/OverviewPage";
+
+const SellerDashboardPage = () => <OverviewPage />;
+
+export default SellerDashboardPage;
+```
+
+## app/seller-dashboard/orders/page.jsx
+
+```
+"use client";
+
+import OrdersPage from "@/components/SellerHub/pages/OrdersPage";
+
+const Orders = () => <OrdersPage />;
+
+export default Orders;
+```
+
+## app/seller-dashboard/listings/page.jsx
+
+```
+"use client";
+
+import ListingsPage from "@/components/SellerHub/pages/ListingsPage";
+
+const Listings = () => <ListingsPage />;
+
+export default Listings;
+```
+
+## app/seller-dashboard/listings/new/page.jsx
+
+```
+"use client";
+
+import ListingFormPage from "@/components/SellerHub/pages/ListingFormPage";
+
+const NewListing = () => <ListingFormPage mode="create" />;
+
+export default NewListing;
+```
+
+## app/seller-dashboard/listings/[id]/edit/page.jsx
+
+(Missing file at time of generation)
+
+## app/seller-dashboard/inventory/page.jsx
+
+```
+"use client";
+
+import InventoryPage from "@/components/SellerHub/pages/InventoryPage";
+
+const Inventory = () => <InventoryPage />;
+
+export default Inventory;
+```
+
+## app/seller-dashboard/performance/page.jsx
+
+```
+"use client";
+
+import PerformancePage from "@/components/SellerHub/pages/PerformancePage";
+
+const Performance = () => <PerformancePage />;
+
+export default Performance;
+```
+
+## app/seller-dashboard/marketing/page.jsx
+
+```
+"use client";
+
+import MarketingPage from "@/components/SellerHub/pages/MarketingPage";
+
+const Marketing = () => <MarketingPage />;
+
+export default Marketing;
+```
+
+## app/seller-dashboard/payments/page.jsx
+
+```
+"use client";
+
+import PaymentsPage from "@/components/SellerHub/pages/PaymentsPage";
+
+const Payments = () => <PaymentsPage />;
+
+export default Payments;
+```
+
+## app/seller-dashboard/messages/page.jsx
+
+```
+"use client";
+
+import MessagesPage from "@/components/SellerHub/pages/MessagesPage";
+
+const Messages = () => <MessagesPage />;
+
+export default Messages;
+```
+
+## app/seller-dashboard/returns/page.jsx
+
+```
+"use client";
+
+import ReturnsPage from "@/components/SellerHub/pages/ReturnsPage";
+
+const Returns = () => <ReturnsPage />;
+
+export default Returns;
+```
+
+## app/seller-dashboard/settings/page.jsx
+
+```
+"use client";
+
+import SettingsPage from "@/components/SellerHub/pages/SettingsPage";
+
+const Settings = () => <SettingsPage />;
+
+export default Settings;
+```
+
+## components/PagesComponent/SellerSignup/SellerSignupWizard.jsx
+
+```
+"use client";
+import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, CheckCircle2, Upload, ArrowRight, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import {
+  authApi,
+  getPackageApi,
+  getPaymentSettingsApi,
+  patentLookupApi,
+  sellerSignupApi,
+  sellerOrderApi,
+} from "@/utils/api";
+import { GoogleLogin } from "@react-oauth/google";
+import { useSelector } from "react-redux";
+import { getIsLoggedIn, loadUpdateData, userSignUpData } from "@/redux/reducer/authSlice";
+import CustomLink from "@/components/Common/CustomLink";
+import StripePayment from "@/components/PagesComponent/Subscription/StripePayment";
+import { useNavigate } from "@/components/Common/useNavigate";
+
+const SellerSignupWizard = ({ onComplete }) => {
+  const { navigate } = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const isLoggedIn = useSelector(getIsLoggedIn);
+  const userData = useSelector(userSignUpData);
+  const hasSellerAccount = Boolean(
+    userData?.seller_id ||
+      userData?.seller?.id ||
+      userData?.is_seller === 1 ||
+      userData?.is_seller === true
+  );
+
+  useEffect(() => {
+    if (hasSellerAccount) {
+      navigate("/seller-dashboard");
+    }
+  }, [hasSellerAccount, navigate]);
+
+  // Account creation
+  const [accountState, setAccountState] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    isCreating: false,
+    isCreated: false,
+  });
+  
+  // Step 1: Patent Status
+  const [hasPatent, setHasPatent] = useState(null);
+  const [patentNumber, setPatentNumber] = useState("");
+  
+  // Step 2: Patent Data
+  const [patentData, setPatentData] = useState(null);
+  const [manualPatentData, setManualPatentData] = useState({
+    title: "",
+    inventor: "",
+    assignee: "",
+    filing_date: "",
+    issue_date: "",
+    abstract: "",
+    claims: "",
+    description: "",
+  });
+  
+  // Step 3: Images
+  const [patentImages, setPatentImages] = useState([]);
+  const [additionalImages, setAdditionalImages] = useState([]);
+  
+  // Step 4: Membership Plan
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [listingPackages, setListingPackages] = useState([]);
+  const [packageSettings, setPackageSettings] = useState(null);
+  const [isPackagesLoading, setIsPackagesLoading] = useState(false);
+  const [isPaymentSettingsLoading, setIsPaymentSettingsLoading] = useState(false);
+  
+  // Step 5: Additional Services
+  const [selectedServices, setSelectedServices] = useState({
+    drawing2D3D: false,
+    evaluation: null, // 'good', 'better', 'best'
+    pitchDeck: false,
+    attorneySupport: false,
+  });
+  
+  // Step 6: Cart Summary
+  const [cartTotal, setCartTotal] = useState(0);
+  const [orderSummary, setOrderSummary] = useState(null);
+  const [clientSecret, setClientSecret] = useState("");
+  const [paymentTransactionId, setPaymentTransactionId] = useState(null);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [isOrderSummaryLoading, setIsOrderSummaryLoading] = useState(false);
+  const [isCreatingPaymentIntent, setIsCreatingPaymentIntent] = useState(false);
+  const [paymentInitError, setPaymentInitError] = useState("");
+
+  const handlePatentLookup = async () => {
+    if (!patentNumber.trim()) {
+      toast.error("Please enter a patent number");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await patentLookupApi.lookup({ patent_number: patentNumber });
+      if (response.data.error === false && response.data.data) {
+        setPatentData(response.data.data);
+        setCurrentStep(3);
+        toast.success("Patent found! Data auto-populated.");
+      } else {
+        toast.info("Patent not found. Please enter manually.");
+        setCurrentStep(2); // Manual entry
+      }
+    } catch (error) {
+      console.error("Patent lookup error:", error);
+      toast.error("Failed to lookup patent. Please enter manually.");
+      setCurrentStep(2);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageUpload = (files, type) => {
+    const fileArray = Array.from(files);
+    if (type === "patent") {
+      setPatentImages([...patentImages, ...fileArray]);
+    } else {
+      setAdditionalImages([...additionalImages, ...fileArray]);
+    }
+  };
+
+  const calculateTotal = () => {
+    let total = 0;
+    if (selectedPlan === "monthly") total += 29;
+    if (selectedPlan === "yearly") total += 199;
+    if (selectedServices.drawing2D3D) total += 20;
+    if (selectedServices.evaluation === "good") total += 250;
+    if (selectedServices.evaluation === "better") total += 500;
+    if (selectedServices.evaluation === "best") total += 1999;
+    if (selectedServices.pitchDeck) total += 0; // Price TBD
+    if (selectedServices.attorneySupport) total += 0; // Price TBD
+    return total;
+  };
+
+  const buildSelectedServicesPayload = () => ({
+    drawing2D3D: Boolean(selectedServices.drawing2D3D),
+    pitchDeck: Boolean(selectedServices.pitchDeck),
+    attorneySupport: Boolean(selectedServices.attorneySupport),
+    evaluation: selectedServices.evaluation ?? null,
+  });
+
+  const formatValidationError = (data) => {
+    if (!data) return null;
+    const message = data?.message;
+    const errors = data?.errors || data?.data?.errors;
+    if (errors && typeof errors === "object") {
+      const firstError = Object.values(errors).flat()?.[0];
+      return firstError || message;
+    }
+    if (Array.isArray(errors)) {
+      return errors[0] || message;
+    }
+    return message;
+  };
+
+  const handleNext = () => {
+    if (currentStep === 1) {
+      if (!isLoggedIn && !accountState.isCreated) {
+        toast.error("Please create an account to continue");
+        return;
+      }
+      if (hasPatent === null) {
+        toast.error("Please select if you have a patent");
+        return;
+      }
+      if (hasPatent && !patentNumber.trim()) {
+        toast.error("Please enter your patent number");
+        return;
+      }
+      if (hasPatent) {
+        handlePatentLookup();
+      } else {
+        setCurrentStep(2);
+      }
+    } else if (currentStep === 2) {
+      if (!patentData) {
+        const requiredFields = [
+          "title",
+          "inventor",
+          "assignee",
+          "filing_date",
+          "issue_date",
+          "abstract",
+          "claims",
+          "description",
+        ];
+        const missingFields = requiredFields.filter((field) => {
+          const value = manualPatentData[field];
+          return !value || (typeof value === "string" && !value.trim());
+        });
+        if (missingFields.length > 0) {
+          toast.error("Please fill in all required patent fields");
+          return;
+        }
+      }
+      setCurrentStep(3);
+    } else if (currentStep === 3) {
+      if (patentImages.length === 0) {
+        toast.error("Please upload at least one patent image");
+        return;
+      }
+      setCurrentStep(4);
+    } else if (currentStep === 4) {
+      if (!selectedPlan) {
+        toast.error("Please select a membership plan");
+        return;
+      }
+      if (!selectedPackage) {
+        toast.error("Please wait while we load the membership plan.");
+        return;
+      }
+      setCurrentStep(5);
+    } else if (currentStep === 5) {
+      setCartTotal(calculateTotal());
+      setCurrentStep(6);
+    } else if (currentStep === 6) {
+      if (showPaymentForm || clientSecret) return;
+      if (!packageSettings) {
+        toast.error("Payment settings are unavailable right now.");
+        return;
+      }
+      handleCreatePaymentIntent();
+    }
+  };
+
+  const handleSelectPlan = (planKey) => {
+    const planPackage = planKey === "monthly" ? planPackages.monthly : planPackages.yearly;
+    setSelectedPlan(planKey);
+    setSelectedPackage(planPackage || null);
+  };
+
+  const handleSubmit = async ({
+    paymentIntentId,
+    paymentTransactionId: transactionId,
+  } = {}) => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      const userId = userData?.id || userData?.data?.id;
+      if (!userId) {
+        toast.error("User ID not found. Please log in again.");
+        setLoading(false);
+        return;
+      }
+      formData.append("user_id", userId);
+      
+      // Append patent data
+      if (patentData) {
+        formData.append("has_patent", "true");
+        formData.append("patent_number", patentNumber);
+        formData.append("patent_data", JSON.stringify(patentData));
+      } else {
+        formData.append("has_patent", "false");
+        formData.append("patent_data", JSON.stringify(manualPatentData));
+      }
+      
+      // Append images
+      patentImages.forEach((img, idx) => {
+        formData.append(`patent_images[${idx}]`, img);
+      });
+      additionalImages.forEach((img, idx) => {
+        formData.append(`additional_images[${idx}]`, img);
+      });
+      
+      // Append membership plan
+      formData.append("membership_plan", orderSummary?.membership_plan || selectedPlan);
+      
+      // Append services
+      formData.append(
+        "selected_services",
+        JSON.stringify(buildSelectedServicesPayload())
+      );
+
+      if (paymentIntentId) {
+        formData.append("payment_intent_id", paymentIntentId);
+      }
+      if (transactionId) {
+        formData.append("payment_transaction_id", String(transactionId));
+      }
+      
+      const response = await sellerSignupApi.submit(formData);
+      
+      if (response.data.error === false || response.data.error === "false") {
+        toast.success("Account created successfully! Redirecting to dashboard...");
+        if (onComplete) onComplete();
+      } else {
+        toast.error(
+          response.data.message ||
+            (response.data ? JSON.stringify(response.data) : null) ||
+            "Failed to create account. Please try again."
+        );
+      }
+    } catch (error) {
+      const serverMessage =
+        formatValidationError(error?.response?.data) ||
+        (error?.response?.data ? JSON.stringify(error.response.data) : null);
+      console.error("Signup error:", error?.response || error);
+      toast.error(serverMessage || "Failed to create account. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const mapPlanToPackage = (planKey, packages) => {
+    if (!packages?.length) return null;
+    const targetPrice = planKey === "monthly" ? 29 : 199;
+    const exactMatch = packages.find(
+      (pkg) => Number(pkg?.final_price) === targetPrice
+    );
+    if (exactMatch) return exactMatch;
+    const sorted = [...packages].sort(
+      (a, b) => Number(a?.final_price || 0) - Number(b?.final_price || 0)
+    );
+    return planKey === "monthly" ? sorted[0] : sorted[sorted.length - 1];
+  };
+
+  const planPackages = useMemo(() => {
+    return {
+      monthly: mapPlanToPackage("monthly", listingPackages),
+      yearly: mapPlanToPackage("yearly", listingPackages),
+    };
+  }, [listingPackages]);
+
+  useEffect(() => {
+    if (!selectedPlan) return;
+    const nextPackage =
+      selectedPlan === "monthly" ? planPackages.monthly : planPackages.yearly;
+    if (nextPackage && nextPackage !== selectedPackage) {
+      setSelectedPackage(nextPackage);
+    }
+  }, [selectedPlan, planPackages, selectedPackage]);
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        setIsPackagesLoading(true);
+        const res = await getPackageApi.getPackage({ type: "item_listing" });
+        setListingPackages(res?.data?.data || []);
+      } catch (error) {
+        console.error("Failed to fetch packages:", error);
+      } finally {
+        setIsPackagesLoading(false);
+      }
+    };
+    fetchPackages();
+  }, []);
+
+  useEffect(() => {
+    if (currentStep !== 6 || packageSettings) return;
+    const fetchPaymentSettings = async () => {
+      try {
+        setIsPaymentSettingsLoading(true);
+        const res = await getPaymentSettingsApi.getPaymentSettings();
+        setPackageSettings(res?.data?.data || null);
+      } catch (error) {
+        console.error("Failed to fetch payment settings:", error);
+      } finally {
+        setIsPaymentSettingsLoading(false);
+      }
+    };
+    fetchPaymentSettings();
+  }, [currentStep, packageSettings]);
+
+  useEffect(() => {
+    if (currentStep !== 6 || !selectedPlan) return;
+    const fetchOrderSummary = async () => {
+      try {
+        setIsOrderSummaryLoading(true);
+        const res = await sellerOrderApi.calculateOrderTotal({
+          membership_plan: selectedPlan,
+          selected_services: buildSelectedServicesPayload(),
+        });
+        if (res?.data?.error === false) {
+          setOrderSummary(res.data.data);
+          if (typeof res.data.data?.total_amount === "number") {
+            setCartTotal(res.data.data.total_amount);
+          }
+        } else {
+          setOrderSummary(null);
+        }
+      } catch (error) {
+        console.error("Failed to calculate order total:", error);
+        setOrderSummary(null);
+      } finally {
+        setIsOrderSummaryLoading(false);
+      }
+    };
+    fetchOrderSummary();
+  }, [currentStep, selectedPlan, selectedServices]);
+
+  const handleCreatePaymentIntent = async () => {
+    try {
+      setIsCreatingPaymentIntent(true);
+      setPaymentInitError("");
+      const membershipPlan = orderSummary?.membership_plan || selectedPlan;
+      if (!membershipPlan) {
+        setPaymentInitError(
+          "Membership plan is missing. Please go back and select a plan."
+        );
+        return;
+      }
+      const rawPaymentMethod = packageSettings?.Stripe?.payment_method;
+      const paymentMethod = rawPaymentMethod
+        ? rawPaymentMethod.toLowerCase() === "stripe"
+          ? "Stripe"
+          : rawPaymentMethod
+        : "Stripe";
+      const res = await sellerOrderApi.createPaymentIntent({
+        membership_plan: membershipPlan,
+        selected_services: buildSelectedServicesPayload(),
+        payment_method: paymentMethod,
+      });
+      console.log("Create payment intent response:", res?.data);
+      if (res?.data?.error === false) {
+        const paymentIntentData = res.data.data?.payment_intent;
+        const gatewayResponse =
+          paymentIntentData?.payment_gateway_response ||
+          paymentIntentData?.paymentGatewayResponse ||
+          res.data.data?.payment_gateway_response;
+        const secret =
+          gatewayResponse?.client_secret ||
+          paymentIntentData?.client_secret ||
+          res.data.data?.client_secret;
+        const transactionId =
+          paymentIntentData?.payment_transaction_id ||
+          paymentIntentData?.transaction_id ||
+          res.data.data?.payment_transaction_id ||
+          res.data.data?.transaction_id;
+        if (res.data.data?.order_summary) {
+          setOrderSummary(res.data.data.order_summary);
+        }
+        if (!secret) {
+          setPaymentInitError(
+            "Payment intent created, but client secret is missing."
+          );
+          return;
+        }
+        setClientSecret(secret);
+        setPaymentTransactionId(transactionId || null);
+        setShowPaymentForm(true);
+      } else {
+        const fallback =
+          res?.data ? JSON.stringify(res.data) : "Failed to initialize payment.";
+        setPaymentInitError(
+          formatValidationError(res?.data) || fallback
+        );
+      }
+    } catch (error) {
+      console.error("Payment intent error:", error);
+      const fallback =
+        error?.response?.data
+          ? JSON.stringify(error.response.data)
+          : "Failed to initialize payment.";
+      setPaymentInitError(
+        formatValidationError(error?.response?.data) || fallback
+      );
+    } finally {
+      setIsCreatingPaymentIntent(false);
+    }
+  };
+
+  const handlePaymentSuccess = (paymentIntent) => {
+    const transactionId =
+      paymentIntent?.metadata?.payment_transaction_id ||
+      paymentIntent?.metadata?.transaction_id ||
+      paymentTransactionId;
+    if (!transactionId) {
+      toast.error(
+        "Missing payment transaction ID. Please retry payment creation."
+      );
+      return;
+    }
+    handleSubmit({
+      paymentIntentId: paymentIntent?.id,
+      paymentTransactionId: transactionId,
+    });
+  };
+
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
+    if (!accountState.name.trim()) {
+      toast.error("Please enter your name");
+      return;
+    }
+    if (!accountState.email.trim()) {
+      toast.error("Please enter your email");
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(accountState.email)) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+    if (!accountState.password) {
+      toast.error("Please enter a password");
+      return;
+    }
+    if (accountState.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    if (accountState.password !== accountState.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    const persistAuthData = (authData) => {
+      if (authData?.token) {
+        localStorage.setItem("token", authData.token);
+      }
+      loadUpdateData(authData);
+    };
+
+    try {
+      setAccountState((prev) => ({ ...prev, isCreating: true }));
+      const response = await authApi.register({
+        name: accountState.name,
+        email: accountState.email,
+        password: accountState.password,
+      });
+      const data = response?.data;
+      if (data?.error === false || data?.error === "false") {
+        if (data?.token) {
+          persistAuthData(data);
+          toast.success(data.message || "Account created");
+          setAccountState((prev) => ({ ...prev, isCreated: true }));
+          return;
+        }
+
+        // Fallback: login to obtain token for payment-required APIs.
+        const loginResponse = await authApi.login({
+          email: accountState.email,
+          password: accountState.password,
+        });
+        const loginData = loginResponse?.data;
+        if (loginData?.error === false || loginData?.error === "false") {
+          persistAuthData(loginData);
+          toast.success(loginData.message || "Account created");
+          setAccountState((prev) => ({ ...prev, isCreated: true }));
+        } else {
+          toast.error(
+            loginData?.message ||
+              "Account created, but login failed. Please log in to continue."
+          );
+        }
+      } else {
+        toast.error(data?.message || "Failed to create account");
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to create account");
+    } finally {
+      setAccountState((prev) => ({ ...prev, isCreating: false }));
+    }
+  };
+
+  const handleGoogleSignup = async (credentialResponse) => {
+    try {
+      setAccountState((prev) => ({ ...prev, isCreating: true }));
+      const response = await authApi.googleLogin({
+        token: credentialResponse.credential,
+      });
+      const data = response?.data;
+      if (data?.error === false || data?.error === "false") {
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+        }
+        loadUpdateData(data);
+        toast.success(data.message || "Account created");
+        setAccountState((prev) => ({ ...prev, isCreated: true }));
+      } else {
+        toast.error(data?.message || "Google login failed");
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Google login failed");
+    } finally {
+      setAccountState((prev) => ({ ...prev, isCreating: false }));
+    }
+  };
+
+  return (
+    <div className="container max-w-4xl mx-auto py-10">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Seller Signup</h1>
+        <p className="text-muted-foreground">List your patent and connect with buyers</p>
+      </div>
+
+      {/* Progress Steps */}
+      <div className="flex items-center justify-between mb-8">
+        {[1, 2, 3, 4, 5, 6].map((step) => (
+          <div key={step} className="flex items-center flex-1">
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                currentStep >= step
+                  ? "bg-primary text-white"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {currentStep > step ? <CheckCircle2 size={20} /> : step}
+            </div>
+            {step < 6 && (
+              <div
+                className={`flex-1 h-1 mx-2 ${
+                  currentStep > step ? "bg-primary" : "bg-muted"
+                }`}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <Card className="shadow-sm border-muted/60">
+        <CardHeader>
+          <CardTitle>
+            {currentStep === 1 && "Do you already have a patent?"}
+            {currentStep === 2 && "Patent Information"}
+            {currentStep === 3 && "Upload Images"}
+            {currentStep === 4 && "Perfect, now choose a membership plan that will place your idea into the marketplace"}
+            {currentStep === 5 && "Additional Services"}
+            {currentStep === 6 && "Review & Complete"}
+          </CardTitle>
+          <CardDescription>
+            Step {currentStep} of 6
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Step 1: Patent Status */}
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              {!isLoggedIn && !accountState.isCreated && (
+                <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
+                  <div>
+                    <h3 className="text-lg font-semibold">Create your account</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Sign up with email or Google to continue.
+                    </p>
+                  </div>
+                  <form className="space-y-4" onSubmit={handleCreateAccount}>
+                    <div>
+                      <Label>Full Name</Label>
+                      <Input
+                        value={accountState.name}
+                        onChange={(e) =>
+                          setAccountState((prev) => ({
+                            ...prev,
+                            name: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input
+                        type="email"
+                        value={accountState.email}
+                        onChange={(e) =>
+                          setAccountState((prev) => ({
+                            ...prev,
+                            email: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Password</Label>
+                        <Input
+                          type="password"
+                          value={accountState.password}
+                          onChange={(e) =>
+                            setAccountState((prev) => ({
+                              ...prev,
+                              password: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label>Confirm Password</Label>
+                        <Input
+                          type="password"
+                          value={accountState.confirmPassword}
+                          onChange={(e) =>
+                            setAccountState((prev) => ({
+                              ...prev,
+                              confirmPassword: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                    </div>
+                    <Button disabled={accountState.isCreating} type="submit">
+                      {accountState.isCreating ? (
+                        <Loader2 className="mr-2 animate-spin" size={16} />
+                      ) : null}
+                      Create Account
+                    </Button>
+                  </form>
+                  <div className="flex items-center gap-3">
+                    <div className="h-px flex-1 bg-muted-foreground/20" />
+                    <span className="text-xs text-muted-foreground">OR</span>
+                    <div className="h-px flex-1 bg-muted-foreground/20" />
+                  </div>
+                  <div className="flex justify-start">
+                    <GoogleLogin
+                      onSuccess={handleGoogleSignup}
+                      onError={() => toast.error("Google login failed")}
+                    />
+                  </div>
+                  <p className="text-sm">
+                    Already have an account?{" "}
+                    <CustomLink href="/seller-login" className="text-primary underline">
+                      Log in
+                    </CustomLink>
+                  </p>
+                </div>
+              )}
+              {(isLoggedIn || accountState.isCreated) && (
+                <div className="rounded-lg border bg-muted/20 p-4 text-sm">
+                  Signed in as{" "}
+                  <span className="font-medium">
+                    {userData?.name || accountState.name || "your account"}
+                  </span>
+                </div>
+              )}
+              {(isLoggedIn || accountState.isCreated) && (
+                <>
+                  <div className="flex gap-4">
+                    <Button
+                      variant={hasPatent === true ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => setHasPatent(true)}
+                    >
+                      Yes, I have a patent
+                    </Button>
+                    <Button
+                      variant={hasPatent === false ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => setHasPatent(false)}
+                    >
+                      No, enter manually
+                    </Button>
+                  </div>
+                  {hasPatent === true && (
+                    <div className="space-y-2">
+                      <Label htmlFor="patentNumber">USPTO Patent Number</Label>
+                      <Input
+                        id="patentNumber"
+                        placeholder="e.g., US12345678"
+                        value={patentNumber}
+                        onChange={(e) => setPatentNumber(e.target.value)}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Patent Data (Manual Entry or Review Auto-populated) */}
+          {currentStep === 2 && (
+            <div className="space-y-4">
+              {patentData ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-green-800 mb-2">
+                    ✓ Patent data found and auto-populated. You can edit if needed.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-blue-800">
+                    Please enter your patent information manually.
+                  </p>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Patent Title</Label>
+                  <Input
+                    value={patentData?.title || manualPatentData.title}
+                    onChange={(e) => {
+                      if (patentData) {
+                        setPatentData({ ...patentData, title: e.target.value });
+                      } else {
+                        setManualPatentData({ ...manualPatentData, title: e.target.value });
+                      }
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label>Inventor Name</Label>
+                  <Input
+                    value={patentData?.inventor || manualPatentData.inventor}
+                    onChange={(e) => {
+                      if (patentData) {
+                        setPatentData({ ...patentData, inventor: e.target.value });
+                      } else {
+                        setManualPatentData({ ...manualPatentData, inventor: e.target.value });
+                      }
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label>Assignee</Label>
+                  <Input
+                    value={patentData?.assignee || manualPatentData.assignee}
+                    onChange={(e) => {
+                      if (patentData) {
+                        setPatentData({ ...patentData, assignee: e.target.value });
+                      } else {
+                        setManualPatentData({ ...manualPatentData, assignee: e.target.value });
+                      }
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label>Filing Date</Label>
+                  <Input
+                    type="date"
+                    value={patentData?.filing_date || manualPatentData.filing_date}
+                    onChange={(e) => {
+                      if (patentData) {
+                        setPatentData({ ...patentData, filing_date: e.target.value });
+                      } else {
+                        setManualPatentData({ ...manualPatentData, filing_date: e.target.value });
+                      }
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label>Issue Date</Label>
+                  <Input
+                    type="date"
+                    value={patentData?.issue_date || manualPatentData.issue_date}
+                    onChange={(e) => {
+                      if (patentData) {
+                        setPatentData({ ...patentData, issue_date: e.target.value });
+                      } else {
+                        setManualPatentData({ ...manualPatentData, issue_date: e.target.value });
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Abstract</Label>
+                <textarea
+                  className="w-full min-h-[100px] p-2 border rounded-md"
+                  value={patentData?.abstract || manualPatentData.abstract}
+                  onChange={(e) => {
+                    if (patentData) {
+                      setPatentData({ ...patentData, abstract: e.target.value });
+                    } else {
+                      setManualPatentData({ ...manualPatentData, abstract: e.target.value });
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <Label>Claims</Label>
+                <textarea
+                  className="w-full min-h-[100px] p-2 border rounded-md"
+                  value={patentData?.claims || manualPatentData.claims}
+                  onChange={(e) => {
+                    if (patentData) {
+                      setPatentData({ ...patentData, claims: e.target.value });
+                    } else {
+                      setManualPatentData({ ...manualPatentData, claims: e.target.value });
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <textarea
+                  className="w-full min-h-[100px] p-2 border rounded-md"
+                  value={patentData?.description || manualPatentData.description}
+                  onChange={(e) => {
+                    if (patentData) {
+                      setPatentData({ ...patentData, description: e.target.value });
+                    } else {
+                      setManualPatentData({
+                        ...manualPatentData,
+                        description: e.target.value,
+                      });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Image Upload */}
+          {currentStep === 3 && (
+            <div className="space-y-6">
+              <div>
+                <Label>Patent Images (Required)</Label>
+                <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                  <Upload className="mx-auto mb-4 text-muted-foreground" size={48} />
+                  <p className="mb-2">Upload patent images</p>
+                  <Input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e.target.files, "patent")}
+                    className="max-w-xs mx-auto"
+                  />
+                </div>
+                {patentImages.length > 0 && (
+                  <div className="mt-4 grid grid-cols-4 gap-2">
+                    {patentImages.map((img, idx) => (
+                      <div key={idx} className="relative">
+                        <img
+                          src={URL.createObjectURL(img)}
+                          alt={`Patent ${idx + 1}`}
+                          className="w-full h-24 object-cover rounded"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label>Additional Images (Optional)</Label>
+                <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                  <Upload className="mx-auto mb-4 text-muted-foreground" size={48} />
+                  <p className="mb-2">Upload additional images</p>
+                  <Input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e.target.files, "additional")}
+                    className="max-w-xs mx-auto"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Membership Plans */}
+          {currentStep === 4 && (
+            <div className="space-y-4">
+              {isPackagesLoading && (
+                <p className="text-sm text-muted-foreground">
+                  Loading membership options...
+                </p>
+              )}
+              <Card
+                className={`cursor-pointer transition-all ${
+                  selectedPlan === "monthly" ? "border-primary border-2" : ""
+                }`}
+                onClick={() => handleSelectPlan("monthly")}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Monthly Plan
+                    {selectedPlan === "monthly" && <CheckCircle2 className="text-primary" />}
+                  </CardTitle>
+                  <CardDescription>$29/month</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li>✓ 15-day free trial</li>
+                    <li>✓ Cancel anytime</li>
+                    <li>✓ List your patent</li>
+                    <li>✓ Access to marketplace</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card
+                className={`cursor-pointer transition-all ${
+                  selectedPlan === "yearly" ? "border-primary border-2" : ""
+                }`}
+                onClick={() => handleSelectPlan("yearly")}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Yearly Plan <span className="text-sm text-green-600">15% OFF</span>
+                    {selectedPlan === "yearly" && <CheckCircle2 className="text-primary" />}
+                  </CardTitle>
+                  <CardDescription>$199/year (Save $149)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li>✓ 15-day free trial</li>
+                    <li>✓ Best value - 15% discount</li>
+                    <li>✓ Recommended for serious sellers</li>
+                    <li>✓ Meaningful partnerships or sales take time</li>
+                    <li>✓ Full marketplace access</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              {selectedPackage?.final_price > 0 && (
+                <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                  Payment is required to activate this membership plan.
+                </div>
+              )}
+              {selectedPlan &&
+                !selectedPackage &&
+                !isPackagesLoading &&
+                listingPackages?.length > 0 && (
+                <div className="rounded-lg border border-dashed p-4 text-sm text-destructive">
+                  No matching package found for this plan. Please check your
+                  packages in the backend.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 5: Additional Services */}
+          {currentStep === 5 && (
+            <div className="space-y-4">
+              <Card
+                className={`cursor-pointer transition-all ${
+                  selectedServices.drawing2D3D ? "border-primary border-2" : ""
+                }`}
+                onClick={() =>
+                  setSelectedServices({ ...selectedServices, drawing2D3D: !selectedServices.drawing2D3D })
+                }
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    2D/3D Drawing of Your Idea
+                    {selectedServices.drawing2D3D && <CheckCircle2 className="text-primary" />}
+                  </CardTitle>
+                  <CardDescription>$20</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Professional visualization of your patent idea
+                  </p>
+                  <Button variant="link" size="sm">
+                    View Sample
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Patent Evaluation by Expert</CardTitle>
+                  <CardDescription>Starting at $250</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div
+                    className={`p-3 border rounded-lg cursor-pointer ${
+                      selectedServices.evaluation === "good" ? "border-primary" : ""
+                    }`}
+                    onClick={() =>
+                      setSelectedServices({ ...selectedServices, evaluation: "good" })
+                    }
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Good - Basic Evaluation</p>
+                        <p className="text-sm text-muted-foreground">$250 • 2 pages</p>
+                      </div>
+                      {selectedServices.evaluation === "good" && (
+                        <CheckCircle2 className="text-primary" />
+                      )}
+                    </div>
+                  </div>
+                  <div
+                    className={`p-3 border rounded-lg cursor-pointer ${
+                      selectedServices.evaluation === "better" ? "border-primary" : ""
+                    }`}
+                    onClick={() =>
+                      setSelectedServices({ ...selectedServices, evaluation: "better" })
+                    }
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Better - Comprehensive</p>
+                        <p className="text-sm text-muted-foreground">$500 • 6-20 pages</p>
+                      </div>
+                      {selectedServices.evaluation === "better" && (
+                        <CheckCircle2 className="text-primary" />
+                      )}
+                    </div>
+                  </div>
+                  <div
+                    className={`p-3 border rounded-lg cursor-pointer ${
+                      selectedServices.evaluation === "best" ? "border-primary" : ""
+                    }`}
+                    onClick={() =>
+                      setSelectedServices({ ...selectedServices, evaluation: "best" })
+                    }
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Best - Detailed Report</p>
+                        <p className="text-sm text-muted-foreground">$1,999 • 15-30 pages</p>
+                      </div>
+                      {selectedServices.evaluation === "best" && (
+                        <CheckCircle2 className="text-primary" />
+                      )}
+                    </div>
+                  </div>
+                  <Button variant="link" size="sm">
+                    View Sample
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`cursor-pointer transition-all ${
+                  selectedServices.pitchDeck ? "border-primary border-2" : ""
+                }`}
+                onClick={() =>
+                  setSelectedServices({ ...selectedServices, pitchDeck: !selectedServices.pitchDeck })
+                }
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Professional Pitch Deck
+                    {selectedServices.pitchDeck && <CheckCircle2 className="text-primary" />}
+                  </CardTitle>
+                  <CardDescription>Price TBD</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Perfect for larger investors and partnerships
+                  </p>
+                  <Button variant="link" size="sm">
+                    View Sample
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`cursor-pointer transition-all ${
+                  selectedServices.attorneySupport ? "border-primary border-2" : ""
+                }`}
+                onClick={() =>
+                  setSelectedServices({
+                    ...selectedServices,
+                    attorneySupport: !selectedServices.attorneySupport,
+                  })
+                }
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Attorney Support
+                    {selectedServices.attorneySupport && (
+                      <CheckCircle2 className="text-primary" />
+                    )}
+                  </CardTitle>
+                  <CardDescription>Price TBD</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Help with paperwork for the sale or investment of your patent
+                  </p>
+                  <Button variant="link" size="sm">
+                    View Sample
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Step 6: Review & Complete */}
+          {currentStep === 6 && (
+            <div className="space-y-4">
+              <div className="bg-muted p-4 rounded-lg">
+                <h3 className="font-semibold mb-4">Order Summary</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Membership Plan:</span>
+                    <span>
+                      {orderSummary?.membership_price !== undefined
+                        ? `$${orderSummary.membership_price}/${
+                            orderSummary?.membership_plan === "yearly"
+                              ? "year"
+                              : "month"
+                          }`
+                        : selectedPlan === "monthly"
+                        ? "$29/month"
+                        : "$199/year"}
+                    </span>
+                  </div>
+                  {isOrderSummaryLoading && (
+                    <div className="text-sm text-muted-foreground">
+                      Calculating order total...
+                    </div>
+                  )}
+                  {orderSummary?.services?.length > 0 ? (
+                    orderSummary.services.map((service, index) => (
+                      <div className="flex justify-between" key={index}>
+                        <span>{service.name}:</span>
+                        <span>${service.price}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      {selectedServices.drawing2D3D && (
+                        <div className="flex justify-between">
+                          <span>2D/3D Drawing:</span>
+                          <span>$20</span>
+                        </div>
+                      )}
+                      {selectedServices.evaluation && (
+                        <div className="flex justify-between">
+                          <span>Evaluation ({selectedServices.evaluation}):</span>
+                          <span>
+                            $
+                            {selectedServices.evaluation === "good"
+                              ? "250"
+                              : selectedServices.evaluation === "better"
+                              ? "500"
+                              : "1,999"}
+                          </span>
+                        </div>
+                      )}
+                      {selectedServices.pitchDeck && (
+                        <div className="flex justify-between">
+                          <span>Pitch Deck:</span>
+                          <span>TBD</span>
+                        </div>
+                      )}
+                      {selectedServices.attorneySupport && (
+                        <div className="flex justify-between">
+                          <span>Attorney Support:</span>
+                          <span>TBD</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
+                    <span>Total:</span>
+                    <span>
+                      {orderSummary?.total_amount !== undefined
+                        ? `$${orderSummary.total_amount}`
+                        : `$${cartTotal}`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {paymentInitError && (
+                <div className="rounded-md bg-red-50 text-red-700 text-sm px-3 py-2">
+                  {paymentInitError}
+                </div>
+              )}
+              {isCreatingPaymentIntent && (
+                <div className="rounded-md bg-muted text-sm px-3 py-2">
+                  Initializing payment...
+                </div>
+              )}
+              {paymentInitError && (
+                <Button variant="outline" onClick={handleCreatePaymentIntent}>
+                  Retry Payment
+                </Button>
+              )}
+              {showPaymentForm && clientSecret && (
+                <div className="rounded-lg border border-muted/60 p-4 space-y-3">
+                  <div className="rounded-md bg-yellow-50 text-yellow-900 text-sm px-3 py-2">
+                    Payment pending. Please complete Stripe payment to finish signup.
+                  </div>
+                  <StripePayment
+                    selectedPackage={selectedPackage}
+                    packageSettings={packageSettings}
+                    PaymentModalClose={() => setShowPaymentForm(false)}
+                    setShowStripePayment={() => {}}
+                    updateActivePackage={() => {}}
+                    clientSecretOverride={clientSecret}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    amountDue={
+                      orderSummary?.total_amount !== undefined
+                        ? orderSummary.total_amount
+                        : cartTotal
+                    }
+                    billingDetails={{
+                      name: userData?.name || accountState?.name,
+                      email: userData?.email || accountState?.email,
+                    }}
+                  />
+                </div>
+              )}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-sm">
+                  <strong>What happens next?</strong>
+                </p>
+                <ul className="text-sm mt-2 space-y-1 list-disc list-inside">
+                  <li>An account manager will be assigned to help you</li>
+                  <li>A sales person will call to confirm everything</li>
+                  <li>You'll receive a welcome email with next steps</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentStep(currentStep - 1)}
+              disabled={currentStep === 1 || loading}
+            >
+              <ArrowLeft className="mr-2" size={16} />
+              Back
+            </Button>
+            <Button
+              onClick={handleNext}
+              disabled={
+                loading ||
+                isCreatingPaymentIntent ||
+                (currentStep === 4 && !selectedPackage)
+              }
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 animate-spin" size={16} />
+                  Processing...
+                </>
+              ) : currentStep === 6 ? (
+                <>
+                  {isCreatingPaymentIntent ? "Preparing Payment..." : "Complete Signup"}
+                  <ArrowRight className="ml-2" size={16} />
+                </>
+              ) : (
+                <>
+                  Next
+                  <ArrowRight className="ml-2" size={16} />
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default SellerSignupWizard;
+```
+
+## HOC/Checkauth.jsx
+
+```
+"use client";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import Loader from "@/components/Common/Loader";
+import { usePathname } from "next/navigation";
+import { useNavigate } from "@/components/Common/useNavigate";
+
+const Checkauth = (WrappedComponent) => {
+  const Wrapper = (props) => {
+    const pathname = usePathname();
+    const { navigate } = useNavigate();
+    const user = useSelector((state) => state.UserSignup.data);
+    const [isAuthorized, setIsAuthorized] = useState(false);
+    const [authChecked, setAuthChecked] = useState(false);
+
+    useEffect(() => {
+      // List of routes that require authentication
+      const privateRoutes = [
+        "/profile",
+        "/ad-listing",
+        "/notifications",
+        "/chat",
+        "/user-subscription",
+        "/my-ads",
+        "/favorites",
+        "/transactions",
+        "/reviews",
+        "/edit-listing",
+        "/user-verification",
+        "/job-applications",
+        "/seller-dashboard",
+      ];
+      const isPrivateRoute = privateRoutes.some(
+        (route) => pathname === route || pathname.startsWith(`${route}/`)
+      );
+
+      // If it's a private route and user is not authenticated
+      if (isPrivateRoute && !user) {
+        navigate("/");
+        return;
+      }
+
+      // If user is authenticated or it's not a private route
+      setIsAuthorized(true);
+      setAuthChecked(true);
+    }, [user, pathname]);
+
+    // Show loader until auth check completes
+    if (!authChecked) {
+      return <Loader />;
+    }
+
+    // Only render the component if user is authorized
+    return isAuthorized ? <WrappedComponent {...props} /> : null;
+  };
+
+  return Wrapper;
+};
+
+export default Checkauth;
+```
+
+## SELLER_DASHBOARD_SETUP.md
+
+```
+# Seller Dashboard (eBay-style) Setup
+
+This update adds a complete Seller Hub experience under `/seller-dashboard` with
+eBay-like navigation, layout, and workflows. The backend is already in Laravel,
+so the UI currently uses mock data and is ready to be wired to the Laravel APIs.
+
+## Run Locally
+
+1. Install dependencies:
+   - `npm install`
+2. Start the Next.js app:
+   - `npm run dev`
+3. Open `http://localhost:3000/seller-dashboard`
+
+## Laravel Backend Integration
+
+The new Seller Hub pages use demo data from `components/SellerHub/sellerHubData.js`.
+Replace the mock data with Laravel API calls in these components:
+
+- `components/SellerHub/pages/OverviewPage.jsx`
+- `components/SellerHub/pages/OrdersPage.jsx`
+- `components/SellerHub/pages/ListingsPage.jsx`
+- `components/SellerHub/pages/InventoryPage.jsx`
+- `components/SellerHub/pages/PerformancePage.jsx`
+- `components/SellerHub/pages/MarketingPage.jsx`
+- `components/SellerHub/pages/PaymentsPage.jsx`
+- `components/SellerHub/pages/MessagesPage.jsx`
+- `components/SellerHub/pages/ReturnsPage.jsx`
+- `components/SellerHub/pages/SettingsPage.jsx`
+
+Suggested flow:
+- Create Laravel endpoints for seller analytics, orders, listings, payouts,
+  messaging, and returns.
+- Add corresponding API wrappers in `utils/api.js`.
+- Swap the mock data in the Seller Hub pages with real API responses.
+
+## Notes
+
+- Charts are built with Recharts.
+- Sidebar + header layout lives in `components/SellerHub/SellerHubLayout.jsx`.
+- Routes are under `app/seller-dashboard/*`.
+```
+
+## package.json
+
+```
+{
+  "name": "mustangip_tailwind",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev-turbo": "next dev --turbo",
+    "dev": "next dev --turbopack -H localhost",
+    "build": "next build",
+    "start": "NODE_ENV=production NODE_PORT=3000 NODE_HOST=localhost node server.js",
+    "start:local": "NODE_ENV=production NODE_PORT=3000 NODE_HOST=localhost node server.js",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@radix-ui/react-accordion": "^1.2.11",
+    "@radix-ui/react-alert-dialog": "^1.1.14",
+    "@radix-ui/react-checkbox": "^1.3.2",
+    "@radix-ui/react-collapsible": "^1.1.11",
+    "@radix-ui/react-context-menu": "^2.2.16",
+    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-dropdown-menu": "^2.1.15",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-navigation-menu": "^1.2.13",
+    "@radix-ui/react-popover": "^1.1.14",
+    "@radix-ui/react-progress": "^1.1.7",
+    "@radix-ui/react-radio-group": "^1.3.7",
+    "@radix-ui/react-scroll-area": "^1.2.9",
+    "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-slider": "^1.3.5",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.5",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-toast": "^1.2.14",
+    "@radix-ui/react-tooltip": "^1.2.7",
+    "@react-google-maps/api": "^2.20.7",
+    "@react-oauth/google": "^0.13.4",
+    "@reduxjs/toolkit": "^2.8.2",
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^6.1.0",
+    "axios": "^1.10.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
+    "firebase": "^11.9.1",
+    "html-react-parser": "^5.2.5",
+    "leaflet": "^1.9.4",
+    "libphonenumber-js": "^1.12.9",
+    "lucide-react": "^0.468.0",
+    "next": "^15.3.4",
+    "next-themes": "^0.4.6",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-dropzone": "^14.3.8",
+    "react-icons": "^5.5.0",
+    "react-infinite-scroll-component": "^6.1.0",
+    "react-intersection-observer": "^9.16.0",
+    "react-leaflet": "^5.0.0",
+    "react-media-recorder": "^1.7.1",
+    "react-phone-input-2": "^2.15.1",
+    "react-phone-number-input": "^3.4.14",
+    "react-photo-view": "^1.2.7",
+    "react-player": "^2.16.0",
+    "react-razorpay": "^3.0.1",
+    "react-redux": "^9.2.0",
+    "react-share": "^5.2.2",
+    "recharts": "^2.15.4",
+    "redux-persist": "^6.0.0",
+    "sonner": "^1.7.4",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss-animate": "^1.0.7",
+    "use-debounce": "^10.0.5",
+    "usehooks-ts": "^3.1.1",
+    "vaul": "^1.1.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "15.3.1",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17"
+  }
+}
+```
+
+## package-lock.json
+
+```
 {
   "name": "mustangip_tailwind",
   "version": "0.1.0",
@@ -10139,3 +13749,5 @@
     }
   }
 }
+```
+

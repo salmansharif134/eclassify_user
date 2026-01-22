@@ -1,16 +1,54 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, CheckCircle2, Upload, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { patentLookupApi, sellerSignupApi } from "@/utils/api";
+import {
+  authApi,
+  getPackageApi,
+  getPaymentSettingsApi,
+  patentLookupApi,
+  sellerSignupApi,
+  sellerOrderApi,
+} from "@/utils/api";
+import { GoogleLogin } from "@react-oauth/google";
+import { useSelector } from "react-redux";
+import { getIsLoggedIn, loadUpdateData, userSignUpData } from "@/redux/reducer/authSlice";
+import CustomLink from "@/components/Common/CustomLink";
+import StripePayment from "@/components/PagesComponent/Subscription/StripePayment";
+import { useNavigate } from "@/components/Common/useNavigate";
 
 const SellerSignupWizard = ({ onComplete }) => {
+  const { navigate } = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const isLoggedIn = useSelector(getIsLoggedIn);
+  const userData = useSelector(userSignUpData);
+  const hasSellerAccount = Boolean(
+    userData?.seller_id ||
+      userData?.seller?.id ||
+      userData?.is_seller === 1 ||
+      userData?.is_seller === true
+  );
+
+  useEffect(() => {
+    if (hasSellerAccount) {
+      navigate("/seller-dashboard");
+    }
+  }, [hasSellerAccount, navigate]);
+
+  // Account creation
+  const [accountState, setAccountState] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    isCreating: false,
+    isCreated: false,
+  });
   
   // Step 1: Patent Status
   const [hasPatent, setHasPatent] = useState(null);
@@ -22,8 +60,8 @@ const SellerSignupWizard = ({ onComplete }) => {
     title: "",
     inventor: "",
     assignee: "",
-    filingDate: "",
-    issueDate: "",
+    filing_date: "",
+    issue_date: "",
     abstract: "",
     claims: "",
     description: "",
@@ -35,16 +73,29 @@ const SellerSignupWizard = ({ onComplete }) => {
   
   // Step 4: Membership Plan
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [listingPackages, setListingPackages] = useState([]);
+  const [packageSettings, setPackageSettings] = useState(null);
+  const [isPackagesLoading, setIsPackagesLoading] = useState(false);
+  const [isPaymentSettingsLoading, setIsPaymentSettingsLoading] = useState(false);
   
   // Step 5: Additional Services
   const [selectedServices, setSelectedServices] = useState({
     drawing2D3D: false,
     evaluation: null, // 'good', 'better', 'best'
     pitchDeck: false,
+    attorneySupport: false,
   });
   
   // Step 6: Cart Summary
   const [cartTotal, setCartTotal] = useState(0);
+  const [orderSummary, setOrderSummary] = useState(null);
+  const [clientSecret, setClientSecret] = useState("");
+  const [paymentTransactionId, setPaymentTransactionId] = useState(null);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [isOrderSummaryLoading, setIsOrderSummaryLoading] = useState(false);
+  const [isCreatingPaymentIntent, setIsCreatingPaymentIntent] = useState(false);
+  const [paymentInitError, setPaymentInitError] = useState("");
 
   const handlePatentLookup = async () => {
     if (!patentNumber.trim()) {
@@ -89,11 +140,37 @@ const SellerSignupWizard = ({ onComplete }) => {
     if (selectedServices.evaluation === "better") total += 500;
     if (selectedServices.evaluation === "best") total += 1999;
     if (selectedServices.pitchDeck) total += 0; // Price TBD
+    if (selectedServices.attorneySupport) total += 0; // Price TBD
     return total;
+  };
+
+  const buildSelectedServicesPayload = () => ({
+    drawing2D3D: Boolean(selectedServices.drawing2D3D),
+    pitchDeck: Boolean(selectedServices.pitchDeck),
+    attorneySupport: Boolean(selectedServices.attorneySupport),
+    evaluation: selectedServices.evaluation ?? null,
+  });
+
+  const formatValidationError = (data) => {
+    if (!data) return null;
+    const message = data?.message;
+    const errors = data?.errors || data?.data?.errors;
+    if (errors && typeof errors === "object") {
+      const firstError = Object.values(errors).flat()?.[0];
+      return firstError || message;
+    }
+    if (Array.isArray(errors)) {
+      return errors[0] || message;
+    }
+    return message;
   };
 
   const handleNext = () => {
     if (currentStep === 1) {
+      if (!isLoggedIn && !accountState.isCreated) {
+        toast.error("Please create an account to continue");
+        return;
+      }
       if (hasPatent === null) {
         toast.error("Please select if you have a patent");
         return;
@@ -108,7 +185,26 @@ const SellerSignupWizard = ({ onComplete }) => {
         setCurrentStep(2);
       }
     } else if (currentStep === 2) {
-      // Validate manual entry
+      if (!patentData) {
+        const requiredFields = [
+          "title",
+          "inventor",
+          "assignee",
+          "filing_date",
+          "issue_date",
+          "abstract",
+          "claims",
+          "description",
+        ];
+        const missingFields = requiredFields.filter((field) => {
+          const value = manualPatentData[field];
+          return !value || (typeof value === "string" && !value.trim());
+        });
+        if (missingFields.length > 0) {
+          toast.error("Please fill in all required patent fields");
+          return;
+        }
+      }
       setCurrentStep(3);
     } else if (currentStep === 3) {
       if (patentImages.length === 0) {
@@ -121,20 +217,44 @@ const SellerSignupWizard = ({ onComplete }) => {
         toast.error("Please select a membership plan");
         return;
       }
+      if (!selectedPackage) {
+        toast.error("Please wait while we load the membership plan.");
+        return;
+      }
       setCurrentStep(5);
     } else if (currentStep === 5) {
       setCartTotal(calculateTotal());
       setCurrentStep(6);
     } else if (currentStep === 6) {
-      // Submit all data
-      handleSubmit();
+      if (showPaymentForm || clientSecret) return;
+      if (!packageSettings) {
+        toast.error("Payment settings are unavailable right now.");
+        return;
+      }
+      handleCreatePaymentIntent();
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSelectPlan = (planKey) => {
+    const planPackage = planKey === "monthly" ? planPackages.monthly : planPackages.yearly;
+    setSelectedPlan(planKey);
+    setSelectedPackage(planPackage || null);
+  };
+
+  const handleSubmit = async ({
+    paymentIntentId,
+    paymentTransactionId: transactionId,
+  } = {}) => {
     setLoading(true);
     try {
       const formData = new FormData();
+      const userId = userData?.id || userData?.data?.id;
+      if (!userId) {
+        toast.error("User ID not found. Please log in again.");
+        setLoading(false);
+        return;
+      }
+      formData.append("user_id", userId);
       
       // Append patent data
       if (patentData) {
@@ -155,29 +275,320 @@ const SellerSignupWizard = ({ onComplete }) => {
       });
       
       // Append membership plan
-      formData.append("membership_plan", selectedPlan);
+      formData.append("membership_plan", orderSummary?.membership_plan || selectedPlan);
       
       // Append services
-      formData.append("selected_services", JSON.stringify(selectedServices));
+      formData.append(
+        "selected_services",
+        JSON.stringify(buildSelectedServicesPayload())
+      );
+
+      if (paymentIntentId) {
+        formData.append("payment_intent_id", paymentIntentId);
+      }
+      if (transactionId) {
+        formData.append("payment_transaction_id", String(transactionId));
+      }
       
       const response = await sellerSignupApi.submit(formData);
       
-      if (response.data.error === false) {
+      if (response.data.error === false || response.data.error === "false") {
         toast.success("Account created successfully! Redirecting to dashboard...");
         if (onComplete) onComplete();
       } else {
-        toast.error(response.data.message || "Failed to create account. Please try again.");
+        toast.error(
+          response.data.message ||
+            (response.data ? JSON.stringify(response.data) : null) ||
+            "Failed to create account. Please try again."
+        );
       }
     } catch (error) {
-      console.error("Signup error:", error);
-      toast.error("Failed to create account. Please try again.");
+      const serverMessage =
+        formatValidationError(error?.response?.data) ||
+        (error?.response?.data ? JSON.stringify(error.response.data) : null);
+      console.error("Signup error:", error?.response || error);
+      toast.error(serverMessage || "Failed to create account. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  const mapPlanToPackage = (planKey, packages) => {
+    if (!packages?.length) return null;
+    const targetPrice = planKey === "monthly" ? 29 : 199;
+    const exactMatch = packages.find(
+      (pkg) => Number(pkg?.final_price) === targetPrice
+    );
+    if (exactMatch) return exactMatch;
+    const sorted = [...packages].sort(
+      (a, b) => Number(a?.final_price || 0) - Number(b?.final_price || 0)
+    );
+    return planKey === "monthly" ? sorted[0] : sorted[sorted.length - 1];
+  };
+
+  const planPackages = useMemo(() => {
+    return {
+      monthly: mapPlanToPackage("monthly", listingPackages),
+      yearly: mapPlanToPackage("yearly", listingPackages),
+    };
+  }, [listingPackages]);
+
+  useEffect(() => {
+    if (!selectedPlan) return;
+    const nextPackage =
+      selectedPlan === "monthly" ? planPackages.monthly : planPackages.yearly;
+    if (nextPackage && nextPackage !== selectedPackage) {
+      setSelectedPackage(nextPackage);
+    }
+  }, [selectedPlan, planPackages, selectedPackage]);
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        setIsPackagesLoading(true);
+        const res = await getPackageApi.getPackage({ type: "item_listing" });
+        setListingPackages(res?.data?.data || []);
+      } catch (error) {
+        console.error("Failed to fetch packages:", error);
+      } finally {
+        setIsPackagesLoading(false);
+      }
+    };
+    fetchPackages();
+  }, []);
+
+  useEffect(() => {
+    if (currentStep !== 6 || packageSettings) return;
+    const fetchPaymentSettings = async () => {
+      try {
+        setIsPaymentSettingsLoading(true);
+        const res = await getPaymentSettingsApi.getPaymentSettings();
+        setPackageSettings(res?.data?.data || null);
+      } catch (error) {
+        console.error("Failed to fetch payment settings:", error);
+      } finally {
+        setIsPaymentSettingsLoading(false);
+      }
+    };
+    fetchPaymentSettings();
+  }, [currentStep, packageSettings]);
+
+  useEffect(() => {
+    if (currentStep !== 6 || !selectedPlan) return;
+    const fetchOrderSummary = async () => {
+      try {
+        setIsOrderSummaryLoading(true);
+        const res = await sellerOrderApi.calculateOrderTotal({
+          membership_plan: selectedPlan,
+          selected_services: buildSelectedServicesPayload(),
+        });
+        if (res?.data?.error === false) {
+          setOrderSummary(res.data.data);
+          if (typeof res.data.data?.total_amount === "number") {
+            setCartTotal(res.data.data.total_amount);
+          }
+        } else {
+          setOrderSummary(null);
+        }
+      } catch (error) {
+        console.error("Failed to calculate order total:", error);
+        setOrderSummary(null);
+      } finally {
+        setIsOrderSummaryLoading(false);
+      }
+    };
+    fetchOrderSummary();
+  }, [currentStep, selectedPlan, selectedServices]);
+
+  const handleCreatePaymentIntent = async () => {
+    try {
+      setIsCreatingPaymentIntent(true);
+      setPaymentInitError("");
+      const membershipPlan = orderSummary?.membership_plan || selectedPlan;
+      if (!membershipPlan) {
+        setPaymentInitError(
+          "Membership plan is missing. Please go back and select a plan."
+        );
+        return;
+      }
+      const rawPaymentMethod = packageSettings?.Stripe?.payment_method;
+      const paymentMethod = rawPaymentMethod
+        ? rawPaymentMethod.toLowerCase() === "stripe"
+          ? "Stripe"
+          : rawPaymentMethod
+        : "Stripe";
+      const res = await sellerOrderApi.createPaymentIntent({
+        membership_plan: membershipPlan,
+        selected_services: buildSelectedServicesPayload(),
+        payment_method: paymentMethod,
+      });
+      console.log("Create payment intent response:", res?.data);
+      if (res?.data?.error === false) {
+        const paymentIntentData = res.data.data?.payment_intent;
+        const gatewayResponse =
+          paymentIntentData?.payment_gateway_response ||
+          paymentIntentData?.paymentGatewayResponse ||
+          res.data.data?.payment_gateway_response;
+        const secret =
+          gatewayResponse?.client_secret ||
+          paymentIntentData?.client_secret ||
+          res.data.data?.client_secret;
+        const transactionId =
+          paymentIntentData?.payment_transaction_id ||
+          paymentIntentData?.transaction_id ||
+          res.data.data?.payment_transaction_id ||
+          res.data.data?.transaction_id;
+        if (res.data.data?.order_summary) {
+          setOrderSummary(res.data.data.order_summary);
+        }
+        if (!secret) {
+          setPaymentInitError(
+            "Payment intent created, but client secret is missing."
+          );
+          return;
+        }
+        setClientSecret(secret);
+        setPaymentTransactionId(transactionId || null);
+        setShowPaymentForm(true);
+      } else {
+        const fallback =
+          res?.data ? JSON.stringify(res.data) : "Failed to initialize payment.";
+        setPaymentInitError(
+          formatValidationError(res?.data) || fallback
+        );
+      }
+    } catch (error) {
+      console.error("Payment intent error:", error);
+      const fallback =
+        error?.response?.data
+          ? JSON.stringify(error.response.data)
+          : "Failed to initialize payment.";
+      setPaymentInitError(
+        formatValidationError(error?.response?.data) || fallback
+      );
+    } finally {
+      setIsCreatingPaymentIntent(false);
+    }
+  };
+
+  const handlePaymentSuccess = (paymentIntent) => {
+    const transactionId =
+      paymentIntent?.metadata?.payment_transaction_id ||
+      paymentIntent?.metadata?.transaction_id ||
+      paymentTransactionId;
+    if (!transactionId) {
+      toast.error(
+        "Missing payment transaction ID. Please retry payment creation."
+      );
+      return;
+    }
+    handleSubmit({
+      paymentIntentId: paymentIntent?.id,
+      paymentTransactionId: transactionId,
+    });
+  };
+
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
+    if (!accountState.name.trim()) {
+      toast.error("Please enter your name");
+      return;
+    }
+    if (!accountState.email.trim()) {
+      toast.error("Please enter your email");
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(accountState.email)) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+    if (!accountState.password) {
+      toast.error("Please enter a password");
+      return;
+    }
+    if (accountState.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    if (accountState.password !== accountState.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    const persistAuthData = (authData) => {
+      if (authData?.token) {
+        localStorage.setItem("token", authData.token);
+      }
+      loadUpdateData(authData);
+    };
+
+    try {
+      setAccountState((prev) => ({ ...prev, isCreating: true }));
+      const response = await authApi.register({
+        name: accountState.name,
+        email: accountState.email,
+        password: accountState.password,
+      });
+      const data = response?.data;
+      if (data?.error === false || data?.error === "false") {
+        if (data?.token) {
+          persistAuthData(data);
+          toast.success(data.message || "Account created");
+          setAccountState((prev) => ({ ...prev, isCreated: true }));
+          return;
+        }
+
+        // Fallback: login to obtain token for payment-required APIs.
+        const loginResponse = await authApi.login({
+          email: accountState.email,
+          password: accountState.password,
+        });
+        const loginData = loginResponse?.data;
+        if (loginData?.error === false || loginData?.error === "false") {
+          persistAuthData(loginData);
+          toast.success(loginData.message || "Account created");
+          setAccountState((prev) => ({ ...prev, isCreated: true }));
+        } else {
+          toast.error(
+            loginData?.message ||
+              "Account created, but login failed. Please log in to continue."
+          );
+        }
+      } else {
+        toast.error(data?.message || "Failed to create account");
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to create account");
+    } finally {
+      setAccountState((prev) => ({ ...prev, isCreating: false }));
+    }
+  };
+
+  const handleGoogleSignup = async (credentialResponse) => {
+    try {
+      setAccountState((prev) => ({ ...prev, isCreating: true }));
+      const response = await authApi.googleLogin({
+        token: credentialResponse.credential,
+      });
+      const data = response?.data;
+      if (data?.error === false || data?.error === "false") {
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+        }
+        loadUpdateData(data);
+        toast.success(data.message || "Account created");
+        setAccountState((prev) => ({ ...prev, isCreated: true }));
+      } else {
+        toast.error(data?.message || "Google login failed");
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Google login failed");
+    } finally {
+      setAccountState((prev) => ({ ...prev, isCreating: false }));
+    }
+  };
+
   return (
-    <div className="container max-w-4xl mx-auto py-8">
+    <div className="container max-w-4xl mx-auto py-10">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Seller Signup</h1>
         <p className="text-muted-foreground">List your patent and connect with buyers</p>
@@ -207,13 +618,13 @@ const SellerSignupWizard = ({ onComplete }) => {
         ))}
       </div>
 
-      <Card>
+      <Card className="shadow-sm border-muted/60">
         <CardHeader>
           <CardTitle>
             {currentStep === 1 && "Do you already have a patent?"}
             {currentStep === 2 && "Patent Information"}
             {currentStep === 3 && "Upload Images"}
-            {currentStep === 4 && "Choose Membership Plan"}
+            {currentStep === 4 && "Perfect, now choose a membership plan that will place your idea into the marketplace"}
             {currentStep === 5 && "Additional Services"}
             {currentStep === 6 && "Review & Complete"}
           </CardTitle>
@@ -224,36 +635,133 @@ const SellerSignupWizard = ({ onComplete }) => {
         <CardContent className="space-y-6">
           {/* Step 1: Patent Status */}
           {currentStep === 1 && (
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <Button
-                  variant={hasPatent === true ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setHasPatent(true)}
-                >
-                  Yes, I have a patent
-                </Button>
-                <Button
-                  variant={hasPatent === false ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setHasPatent(false)}
-                >
-                  No, enter manually
-                </Button>
-              </div>
-              {hasPatent === true && (
-                <div className="space-y-2">
-                  <Label htmlFor="patentNumber">USPTO Patent Number</Label>
-                  <Input
-                    id="patentNumber"
-                    placeholder="e.g., US12345678"
-                    value={patentNumber}
-                    onChange={(e) => setPatentNumber(e.target.value)}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    We'll automatically pull in patent data from our database
+            <div className="space-y-6">
+              {!isLoggedIn && !accountState.isCreated && (
+                <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
+                  <div>
+                    <h3 className="text-lg font-semibold">Create your account</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Sign up with email or Google to continue.
+                    </p>
+                  </div>
+                  <form className="space-y-4" onSubmit={handleCreateAccount}>
+                    <div>
+                      <Label>Full Name</Label>
+                      <Input
+                        value={accountState.name}
+                        onChange={(e) =>
+                          setAccountState((prev) => ({
+                            ...prev,
+                            name: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input
+                        type="email"
+                        value={accountState.email}
+                        onChange={(e) =>
+                          setAccountState((prev) => ({
+                            ...prev,
+                            email: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Password</Label>
+                        <Input
+                          type="password"
+                          value={accountState.password}
+                          onChange={(e) =>
+                            setAccountState((prev) => ({
+                              ...prev,
+                              password: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label>Confirm Password</Label>
+                        <Input
+                          type="password"
+                          value={accountState.confirmPassword}
+                          onChange={(e) =>
+                            setAccountState((prev) => ({
+                              ...prev,
+                              confirmPassword: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                    </div>
+                    <Button disabled={accountState.isCreating} type="submit">
+                      {accountState.isCreating ? (
+                        <Loader2 className="mr-2 animate-spin" size={16} />
+                      ) : null}
+                      Create Account
+                    </Button>
+                  </form>
+                  <div className="flex items-center gap-3">
+                    <div className="h-px flex-1 bg-muted-foreground/20" />
+                    <span className="text-xs text-muted-foreground">OR</span>
+                    <div className="h-px flex-1 bg-muted-foreground/20" />
+                  </div>
+                  <div className="flex justify-start">
+                    <GoogleLogin
+                      onSuccess={handleGoogleSignup}
+                      onError={() => toast.error("Google login failed")}
+                    />
+                  </div>
+                  <p className="text-sm">
+                    Already have an account?{" "}
+                    <CustomLink href="/seller-login" className="text-primary underline">
+                      Log in
+                    </CustomLink>
                   </p>
                 </div>
+              )}
+              {(isLoggedIn || accountState.isCreated) && (
+                <div className="rounded-lg border bg-muted/20 p-4 text-sm">
+                  Signed in as{" "}
+                  <span className="font-medium">
+                    {userData?.name || accountState.name || "your account"}
+                  </span>
+                </div>
+              )}
+              {(isLoggedIn || accountState.isCreated) && (
+                <>
+                  <div className="flex gap-4">
+                    <Button
+                      variant={hasPatent === true ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => setHasPatent(true)}
+                    >
+                      Yes, I have a patent
+                    </Button>
+                    <Button
+                      variant={hasPatent === false ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => setHasPatent(false)}
+                    >
+                      No, enter manually
+                    </Button>
+                  </div>
+                  {hasPatent === true && (
+                    <div className="space-y-2">
+                      <Label htmlFor="patentNumber">USPTO Patent Number</Label>
+                      <Input
+                        id="patentNumber"
+                        placeholder="e.g., US12345678"
+                        value={patentNumber}
+                        onChange={(e) => setPatentNumber(e.target.value)}
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -318,12 +826,12 @@ const SellerSignupWizard = ({ onComplete }) => {
                   <Label>Filing Date</Label>
                   <Input
                     type="date"
-                    value={patentData?.filing_date || manualPatentData.filingDate}
+                    value={patentData?.filing_date || manualPatentData.filing_date}
                     onChange={(e) => {
                       if (patentData) {
                         setPatentData({ ...patentData, filing_date: e.target.value });
                       } else {
-                        setManualPatentData({ ...manualPatentData, filingDate: e.target.value });
+                        setManualPatentData({ ...manualPatentData, filing_date: e.target.value });
                       }
                     }}
                   />
@@ -332,12 +840,12 @@ const SellerSignupWizard = ({ onComplete }) => {
                   <Label>Issue Date</Label>
                   <Input
                     type="date"
-                    value={patentData?.issue_date || manualPatentData.issueDate}
+                    value={patentData?.issue_date || manualPatentData.issue_date}
                     onChange={(e) => {
                       if (patentData) {
                         setPatentData({ ...patentData, issue_date: e.target.value });
                       } else {
-                        setManualPatentData({ ...manualPatentData, issueDate: e.target.value });
+                        setManualPatentData({ ...manualPatentData, issue_date: e.target.value });
                       }
                     }}
                   />
@@ -353,6 +861,37 @@ const SellerSignupWizard = ({ onComplete }) => {
                       setPatentData({ ...patentData, abstract: e.target.value });
                     } else {
                       setManualPatentData({ ...manualPatentData, abstract: e.target.value });
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <Label>Claims</Label>
+                <textarea
+                  className="w-full min-h-[100px] p-2 border rounded-md"
+                  value={patentData?.claims || manualPatentData.claims}
+                  onChange={(e) => {
+                    if (patentData) {
+                      setPatentData({ ...patentData, claims: e.target.value });
+                    } else {
+                      setManualPatentData({ ...manualPatentData, claims: e.target.value });
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <textarea
+                  className="w-full min-h-[100px] p-2 border rounded-md"
+                  value={patentData?.description || manualPatentData.description}
+                  onChange={(e) => {
+                    if (patentData) {
+                      setPatentData({ ...patentData, description: e.target.value });
+                    } else {
+                      setManualPatentData({
+                        ...manualPatentData,
+                        description: e.target.value,
+                      });
                     }
                   }}
                 />
@@ -410,11 +949,16 @@ const SellerSignupWizard = ({ onComplete }) => {
           {/* Step 4: Membership Plans */}
           {currentStep === 4 && (
             <div className="space-y-4">
+              {isPackagesLoading && (
+                <p className="text-sm text-muted-foreground">
+                  Loading membership options...
+                </p>
+              )}
               <Card
                 className={`cursor-pointer transition-all ${
                   selectedPlan === "monthly" ? "border-primary border-2" : ""
                 }`}
-                onClick={() => setSelectedPlan("monthly")}
+                onClick={() => handleSelectPlan("monthly")}
               >
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
@@ -436,7 +980,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                 className={`cursor-pointer transition-all ${
                   selectedPlan === "yearly" ? "border-primary border-2" : ""
                 }`}
-                onClick={() => setSelectedPlan("yearly")}
+                onClick={() => handleSelectPlan("yearly")}
               >
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
@@ -450,10 +994,25 @@ const SellerSignupWizard = ({ onComplete }) => {
                     <li>✓ 15-day free trial</li>
                     <li>✓ Best value - 15% discount</li>
                     <li>✓ Recommended for serious sellers</li>
+                    <li>✓ Meaningful partnerships or sales take time</li>
                     <li>✓ Full marketplace access</li>
                   </ul>
                 </CardContent>
               </Card>
+              {selectedPackage?.final_price > 0 && (
+                <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                  Payment is required to activate this membership plan.
+                </div>
+              )}
+              {selectedPlan &&
+                !selectedPackage &&
+                !isPackagesLoading &&
+                listingPackages?.length > 0 && (
+                <div className="rounded-lg border border-dashed p-4 text-sm text-destructive">
+                  No matching package found for this plan. Please check your
+                  packages in the backend.
+                </div>
+              )}
             </div>
           )}
 
@@ -575,6 +1134,36 @@ const SellerSignupWizard = ({ onComplete }) => {
                   </Button>
                 </CardContent>
               </Card>
+
+              <Card
+                className={`cursor-pointer transition-all ${
+                  selectedServices.attorneySupport ? "border-primary border-2" : ""
+                }`}
+                onClick={() =>
+                  setSelectedServices({
+                    ...selectedServices,
+                    attorneySupport: !selectedServices.attorneySupport,
+                  })
+                }
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Attorney Support
+                    {selectedServices.attorneySupport && (
+                      <CheckCircle2 className="text-primary" />
+                    )}
+                  </CardTitle>
+                  <CardDescription>Price TBD</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Help with paperwork for the sale or investment of your patent
+                  </p>
+                  <Button variant="link" size="sm">
+                    View Sample
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           )}
 
@@ -587,40 +1176,114 @@ const SellerSignupWizard = ({ onComplete }) => {
                   <div className="flex justify-between">
                     <span>Membership Plan:</span>
                     <span>
-                      {selectedPlan === "monthly" ? "$29/month" : "$199/year"}
+                      {orderSummary?.membership_price !== undefined
+                        ? `$${orderSummary.membership_price}/${
+                            orderSummary?.membership_plan === "yearly"
+                              ? "year"
+                              : "month"
+                          }`
+                        : selectedPlan === "monthly"
+                        ? "$29/month"
+                        : "$199/year"}
                     </span>
                   </div>
-                  {selectedServices.drawing2D3D && (
-                    <div className="flex justify-between">
-                      <span>2D/3D Drawing:</span>
-                      <span>$20</span>
+                  {isOrderSummaryLoading && (
+                    <div className="text-sm text-muted-foreground">
+                      Calculating order total...
                     </div>
                   )}
-                  {selectedServices.evaluation && (
-                    <div className="flex justify-between">
-                      <span>Evaluation ({selectedServices.evaluation}):</span>
-                      <span>
-                        $
-                        {selectedServices.evaluation === "good"
-                          ? "250"
-                          : selectedServices.evaluation === "better"
-                          ? "500"
-                          : "1,999"}
-                      </span>
-                    </div>
-                  )}
-                  {selectedServices.pitchDeck && (
-                    <div className="flex justify-between">
-                      <span>Pitch Deck:</span>
-                      <span>TBD</span>
-                    </div>
+                  {orderSummary?.services?.length > 0 ? (
+                    orderSummary.services.map((service, index) => (
+                      <div className="flex justify-between" key={index}>
+                        <span>{service.name}:</span>
+                        <span>${service.price}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      {selectedServices.drawing2D3D && (
+                        <div className="flex justify-between">
+                          <span>2D/3D Drawing:</span>
+                          <span>$20</span>
+                        </div>
+                      )}
+                      {selectedServices.evaluation && (
+                        <div className="flex justify-between">
+                          <span>Evaluation ({selectedServices.evaluation}):</span>
+                          <span>
+                            $
+                            {selectedServices.evaluation === "good"
+                              ? "250"
+                              : selectedServices.evaluation === "better"
+                              ? "500"
+                              : "1,999"}
+                          </span>
+                        </div>
+                      )}
+                      {selectedServices.pitchDeck && (
+                        <div className="flex justify-between">
+                          <span>Pitch Deck:</span>
+                          <span>TBD</span>
+                        </div>
+                      )}
+                      {selectedServices.attorneySupport && (
+                        <div className="flex justify-between">
+                          <span>Attorney Support:</span>
+                          <span>TBD</span>
+                        </div>
+                      )}
+                    </>
                   )}
                   <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
                     <span>Total:</span>
-                    <span>${cartTotal}</span>
+                    <span>
+                      {orderSummary?.total_amount !== undefined
+                        ? `$${orderSummary.total_amount}`
+                        : `$${cartTotal}`}
+                    </span>
                   </div>
                 </div>
               </div>
+              {paymentInitError && (
+                <div className="rounded-md bg-red-50 text-red-700 text-sm px-3 py-2">
+                  {paymentInitError}
+                </div>
+              )}
+              {isCreatingPaymentIntent && (
+                <div className="rounded-md bg-muted text-sm px-3 py-2">
+                  Initializing payment...
+                </div>
+              )}
+              {paymentInitError && (
+                <Button variant="outline" onClick={handleCreatePaymentIntent}>
+                  Retry Payment
+                </Button>
+              )}
+              {showPaymentForm && clientSecret && (
+                <div className="rounded-lg border border-muted/60 p-4 space-y-3">
+                  <div className="rounded-md bg-yellow-50 text-yellow-900 text-sm px-3 py-2">
+                    Payment pending. Please complete Stripe payment to finish signup.
+                  </div>
+                  <StripePayment
+                    selectedPackage={selectedPackage}
+                    packageSettings={packageSettings}
+                    PaymentModalClose={() => setShowPaymentForm(false)}
+                    setShowStripePayment={() => {}}
+                    updateActivePackage={() => {}}
+                    clientSecretOverride={clientSecret}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    amountDue={
+                      orderSummary?.total_amount !== undefined
+                        ? orderSummary.total_amount
+                        : cartTotal
+                    }
+                    billingDetails={{
+                      name: userData?.name || accountState?.name,
+                      email: userData?.email || accountState?.email,
+                    }}
+                  />
+                </div>
+              )}
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-sm">
                   <strong>What happens next?</strong>
@@ -644,7 +1307,14 @@ const SellerSignupWizard = ({ onComplete }) => {
               <ArrowLeft className="mr-2" size={16} />
               Back
             </Button>
-            <Button onClick={handleNext} disabled={loading}>
+            <Button
+              onClick={handleNext}
+              disabled={
+                loading ||
+                isCreatingPaymentIntent ||
+                (currentStep === 4 && !selectedPackage)
+              }
+            >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 animate-spin" size={16} />
@@ -652,7 +1322,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                 </>
               ) : currentStep === 6 ? (
                 <>
-                  Complete Signup
+                  {isCreatingPaymentIntent ? "Preparing Payment..." : "Complete Signup"}
                   <ArrowRight className="ml-2" size={16} />
                 </>
               ) : (
