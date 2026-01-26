@@ -152,7 +152,7 @@ const getAllItems = async (langCode, searchParams) => {
       : "";
     const url = `${process.env.NEXT_PUBLIC_API_URL}${
       process.env.NEXT_PUBLIC_END_POINT
-    }get-item?page=1${queryString ? `&${queryString}` : ""}`;
+    }get-item?page=1&status=active${queryString ? `&${queryString}` : ""}`;
 
     const res = await fetch(url, {
       headers: {

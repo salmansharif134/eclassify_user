@@ -107,7 +107,7 @@ const SellerSignupWizard = ({ onComplete }) => {
       const response = await patentLookupApi.lookup({ patent_number: patentNumber });
       if (response.data.error === false && response.data.data) {
         setPatentData(response.data.data);
-        setCurrentStep(3);
+        setCurrentStep(2);
         toast.success("Patent found! Data auto-populated.");
       } else {
         toast.info("Patent not found. Please enter manually.");
@@ -747,7 +747,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                       className="flex-1"
                       onClick={() => setHasPatent(false)}
                     >
-                      No, enter manually
+                      No, input data manually
                     </Button>
                   </div>
                   {hasPatent === true && (

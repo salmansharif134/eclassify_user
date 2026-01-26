@@ -83,7 +83,7 @@ const fetchProductItems = async (langCode) => {
   if (process.env.NEXT_PUBLIC_SEO === "false") return [];
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}${process.env.NEXT_PUBLIC_END_POINT}get-item?page=1`,
+      `${process.env.NEXT_PUBLIC_API_URL}${process.env.NEXT_PUBLIC_END_POINT}get-item?page=1&status=active`,
       {
         headers: {
           "Content-Language": langCode || "en",

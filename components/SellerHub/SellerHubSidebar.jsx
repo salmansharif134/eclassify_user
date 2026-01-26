@@ -6,12 +6,14 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { sellerHubNav } from "./sellerHubNav";
+import Image from "next/image";
 
 const SellerHubSidebar = ({
   collapsed,
   mobileOpen,
   onCloseMobile,
   storeName,
+  storeLogo,
 }) => {
   const pathname = usePathname();
 
@@ -24,7 +26,15 @@ const SellerHubSidebar = ({
     >
       <div className="flex items-center justify-between border-b px-4 py-4">
         <div className="flex items-center gap-2">
-          <span className="h-8 w-8 rounded-lg bg-primary/10" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border bg-white">
+            <Image
+              src={storeLogo || "/assets/MustangIPLog01.png"}
+              alt="Store logo"
+              width={24}
+              height={24}
+              className="h-6 w-6 object-contain"
+            />
+          </div>
           {!collapsed && (
             <div>
               <p className="text-xs uppercase text-muted-foreground">

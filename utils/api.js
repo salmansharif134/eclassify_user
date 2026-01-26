@@ -78,6 +78,22 @@ export const GET_SERVICES = "services";
 export const CREATE_SERVICE_ORDER = "service-orders/create";
 export const GET_SELLER_DASHBOARD = "sellers/dashboard";
 export const ADD_PATENT = "sellers/patents";
+export const SELLER_DASHBOARD_OVERVIEW = "seller/dashboard";
+export const SELLER_ORDERS = "seller/orders";
+export const SELLER_LISTINGS = "seller/listings";
+export const SELLER_LISTINGS_META = "seller/listings/meta";
+export const SELLER_LISTINGS_CATEGORIES = "seller/listings/categories";
+export const SELLER_SHIPPING_PROFILES = "seller/shipping-profiles";
+export const SELLER_LISTING_IMAGES = "seller/listings/images";
+export const SELLER_CATEGORIES = "seller/categories";
+export const SELLER_INVENTORY = "seller/inventory";
+export const SELLER_PERFORMANCE = "seller/performance";
+export const SELLER_MARKETING = "seller/marketing";
+export const SELLER_PAYMENTS = "seller/payments";
+export const SELLER_MESSAGES = "seller/messages";
+export const SELLER_RETURNS = "seller/returns";
+export const SELLER_ME = "seller/me";
+export const SELLER_SETTINGS = "seller/settings";
 
 export const authApi = {
   login: ({ email, password, fcm_id } = {}) => {
@@ -190,6 +206,7 @@ export const allItemApi = {
     limit,
     current_page,
   } = {}) => {
+    const resolvedStatus = status ?? "active";
     return Api.get(GET_ITEM, {
       params: {
         id,
@@ -200,7 +217,7 @@ export const allItemApi = {
         sort_by,
         posted_since,
         featured_section_id,
-        status,
+        status: resolvedStatus,
         page,
         search,
         country,
@@ -1193,4 +1210,50 @@ export const sellerDashboardApi = {
       },
     });
   },
+};
+
+// SELLER HUB (DYNAMIC) API
+export const sellerHubApi = {
+  getDashboard: ({ query } = {}) => Api.get(SELLER_DASHBOARD_OVERVIEW, { params: { query } }),
+  getOrders: ({ page, perPage, status, payment, query, date } = {}) =>
+    Api.get(SELLER_ORDERS, { params: { page, perPage, status, payment, query, date } }),
+  getOrder: (orderId) => Api.get(`${SELLER_ORDERS}/${orderId}`),
+  shipOrder: (orderId) => Api.post(`${SELLER_ORDERS}/${orderId}/ship`),
+  refundOrder: (orderId) => Api.post(`${SELLER_ORDERS}/${orderId}/refund`),
+  getListings: ({ page, perPage, status, query } = {}) =>
+    Api.get(SELLER_LISTINGS, { params: { page, perPage, status, query } }),
+  getListing: (productId) => Api.get(`${SELLER_LISTINGS}/${productId}`),
+  getListingMeta: () => Api.get(SELLER_LISTINGS_META),
+  searchCategories: ({ query } = {}) =>
+    Api.get(SELLER_LISTINGS_CATEGORIES, { params: { query } }),
+  getSellerCategories: ({ page, perPage, query } = {}) =>
+    Api.get(SELLER_CATEGORIES, { params: { page, perPage, query } }),
+  createSellerCategory: (payload) => Api.post(SELLER_CATEGORIES, payload),
+  updateSellerCategory: (categoryId, payload) => Api.put(`${SELLER_CATEGORIES}/${categoryId}`, payload),
+  deleteSellerCategory: (categoryId) => Api.delete(`${SELLER_CATEGORIES}/${categoryId}`),
+  createListing: (payload) => Api.post(SELLER_LISTINGS, payload),
+  updateListing: (productId, payload) => Api.put(`${SELLER_LISTINGS}/${productId}`, payload),
+  endListing: (productId) => Api.post(`${SELLER_LISTINGS}/${productId}/end`),
+  duplicateListing: (productId) => Api.post(`${SELLER_LISTINGS}/${productId}/duplicate`),
+  deleteListingImage: (imageId) => Api.delete(`${SELLER_LISTING_IMAGES}/${imageId}`),
+  createShippingProfile: (payload) => Api.post(SELLER_SHIPPING_PROFILES, payload),
+  getInventory: ({ page, perPage, lowStock, query } = {}) =>
+    Api.get(SELLER_INVENTORY, { params: { page, perPage, lowStock, query } }),
+  adjustInventory: (itemId, payload) => Api.post(`${SELLER_INVENTORY}/${itemId}/adjust`, payload),
+  getPerformance: ({ query } = {}) => Api.get(SELLER_PERFORMANCE, { params: { query } }),
+  getMarketing: ({ query } = {}) => Api.get(SELLER_MARKETING, { params: { query } }),
+  getPayments: ({ page, perPage, query } = {}) =>
+    Api.get(SELLER_PAYMENTS, { params: { page, perPage, query } }),
+  getMessages: ({ page, perPage, query } = {}) =>
+    Api.get(SELLER_MESSAGES, { params: { page, perPage, query } }),
+  getThread: (threadId, { page, perPage } = {}) =>
+    Api.get(`${SELLER_MESSAGES}/${threadId}`, { params: { page, perPage } }),
+  sendMessage: (payload) => Api.post(SELLER_MESSAGES, payload),
+  getReturns: ({ page, perPage, query } = {}) =>
+    Api.get(SELLER_RETURNS, { params: { page, perPage, query } }),
+  approveReturn: (returnId) => Api.post(`${SELLER_RETURNS}/${returnId}/approve`),
+  rejectReturn: (returnId) => Api.post(`${SELLER_RETURNS}/${returnId}/reject`),
+  getMe: () => Api.get(SELLER_ME),
+  getSettings: () => Api.get(SELLER_SETTINGS),
+  updateSettings: (payload) => Api.put(SELLER_SETTINGS, payload),
 };

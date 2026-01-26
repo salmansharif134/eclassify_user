@@ -39,7 +39,7 @@ const getSellerItems = async (id, langCode) => {
   try {
     if (process.env.NEXT_PUBLIC_SEO === "false") return;
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}${process.env.NEXT_PUBLIC_END_POINT}get-item?page=1&user_id=${id}`,
+      `${process.env.NEXT_PUBLIC_API_URL}${process.env.NEXT_PUBLIC_END_POINT}get-item?page=1&status=active&user_id=${id}`,
       {
         headers: {
           "Content-Language": langCode || "en",
