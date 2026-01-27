@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "../Common/useNavigate";
 
-const CategoryNode = ({ category, extraDetails }) => {
+const CategoryNode = ({ category, extraDetails, categoryType }) => {
   const { navigate } = useNavigate();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -18,6 +18,9 @@ const CategoryNode = ({ category, extraDetails }) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const breadcrumbPath = useSelector(BreadcrumbPathData);
+  
+  // Get itemType from URL if not passed as prop
+  const itemType = categoryType || searchParams.get("type") || "products";
 
   const selectedSlug = searchParams.get("category") || "";
   const isSelected = category.slug === selectedSlug;
@@ -44,6 +47,7 @@ const CategoryNode = ({ category, extraDetails }) => {
       const response = await categoryApi.getCategory({
         category_id: category.id,
         page,
+        type: itemType, // Pass type parameter to fetch correct subcategories
       });
       const data = response.data.data.data;
       const hasMore =
@@ -120,6 +124,8 @@ const CategoryNode = ({ category, extraDetails }) => {
               category={sub}
               selectedSlug={selectedSlug}
               searchParams={searchParams}
+              categoryType={itemType}
+              extraDetails={extraDetails}
             />
           ))}
 

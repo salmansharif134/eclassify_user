@@ -18,10 +18,10 @@ const ProductHorizontalCard = ({ item, handleLike }) => {
   const userData = useSelector(userSignUpData);
   const translated_item = item.translated_item;
 
-  const productLink =
-    userData?.id === item?.user_id
-      ? `/my-listing/${item?.slug}`
-      : `/ad-details/${item.slug}`;
+  // ProductHorizontalCard is used in buyer-facing contexts
+  // Always use /ad-details for buyer view
+  // MyAdsCard component handles /my-listing route for seller's own listings
+  const productLink = `/ad-details/${item.slug}`;
   const isJobCategory = Number(item?.category?.is_job_category) === 1;
 
   const isHidePrice = isJobCategory

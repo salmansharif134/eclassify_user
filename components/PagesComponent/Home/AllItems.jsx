@@ -10,7 +10,7 @@ import { allItemApi } from "@/utils/api";
 import { Info, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-const AllItems = ({ cityData, KmRange }) => {
+const AllItems = ({ cityData, KmRange, itemType = "products" }) => {
   const dispatch = useDispatch();
   const CurrentLanguage = useSelector(CurrentLanguageData);
   const [AllItem, setAllItem] = useState([]);
@@ -30,7 +30,12 @@ const AllItems = ({ cityData, KmRange }) => {
       const params = {
         page,
         current_page: "home",
+        // Backend filtering: Pass item_type parameter to API
+        // 'products' includes: ONLY seller products (items with product_id created via seller dashboard)
+        // 'patents' includes: only patents (items from sellers without product_id)
+        item_type: itemType === "patents" ? "patents" : "products",
       };
+      
       if (Number(KmRange) > 0 && (cityData?.areaId || cityData?.city)) {
         // Add location-based parameters for non-demo mode
         params.radius = KmRange;
@@ -68,7 +73,9 @@ const AllItems = ({ cityData, KmRange }) => {
       }
 
       if (response?.data?.data?.data?.length > 0) {
+        // Backend already filters by item_type, so no client-side filtering needed
         const data = response?.data?.data?.data;
+        
         if (page === 1) {
           setAllItem(data);
         } else {
@@ -76,7 +83,7 @@ const AllItems = ({ cityData, KmRange }) => {
         }
         const currentPage = response?.data?.data?.current_page;
         const lastPage = response?.data?.data?.last_page;
-        setHasMore(currentPage < lastPage);
+        setHasMore(data.length > 0 && currentPage < lastPage);
         setCurrentPage(currentPage);
       } else {
         setAllItem([]);
@@ -90,8 +97,10 @@ const AllItems = ({ cityData, KmRange }) => {
   };
 
   useEffect(() => {
+    setAllItem([]); // Reset items when switching tabs
+    setCurrentPage(1);
     getAllItemData(1);
-  }, [cityData.lat, cityData.long, KmRange, CurrentLanguage?.id]);
+  }, [cityData.lat, cityData.long, KmRange, CurrentLanguage?.id, itemType]);
 
   const handleLoadMore = () => {
     setIsLoadMore(true);
@@ -114,19 +123,21 @@ const AllItems = ({ cityData, KmRange }) => {
   };
 
   return (
-    <section className="container mt-12">
-      <h5 className="text-xl sm:text-2xl font-medium">{t("allItems")}</h5>
+    <section className="mt-0">
+      <h5 className="text-xl sm:text-2xl font-medium mb-6">
+        {itemType === "patents" ? "All Patents" : "All Products"}
+      </h5>
 
       {/* Location Alert - shows when items are from different location */}
       {locationAlertMessage && AllItem.length > 0 && (
-        <Alert variant="warning" className="mt-3">
+        <Alert variant="warning" className="mt-3 mb-6">
           <Info className="size-4" />
           <AlertTitle>{locationAlertMessage}</AlertTitle>
           <AlertDescription className="sr-only"></AlertDescription>
         </Alert>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 mt-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
         {isLoading ? (
           <AllItemsSkeleton />
         ) : AllItem && AllItem.length > 0 ? (

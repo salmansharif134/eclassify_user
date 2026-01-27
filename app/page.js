@@ -82,8 +82,9 @@ const fetchCategories = async (langCode) => {
 const fetchProductItems = async (langCode) => {
   if (process.env.NEXT_PUBLIC_SEO === "false") return [];
   try {
+    // Include item_type=products to ensure seller products are included
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}${process.env.NEXT_PUBLIC_END_POINT}get-item?page=1&status=active`,
+      `${process.env.NEXT_PUBLIC_API_URL}${process.env.NEXT_PUBLIC_END_POINT}get-item?page=1&status=active&item_type=products`,
       {
         headers: {
           "Content-Language": langCode || "en",

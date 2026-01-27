@@ -10,6 +10,8 @@ import OfferSliderSkeleton from "@/components/PagesComponent/Home/OfferSliderSke
 import FeaturedSectionsSkeleton from "./FeaturedSectionsSkeleton";
 import PopularCategories from "./PopularCategories";
 import dynamic from "next/dynamic";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Package, FileText } from "lucide-react";
 
 const OfferSlider = dynamic(() => import("./OfferSlider"), {
   ssr: false,
@@ -24,6 +26,7 @@ const Home = () => {
   const [featuredData, setFeaturedData] = useState([]);
   const [Slider, setSlider] = useState([]);
   const [IsSliderLoading, setIsSliderLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("products"); // 'products' or 'patents'
   const allEmpty = featuredData?.every((ele) => ele?.section_data.length === 0);
 
   // Static slider images - MustangIP banners
@@ -125,7 +128,44 @@ const Home = () => {
           <OfferSlider Slider={Slider} IsLoading={IsSliderLoading} />
         )
       )}
-      <PopularCategories />
+      {/* Categories and Items Tabs - Products and Patents */}
+      <div className="container mt-12">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+            <TabsTrigger value="products" className="flex items-center gap-2">
+              <Package size={18} />
+              Products
+            </TabsTrigger>
+            <TabsTrigger value="patents" className="flex items-center gap-2">
+              <FileText size={18} />
+              Patents
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="products" className="mt-0">
+            <PopularCategories categoryType="products" />
+            <div className="mt-12">
+              <AllItems 
+                cityData={cityData} 
+                KmRange={KmRange} 
+                itemType="products"
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="patents" className="mt-0">
+            <PopularCategories categoryType="patents" />
+            <div className="mt-12">
+              <AllItems 
+                cityData={cityData} 
+                KmRange={KmRange} 
+                itemType="patents"
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
       {IsFeaturedLoading ? (
         <FeaturedSectionsSkeleton />
       ) : (
@@ -135,7 +175,6 @@ const Home = () => {
           allEmpty={allEmpty}
         />
       )}
-      <AllItems cityData={cityData} KmRange={KmRange} />
     </>
   );
 };

@@ -94,6 +94,12 @@ export const SELLER_MESSAGES = "seller/messages";
 export const SELLER_RETURNS = "seller/returns";
 export const SELLER_ME = "seller/me";
 export const SELLER_SETTINGS = "seller/settings";
+export const BUYER_ORDERS = "buyer/orders";
+export const BUYER_CREATE_ORDER = "buyer/orders/create";
+export const BUYER_CART = "buyer/cart";
+export const BUYER_ADD_TO_CART = "buyer/cart/add";
+export const BUYER_REMOVE_FROM_CART = "buyer/cart/remove";
+export const BUYER_CHECKOUT = "buyer/checkout";
 
 export const authApi = {
   login: ({ email, password, fcm_id } = {}) => {
@@ -131,9 +137,13 @@ export const sliderApi = {
 
 // 3. CATEGORY API
 export const categoryApi = {
-  getCategory: ({ category_id, page } = {}) => {
+  getCategory: ({ category_id, page, type } = {}) => {
     return Api.get(GET_CATEGORIES, {
-      params: { category_id, page },
+      params: { 
+        category_id, 
+        page,
+        ...(type && { type }) // Add type parameter if provided ('products' or 'patents')
+      },
     });
   },
 };
@@ -205,6 +215,7 @@ export const allItemApi = {
     popular_items,
     limit,
     current_page,
+    item_type, // NEW: 'products' or 'patents'
   } = {}) => {
     const resolvedStatus = status ?? "active";
     return Api.get(GET_ITEM, {
@@ -234,6 +245,7 @@ export const allItemApi = {
         popular_items,
         limit,
         current_page,
+        ...(item_type && { item_type }), // Add item_type parameter if provided
       },
     });
   },
@@ -1228,11 +1240,22 @@ export const sellerHubApi = {
     Api.get(SELLER_LISTINGS_CATEGORIES, { params: { query } }),
   getSellerCategories: ({ page, perPage, query } = {}) =>
     Api.get(SELLER_CATEGORIES, { params: { page, perPage, query } }),
-  createSellerCategory: (payload) => Api.post(SELLER_CATEGORIES, payload),
-  updateSellerCategory: (categoryId, payload) => Api.put(`${SELLER_CATEGORIES}/${categoryId}`, payload),
+  createSellerCategory: (payload) => {
+    const config = payload instanceof FormData 
+      ? { headers: { 'Content-Type': 'multipart/form-data' } }
+      : {};
+    return Api.post(SELLER_CATEGORIES, payload, config);
+  },
+  updateSellerCategory: (categoryId, payload) => {
+    const config = payload instanceof FormData 
+      ? { headers: { 'Content-Type': 'multipart/form-data' } }
+      : {};
+    return Api.put(`${SELLER_CATEGORIES}/${categoryId}`, payload, config);
+  },
   deleteSellerCategory: (categoryId) => Api.delete(`${SELLER_CATEGORIES}/${categoryId}`),
   createListing: (payload) => Api.post(SELLER_LISTINGS, payload),
   updateListing: (productId, payload) => Api.put(`${SELLER_LISTINGS}/${productId}`, payload),
+  deleteListing: (productId) => Api.delete(`${SELLER_LISTINGS}/${productId}`),
   endListing: (productId) => Api.post(`${SELLER_LISTINGS}/${productId}/end`),
   duplicateListing: (productId) => Api.post(`${SELLER_LISTINGS}/${productId}/duplicate`),
   deleteListingImage: (imageId) => Api.delete(`${SELLER_LISTING_IMAGES}/${imageId}`),
@@ -1256,4 +1279,17 @@ export const sellerHubApi = {
   getMe: () => Api.get(SELLER_ME),
   getSettings: () => Api.get(SELLER_SETTINGS),
   updateSettings: (payload) => Api.put(SELLER_SETTINGS, payload),
+};
+
+// BUYER API
+export const buyerApi = {
+  getOrders: ({ page, perPage, status, query } = {}) =>
+    Api.get(BUYER_ORDERS, { params: { page, perPage, status, query } }),
+  getOrder: (orderId) => Api.get(`${BUYER_ORDERS}/${orderId}`),
+  createOrder: (payload) => Api.post(BUYER_CREATE_ORDER, payload),
+  getCart: () => Api.get(BUYER_CART),
+  addToCart: (payload) => Api.post(BUYER_ADD_TO_CART, payload),
+  removeFromCart: (itemId) => Api.delete(`${BUYER_REMOVE_FROM_CART}/${itemId}`),
+  updateCartItem: (itemId, payload) => Api.put(`${BUYER_CART}/${itemId}`, payload),
+  checkout: (payload) => Api.post(BUYER_CHECKOUT, payload),
 };

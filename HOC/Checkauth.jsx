@@ -29,6 +29,9 @@ const Checkauth = (WrappedComponent) => {
         "/user-verification",
         "/job-applications",
         "/seller-dashboard",
+        "/buyer-orders",
+        "/checkout",
+        "/cart",
       ];
       const isPrivateRoute = privateRoutes.some(
         (route) => pathname === route || pathname.startsWith(`${route}/`)

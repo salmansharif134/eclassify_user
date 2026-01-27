@@ -75,6 +75,7 @@ const Ads = () => {
   const sortBy = searchParams.get("sort_by") || "new-to-old";
   const langCode = searchParams.get("lang");
   const featured_section = searchParams.get("featured_section") || "";
+  const itemType = searchParams.get("type") || "products"; // 'products' or 'patents'
 
   const isMinPrice =
     min_price !== "" &&
@@ -99,6 +100,7 @@ const Ads = () => {
     "query",
     "lang",
     "featured_section",
+    "type",
   ];
 
   const title = useMemo(() => {
@@ -308,6 +310,7 @@ const Ads = () => {
     query,
     langCode,
     featured_section,
+    itemType,
   ]);
 
   const getSingleCatItem = async (page) => {
@@ -320,6 +323,11 @@ const Ads = () => {
       if (slug) parameters.category_slug = slug;
       if (extraDetails) parameters.custom_fields = extraDetails;
       if (featured_section) parameters.featured_section_slug = featured_section;
+      // Backend filtering: Pass item_type parameter to API
+      // 'products' includes: ONLY seller products (items with product_id created via seller dashboard)
+      // 'patents' includes: only patents (items from sellers without product_id)
+      // Always pass item_type to ensure correct filtering
+      parameters.item_type = itemType === "patents" ? "patents" : "products";
 
       if (Number(km_range) > 0) {
         parameters.latitude = lat;
@@ -347,18 +355,21 @@ const Ads = () => {
       const data = res?.data;
 
       if (data.error === false) {
+        // Backend already filters by item_type, so no client-side filtering needed
+        const items = data?.data?.data || [];
+        
         page > 1
           ? setAdvertisements((prev) => ({
               ...prev,
-              data: [...prev.data, ...data?.data?.data],
+              data: [...prev.data, ...items],
               currentPage: data?.data?.current_page,
-              hasMore: data?.data?.last_page > data?.data?.current_page,
+              hasMore: items.length > 0 && data?.data?.last_page > data?.data?.current_page,
             }))
           : setAdvertisements((prev) => ({
               ...prev,
-              data: data?.data?.data,
+              data: items,
               currentPage: data?.data?.current_page,
-              hasMore: data?.data?.last_page > data?.data?.current_page,
+              hasMore: items.length > 0 && data?.data?.last_page > data?.data?.current_page,
             }));
       }
     } catch (error) {

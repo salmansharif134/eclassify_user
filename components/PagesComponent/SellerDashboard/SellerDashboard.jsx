@@ -15,7 +15,10 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  Loader2
+  Loader2,
+  TrendingUp,
+  Award,
+  ArrowRight
 } from "lucide-react";
 import { useNavigate } from "@/components/Common/useNavigate";
 import { useSelector } from "react-redux";
@@ -57,17 +60,17 @@ const SellerDashboard = () => {
 
   const getStatusBadge = (status) => {
     const badges = {
-      active: <Badge className="bg-green-500">Active</Badge>,
-      trial: <Badge className="bg-blue-500">Trial</Badge>,
-      expired: <Badge className="bg-red-500">Expired</Badge>,
-      listed: <Badge className="bg-green-500">Listed</Badge>,
-      draft: <Badge className="bg-gray-500">Draft</Badge>,
-      sold: <Badge className="bg-purple-500">Sold</Badge>,
-      completed: <Badge className="bg-green-500">Completed</Badge>,
-      processing: <Badge className="bg-yellow-500">Processing</Badge>,
-      pending: <Badge className="bg-gray-500">Pending</Badge>
+      active: <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white">Active</Badge>,
+      trial: <Badge className="bg-blue-500 hover:bg-blue-600 text-white">Trial</Badge>,
+      expired: <Badge className="bg-red-500 hover:bg-red-600 text-white">Expired</Badge>,
+      listed: <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white">Listed</Badge>,
+      draft: <Badge className="bg-slate-500 hover:bg-slate-600 text-white">Draft</Badge>,
+      sold: <Badge className="bg-purple-500 hover:bg-purple-600 text-white">Sold</Badge>,
+      completed: <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white">Completed</Badge>,
+      processing: <Badge className="bg-amber-500 hover:bg-amber-600 text-white">Processing</Badge>,
+      pending: <Badge className="bg-slate-500 hover:bg-slate-600 text-white">Pending</Badge>
     };
-    return badges[status] || <Badge>{status}</Badge>;
+    return badges[status] || <Badge className="bg-slate-500 text-white">{status}</Badge>;
   };
 
   if (loading) {
@@ -86,16 +89,18 @@ const SellerDashboard = () => {
   return (
     <Layout>
       <BreadCrumb title2="Seller Dashboard" />
-      <div className="container mt-8 space-y-6">
+      <div className="container mt-8 space-y-8 pb-8">
         {/* Welcome Section */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Welcome back, {dashboardData?.seller_info?.name}!</h1>
-            <p className="text-muted-foreground mt-1">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+              Welcome back, {dashboardData?.seller_info?.name || "Seller"}!
+            </h1>
+            <p className="text-muted-foreground text-base">
               Manage your patents and track your marketplace activity
             </p>
           </div>
-          <Button onClick={() => navigate("/seller-signup")} className="gap-2">
+          <Button onClick={() => navigate("/seller-signup")} className="gap-2 shadow-md hover:shadow-lg transition-shadow">
             <Plus size={20} />
             Add More Patents
           </Button>
@@ -208,31 +213,39 @@ const SellerDashboard = () => {
             </Card>
 
             {/* Service Orders */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle2 size={20} />
+            <Card className="shadow-sm">
+              <CardHeader className="border-b bg-slate-50/50 dark:bg-slate-900/50">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <div className="h-8 w-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                    <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400" />
+                  </div>
                   Service Orders
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 {dashboardData?.service_orders?.length > 0 ? (
                   <div className="space-y-3">
                     {dashboardData.service_orders.map((order) => (
                       <div
                         key={order.id}
-                        className="border rounded-lg p-4 flex items-center justify-between"
+                        className="border-2 rounded-xl p-4 flex items-center justify-between hover:border-primary/50 hover:shadow-md transition-all duration-200 bg-white dark:bg-slate-900"
                       >
-                        <div>
-                          <p className="font-medium">{order.service_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Ordered: {new Date(order.order_date).toLocaleDateString()}
-                          </p>
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                            <CheckCircle2 size={18} className="text-slate-600 dark:text-slate-400" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900 dark:text-slate-100">{order.service_name}</p>
+                            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                              <Calendar size={14} />
+                              Ordered: {new Date(order.order_date).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
                         <div className="flex items-center gap-3">
                           {getStatusBadge(order.status)}
                           {order.status === "completed" && order.delivery_date && (
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-sm text-muted-foreground hidden md:inline">
                               Delivered: {new Date(order.delivery_date).toLocaleDateString()}
                             </span>
                           )}
@@ -241,9 +254,12 @@ const SellerDashboard = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center text-muted-foreground py-4">
-                    No service orders yet
-                  </p>
+                  <div className="text-center py-8">
+                    <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
+                      <CheckCircle2 size={32} className="text-muted-foreground" />
+                    </div>
+                    <p className="text-muted-foreground">No service orders yet</p>
+                  </div>
                 )}
               </CardContent>
             </Card>

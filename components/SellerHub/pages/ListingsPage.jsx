@@ -12,6 +12,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import SellerHubPageHeader from "@/components/SellerHub/SellerHubPageHeader";
 import { getStatusBadge } from "@/components/SellerHub/statusUtils";
 import Link from "next/link";
@@ -31,6 +41,9 @@ const ListingsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshToken, setRefreshToken] = useState(0);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [listingToDelete, setListingToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const resolveImageUrl = (image) => {
     if (!image) return "";
@@ -111,6 +124,28 @@ const ListingsPage = () => {
       isMounted = false;
     };
   }, [page, perPage, refreshToken, statusFilter, query]);
+
+  const handleDeleteClick = (listing) => {
+    setListingToDelete(listing);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!listingToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      const itemId = listingToDelete.product_id ?? listingToDelete.id;
+      await sellerHubApi.deleteListing(itemId);
+      setDeleteDialogOpen(false);
+      setListingToDelete(null);
+      setRefreshToken((prev) => prev + 1);
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to delete listing.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
 
   return (
@@ -214,6 +249,14 @@ const ListingsPage = () => {
                         Edit
                       </Link>
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteClick(listing)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      Delete
+                    </Button>
                   </TableCell>
                 </TableRow>
               );
@@ -252,6 +295,27 @@ const ListingsPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Listing</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{listingToDelete?.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

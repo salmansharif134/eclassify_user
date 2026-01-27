@@ -20,6 +20,7 @@ import { getIsLoggedIn, loadUpdateData, userSignUpData } from "@/redux/reducer/a
 import CustomLink from "@/components/Common/CustomLink";
 import StripePayment from "@/components/PagesComponent/Subscription/StripePayment";
 import { useNavigate } from "@/components/Common/useNavigate";
+import LoginWithEmailForm from "@/components/Auth/LoginWithEmailForm";
 
 const SellerSignupWizard = ({ onComplete }) => {
   const { navigate } = useNavigate();
@@ -35,9 +36,12 @@ const SellerSignupWizard = ({ onComplete }) => {
   );
 
   useEffect(() => {
+    // Only redirect if user already has a seller account
+    // Don't redirect logged-in users without seller accounts - they can sign up as sellers
     if (hasSellerAccount) {
       navigate("/seller-dashboard");
     }
+    // Explicitly ensure we don't redirect to login - this is a signup page
   }, [hasSellerAccount, navigate]);
 
   // Account creation
@@ -590,8 +594,8 @@ const SellerSignupWizard = ({ onComplete }) => {
   return (
     <div className="container max-w-4xl mx-auto py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Seller Signup</h1>
-        <p className="text-muted-foreground">List your patent and connect with buyers</p>
+        <h1 className="text-3xl font-bold mb-2">Become a Seller</h1>
+        <p className="text-muted-foreground">Sign in to your account to list your patent and connect with buyers</p>
       </div>
 
       {/* Progress Steps */}
@@ -639,89 +643,23 @@ const SellerSignupWizard = ({ onComplete }) => {
               {!isLoggedIn && !accountState.isCreated && (
                 <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
                   <div>
-                    <h3 className="text-lg font-semibold">Create your account</h3>
+                    <h3 className="text-lg font-semibold">Seller Login</h3>
                     <p className="text-sm text-muted-foreground">
-                      Sign up with email or Google to continue.
+                      Sign in to access your seller account and list your patents.
                     </p>
                   </div>
-                  <form className="space-y-4" onSubmit={handleCreateAccount}>
-                    <div>
-                      <Label>Full Name</Label>
-                      <Input
-                        value={accountState.name}
-                        onChange={(e) =>
-                          setAccountState((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label>Email</Label>
-                      <Input
-                        type="email"
-                        value={accountState.email}
-                        onChange={(e) =>
-                          setAccountState((prev) => ({
-                            ...prev,
-                            email: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <Label>Password</Label>
-                        <Input
-                          type="password"
-                          value={accountState.password}
-                          onChange={(e) =>
-                            setAccountState((prev) => ({
-                              ...prev,
-                              password: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                      <div>
-                        <Label>Confirm Password</Label>
-                        <Input
-                          type="password"
-                          value={accountState.confirmPassword}
-                          onChange={(e) =>
-                            setAccountState((prev) => ({
-                              ...prev,
-                              confirmPassword: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-                    <Button disabled={accountState.isCreating} type="submit">
-                      {accountState.isCreating ? (
-                        <Loader2 className="mr-2 animate-spin" size={16} />
-                      ) : null}
-                      Create Account
-                    </Button>
-                  </form>
-                  <div className="flex items-center gap-3">
-                    <div className="h-px flex-1 bg-muted-foreground/20" />
-                    <span className="text-xs text-muted-foreground">OR</span>
-                    <div className="h-px flex-1 bg-muted-foreground/20" />
-                  </div>
-                  <div className="flex justify-start">
-                    <GoogleLogin
-                      onSuccess={handleGoogleSignup}
-                      onError={() => toast.error("Google login failed")}
-                    />
-                  </div>
-                  <p className="text-sm">
-                    Already have an account?{" "}
-                    <CustomLink href="/seller-login" className="text-primary underline">
-                      Log in
+                  <LoginWithEmailForm 
+                    OnHide={() => {
+                      // After successful login, continue with seller signup flow
+                      setAccountState((prev) => ({ ...prev, isCreated: true }));
+                    }} 
+                  />
+                  <div className="text-sm text-center">
+                    Don't have an account?{" "}
+                    <CustomLink href="/buyer-signup" className="text-primary underline">
+                      Sign Up First
                     </CustomLink>
-                  </p>
+                  </div>
                 </div>
               )}
               {(isLoggedIn || accountState.isCreated) && (

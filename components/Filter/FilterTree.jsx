@@ -11,6 +11,9 @@ const FilterTree = ({ extraDetails }) => {
   const { navigate } = useNavigate();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  
+  // Get itemType from URL to determine which categories to show
+  const itemType = searchParams.get("type") || "products"; // 'products' or 'patents'
 
   const {
     getCategories,
@@ -19,7 +22,7 @@ const FilterTree = ({ extraDetails }) => {
     isCatLoadMore,
     catCurrentPage,
     catLastPage,
-  } = useGetCategories();
+  } = useGetCategories(itemType); // Pass itemType to fetch correct categories
   const hasMore = catCurrentPage < catLastPage;
 
   const selectedSlug = searchParams.get("category") || "";
@@ -79,6 +82,7 @@ const FilterTree = ({ extraDetails }) => {
                 key={category.id + "filter-tree"}
                 category={category}
                 extraDetails={extraDetails}
+                categoryType={itemType}
               />
             ))}
 

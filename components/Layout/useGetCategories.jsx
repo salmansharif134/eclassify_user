@@ -12,23 +12,34 @@ import {
   setIsCatLoadMore,
 } from "@/redux/reducer/categorySlice";
 import { categoryApi } from "@/utils/api"; // assume you have this
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   getHasFetchedCategories,
   setHasFetchedCategories,
 } from "@/utils/getFetcherStatus";
 
-const useGetCategories = () => {
+const useGetCategories = (categoryType = null) => {
   const dispatch = useDispatch();
   const cateData = useSelector(CategoryData);
   const isCatLoading = useSelector(getIsCatLoading);
   const isCatLoadMore = useSelector(getIsCatLoadMore);
   const catLastPage = useSelector(getCatLastPage);
   const catCurrentPage = useSelector(getCatCurrentPage);
+  const previousCategoryType = useRef(categoryType);
+
+  // Clear categories and cache when categoryType changes
+  useEffect(() => {
+    if (previousCategoryType.current !== categoryType) {
+      dispatch(setCateData([]));
+      setHasFetchedCategories(false);
+      previousCategoryType.current = categoryType;
+    }
+  }, [categoryType, dispatch]);
 
   const getCategories = useCallback(
-    async (page = 1) => {
-      if (page === 1 && getHasFetchedCategories()) {
+    async (page = 1, force = false) => {
+      // Skip cache check if forcing refresh or if categoryType changed
+      if (page === 1 && !force && getHasFetchedCategories() && previousCategoryType.current === categoryType) {
         return;
       }
       if (page === 1) {
@@ -37,7 +48,13 @@ const useGetCategories = () => {
         dispatch(setIsCatLoadMore(true));
       }
       try {
-        const res = await categoryApi.getCategory({ page });
+        // Map categoryType to API type parameter
+        // 'products' -> 'products', 'patents' -> 'patents', null -> undefined (all categories)
+        const typeParam = categoryType === 'products' || categoryType === 'patents' 
+          ? categoryType 
+          : undefined;
+        
+        const res = await categoryApi.getCategory({ page, type: typeParam });
         if (res?.data?.error === false) {
           const data = res?.data?.data?.data;
           if (page === 1) {
@@ -56,7 +73,7 @@ const useGetCategories = () => {
         dispatch(setIsCatLoadMore(false));
       }
     },
-    [cateData, dispatch]
+    [cateData, dispatch, categoryType]
   );
 
   return {

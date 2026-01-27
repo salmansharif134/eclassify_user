@@ -1,10 +1,13 @@
 import CustomLink from "@/components/Common/CustomLink";
 import CustomImage from "@/components/Common/CustomImage";
 
-const PopularCategoryCard = ({ item }) => {
+const PopularCategoryCard = ({ item, categoryType = "products" }) => {
+  // Include type parameter in the URL to filter items by type
+  const categoryUrl = `/ads?category=${item?.slug}&type=${categoryType}`;
+  
   return (
     <CustomLink
-      href={`/ads?category=${item?.slug}`}
+      href={categoryUrl}
       className="flex flex-col gap-4"
     >
       <div className="border p-2.5 rounded-full">

@@ -14,7 +14,7 @@ import { getIsRtl } from "@/redux/reducer/languageSlice.js";
 import { Loader2 } from "lucide-react";
 import useGetCategories from "@/components/Layout/useGetCategories.jsx";
 
-const PopularCategories = () => {
+const PopularCategories = ({ categoryType = "products" }) => {
   const {
     cateData,
     getCategories,
@@ -22,7 +22,14 @@ const PopularCategories = () => {
     isCatLoadMore,
     catLastPage,
     catCurrentPage,
-  } = useGetCategories();
+  } = useGetCategories(categoryType); // Pass categoryType to hook for backend filtering
+  
+  const filteredCategories = cateData || [];
+
+  // Fetch categories when component mounts or categoryType changes
+  useEffect(() => {
+    getCategories(1, true); // Force refresh when type changes
+  }, [categoryType, getCategories]);
 
   const isRTL = useSelector(getIsRtl);
   const [api, setApi] = useState();
@@ -59,7 +66,7 @@ const PopularCategories = () => {
       <section className="container mt-12">
         <div className="space-between">
           <h5 className="text-xl sm:text-2xl font-medium">
-            {t("popularCategories")}
+            {categoryType === "patents" ? "Patent Categories" : "Product Categories"}
           </h5>
           <div className="flex items-center justify-center gap-2 sm:gap-4">
             <button
@@ -105,12 +112,12 @@ const PopularCategories = () => {
           }}
         >
           <CarouselContent className="-ml-3 md:-ml-[30px]">
-            {cateData.map((item) => (
+            {filteredCategories.map((item) => (
               <CarouselItem
                 key={item?.id}
                 className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-[16.66%] xl:basis-[12.5%] 2xl:basis-[11.11%] md:pl-[30px]"
               >
-                <PopularCategoryCard item={item} />
+                <PopularCategoryCard item={item} categoryType={categoryType} />
               </CarouselItem>
             ))}
           </CarouselContent>

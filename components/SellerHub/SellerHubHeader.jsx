@@ -97,12 +97,12 @@ const SellerHubHeader = ({
         <Button
           variant="ghost"
           size="icon"
-          className="relative"
+          className="relative hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           onClick={onNotificationsClick}
         >
           <Bell className="h-5 w-5" />
           {notificationCount > 0 && (
-            <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white">
+            <span className="absolute -right-1 -top-1 min-w-[20px] h-5 rounded-full bg-rose-500 px-1.5 text-[11px] font-bold text-white flex items-center justify-center shadow-md animate-pulse">
               {notificationCount > 99 ? "99+" : notificationCount}
             </span>
           )}
@@ -110,43 +110,49 @@ const SellerHubHeader = ({
         <Button
           variant="ghost"
           size="icon"
-          className="relative"
+          className="relative hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           onClick={onMessagesClick}
         >
           <MessageCircle className="h-5 w-5" />
           {messageCount > 0 && (
-            <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-blue-500 px-1 text-[10px] font-semibold text-white">
+            <span className="absolute -right-1 -top-1 min-w-[20px] h-5 rounded-full bg-blue-500 px-1.5 text-[11px] font-bold text-white flex items-center justify-center shadow-md animate-pulse">
               {messageCount > 99 ? "99+" : messageCount}
             </span>
           )}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <span className="hidden text-sm font-medium md:inline">
+            <Button variant="outline" className="gap-2 border-2 hover:border-primary/50 transition-all shadow-sm">
+              <span className="hidden text-sm font-semibold md:inline">
                 Account
               </span>
-              <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-slate-200">
+              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 border-2 border-white shadow-sm">
                 {avatarUrl ? (
                   <Image
                     src={avatarUrl}
                     alt="Account"
-                    width={32}
-                    height={32}
+                    width={36}
+                    height={36}
                     className="h-full w-full object-cover"
                   />
-                ) : null}
+                ) : (
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300">A</span>
+                )}
               </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuLabel>Seller Profile</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-48 shadow-lg border-2">
+            <DropdownMenuLabel className="font-semibold">Seller Profile</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onProfileClick}>View profile</DropdownMenuItem>
-            <DropdownMenuItem onClick={onBillingClick}>Billing</DropdownMenuItem>
-            <DropdownMenuItem onClick={onSettingsClick}>Settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={onProfileClick} className="cursor-pointer">View profile</DropdownMenuItem>
+            <DropdownMenuItem onClick={onBillingClick} className="cursor-pointer">Billing</DropdownMenuItem>
+            <DropdownMenuItem onClick={onSettingsClick} className="cursor-pointer">Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onLogout} disabled={isLoggingOut}>
+            <DropdownMenuItem 
+              onClick={onLogout} 
+              disabled={isLoggingOut}
+              className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/20"
+            >
               {isLoggingOut ? "Signing out..." : "Sign out"}
             </DropdownMenuItem>
           </DropdownMenuContent>
