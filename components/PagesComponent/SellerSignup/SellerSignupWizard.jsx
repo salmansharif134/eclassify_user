@@ -229,15 +229,14 @@ const SellerSignupWizard = ({ onComplete }) => {
         toast.error("Please select a membership plan");
         return;
       }
-      if (!selectedPackage) {
-        if (isPackagesLoading) {
-          toast.error("Please wait while we load membership options...");
-        } else {
-          toast.error(
-            "No matching membership package found for this plan. Please contact support."
-          );
-        }
-        return;
+      // Do NOT block progression on packages.
+      // Packages can fail to load (API/CORS/auth issues). We only truly need the plan here.
+      if (!selectedPackage && isPackagesLoading) {
+        toast.message("Loading membership options… you can continue.");
+      } else if (!selectedPackage && listingPackages?.length === 0) {
+        toast.message(
+          "Membership packages couldn't be loaded. You can continue, but payment may fail until this is fixed."
+        );
       }
       setCurrentStep(5);
     } else if (currentStep === 5) {
@@ -1325,10 +1324,7 @@ const SellerSignupWizard = ({ onComplete }) => {
             </Button>
             <Button
               onClick={handleNext}
-              disabled={
-                loading ||
-                isCreatingPaymentIntent
-              }
+              
             >
               {loading ? (
                 <>

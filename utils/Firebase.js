@@ -57,13 +57,14 @@ const FirebaseData = () => {
     try {
       if (typeof window !== "undefined" && "serviceWorker" in navigator) {
         const vapidKey = process.env.NEXT_PUBLIC_VAPID_KEY;
+        // Disable FCM if VAPID key is missing or invalid - fail silently
         if (!isValidVapidKey(vapidKey)) {
-          console.error("Invalid or missing VAPID key. Skipping FCM token.");
+          // FCM disabled - no error logging to avoid console noise
           return;
         }
         const messaging = await messagingInstance();
         if (!messaging) {
-          console.error("Messaging not supported.");
+          // Messaging not supported - fail silently
           return;
         }
         const permission = await Notification.requestPermission();
@@ -75,24 +76,23 @@ const FirebaseData = () => {
               if (currentToken) {
                 getFcmToken(currentToken);
                 setFcmToken(currentToken);
-              } else {
-                console.error("No token found");
-                toast.error(t("permissionRequired"));
               }
+              // No token found - fail silently (don't show error)
             })
             .catch((err) => {
-              console.error("Error retrieving token:", err);
-              // If the error is "no active Service Worker", try to register the service worker again
-              if (err.message.includes("no active Service Worker")) {
+              // Catch all FCM errors (including atob InvalidCharacterError) and fail silently
+              // FCM is disabled/not configured - don't log errors to console
+              // Only log if it's a service worker issue that we can potentially fix
+              if (err.message && err.message.includes("no active Service Worker")) {
                 registerServiceWorker();
               }
             });
-        } else {
-          console.error("Permission not granted");
         }
+        // Permission not granted - fail silently
       }
     } catch (err) {
-      console.error("Error requesting notification permission:", err);
+      // Catch any unexpected errors and fail silently
+      // FCM is disabled - don't log errors
     }
   };
 
@@ -115,11 +115,15 @@ const FirebaseData = () => {
   };
 
   const onMessageListener = async (callback) => {
-    const messaging = await messagingInstance();
-    if (messaging) {
-      return onMessage(messaging, callback);
-    } else {
-      console.error("Messaging not supported.");
+    try {
+      const messaging = await messagingInstance();
+      if (messaging) {
+        return onMessage(messaging, callback);
+      }
+      // Messaging not available - return null silently
+      return null;
+    } catch (err) {
+      // FCM disabled or error - return null silently
       return null;
     }
   };

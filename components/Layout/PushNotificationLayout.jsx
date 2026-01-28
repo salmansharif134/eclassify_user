@@ -19,9 +19,11 @@ const PushNotificationLayout = ({ children }) => {
     await fetchToken(setFcmToken);
   };
 
-  // Fetch token when user logs in
+  // Fetch token when user logs in (silently fails if FCM is disabled)
   useEffect(() => {
-    handleFetchToken();
+    handleFetchToken().catch(() => {
+      // FCM disabled - fail silently
+    });
   }, []);
 
   // Set up message listener when logged in, clean up when logged out
@@ -35,10 +37,10 @@ const PushNotificationLayout = ({ children }) => {
       return;
     }
 
-    // Set up listener when user logs in
+    // Set up listener when user logs in (silently fails if FCM is disabled)
     const setupListener = async () => {
       try {
-        unsubscribeRef.current = await onMessageListener((payload) => {
+        const unsubscribe = await onMessageListener((payload) => {
           if (payload && payload.data) {
             dispatch(setNotification(payload.data));
             if (Notification.permission === "granted") {
@@ -61,8 +63,12 @@ const PushNotificationLayout = ({ children }) => {
             }
           }
         });
+        // Only set unsubscribe if listener was successfully created
+        if (unsubscribe) {
+          unsubscribeRef.current = unsubscribe;
+        }
       } catch (err) {
-        console.error("Error handling foreground notification:", err);
+        // FCM disabled or error - fail silently
       }
     };
 
