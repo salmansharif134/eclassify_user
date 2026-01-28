@@ -38,11 +38,14 @@ const AdLanguageSelector = ({
           <SelectGroup>
             {languages &&
               languages.length > 0 &&
-              languages.map((lang) => (
-                <SelectItem key={lang.id} value={lang.id}>
-                  {lang.name}
-                </SelectItem>
-              ))}
+              languages.map((lang, index) => {
+                const val = lang.id != null && lang.id !== "" ? String(lang.id) : `__lang-${index}`;
+                return (
+                  <SelectItem key={lang.id ?? index} value={val}>
+                    {lang.name}
+                  </SelectItem>
+                );
+              })}
           </SelectGroup>
         </SelectContent>
       </Select>

@@ -183,19 +183,18 @@ const ListingFormPage = ({ mode = "create" }) => {
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem
-                      key={category.id ?? category.value ?? category.slug ?? category.name}
-                      value={
-                        category.id?.toString?.() ??
-                        category.value ??
-                        category.slug ??
-                        category.name
-                      }
-                    >
-                      {category.name || category.label || category.title}
-                    </SelectItem>
-                  ))}
+                  {categories.map((category) => {
+                    const val = category.id?.toString?.() ?? category.value ?? category.slug ?? category.name ?? "__unknown__";
+                    if (val === "") return null;
+                    return (
+                      <SelectItem
+                        key={category.id ?? category.value ?? category.slug ?? category.name ?? val}
+                        value={val}
+                      >
+                        {category.name || category.label || category.title}
+                      </SelectItem>
+                    );
+                  })}
                   {categories.length === 0 && (
                     <SelectItem value="unavailable" disabled>
                       No categories available
@@ -375,19 +374,18 @@ const ListingFormPage = ({ mode = "create" }) => {
                   <SelectValue placeholder="Shipping profile" />
                 </SelectTrigger>
                 <SelectContent>
-                  {shippingProfiles.map((profile) => (
-                    <SelectItem
-                      key={profile.id ?? profile.value ?? profile.slug ?? profile.name}
-                      value={
-                        profile.id?.toString?.() ??
-                        profile.value ??
-                        profile.slug ??
-                        profile.name
-                      }
-                    >
-                      {profile.name || profile.label || profile.title}
-                    </SelectItem>
-                  ))}
+                  {shippingProfiles.map((profile) => {
+                    const val = profile.id?.toString?.() ?? profile.value ?? profile.slug ?? profile.name ?? "__unknown__";
+                    if (val === "") return null;
+                    return (
+                      <SelectItem
+                        key={profile.id ?? profile.value ?? profile.slug ?? profile.name ?? val}
+                        value={val}
+                      >
+                        {profile.name || profile.label || profile.title}
+                      </SelectItem>
+                    );
+                  })}
                   {shippingProfiles.length === 0 && (
                     <SelectItem value="unavailable" disabled>
                       No shipping profiles available

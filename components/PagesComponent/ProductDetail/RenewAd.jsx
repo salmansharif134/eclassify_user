@@ -92,12 +92,15 @@ const RenewAd = ({
             <SelectValue placeholder={t("renewAd")} />
           </SelectTrigger>
           <SelectContent className="w-[--radix-select-trigger-width]">
-            {ItemPackages.map((item) => (
-              <SelectItem value={item?.id} key={item?.id}>
-                {item?.translated_name} - {item.duration} {t("days")}{" "}
-                {item?.is_active && t("activePlan")}
-              </SelectItem>
-            ))}
+            {ItemPackages.map((item, index) => {
+              const val = item?.id != null ? String(item.id) : `__fallback-${index}`;
+              return (
+                <SelectItem value={val} key={item?.id ?? index}>
+                  {item?.translated_name} - {item.duration} {t("days")}{" "}
+                  {item?.is_active && t("activePlan")}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
 

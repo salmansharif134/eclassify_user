@@ -128,11 +128,15 @@ const ExtraDetailsFilter = ({
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {field.values.map((option, index) => (
-                    <SelectItem key={option} value={option}>
-                      {field?.translated_value[index] || option}
-                    </SelectItem>
-                  ))}
+                  {field.values.map((option, index) => {
+                    if (option === "" || option == null) return null;
+                    const val = String(option);
+                    return (
+                      <SelectItem key={option ?? index} value={val}>
+                        {field?.translated_value[index] || option}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

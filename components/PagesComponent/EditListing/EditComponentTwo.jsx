@@ -145,16 +145,20 @@ const EditComponentTwo = ({
                   <SelectLabel value="">
                     {t("select")} {translated_name || name}
                   </SelectLabel>
-                  {values?.map((option, index) => (
-                    <SelectItem
-                      id={option}
-                      className="font-medium"
-                      key={option}
-                      value={option}
-                    >
-                      {translated_value[index] || option}
-                    </SelectItem>
-                  ))}
+                  {values?.map((option, index) => {
+                    if (option === "" || option == null) return null;
+                    const val = String(option);
+                    return (
+                      <SelectItem
+                        id={val}
+                        className="font-medium"
+                        key={option ?? index}
+                        value={val}
+                      >
+                        {translated_value[index] || option}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectGroup>
               </SelectContent>
             </Select>

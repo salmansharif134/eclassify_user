@@ -409,14 +409,14 @@ const CategoriesPage = () => {
             <div>
               <Label htmlFor="parent_id">Parent Category (optional)</Label>
               <Select
-                value={form.parent_id}
-                onValueChange={(value) => setForm((prev) => ({ ...prev, parent_id: value }))}
+                value={form.parent_id ?? "__none__"}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, parent_id: value === "__none__" ? "" : value }))}
               >
                 <SelectTrigger id="parent_id">
                   <SelectValue placeholder="Select parent category (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None (Top Level)</SelectItem>
+                  <SelectItem value="__none__">None (Top Level)</SelectItem>
                   {parentOptions
                     .filter((item) => !editingCategory || item.id !== editingCategory.id)
                     .map((item) => (
