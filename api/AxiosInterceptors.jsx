@@ -9,6 +9,57 @@ const Api = axios.create({
 
 let isUnauthorizedToastShown = false;
 
+// List of public endpoints that don't require authentication
+const publicEndpoints = [
+  'get-system-settings',
+  'get-categories',
+  'get-item',
+  'get-featured-section',
+  'get-slider',
+  'get-languages',
+  'get-package',
+  'blogs',
+  'faq',
+  'countries',
+  'states',
+  'cities',
+  'areas',
+  'seo-settings',
+  'get-seller',
+  'auth/login',
+  'auth/register',
+  'auth/email/verify',
+  'auth/email/resend',
+  'auth/forgot-password',
+];
+
+// Function to check if token is valid JWT format
+function isValidToken(token) {
+  if (!token || typeof token !== 'string') return false;
+  
+  try {
+    // JWT tokens have 3 parts separated by dots
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    
+    // Try to decode the payload (second part) to check if it's valid base64
+    try {
+      atob(parts[1]);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  } catch (e) {
+    return false;
+  }
+}
+
+// Function to check if endpoint is public
+function isPublicEndpoint(url) {
+  if (!url) return false;
+  return publicEndpoints.some(endpoint => url.includes(endpoint));
+}
+
 Api.interceptors.request.use(function (config) {
   let token = undefined;
   let langCode = undefined;
@@ -19,10 +70,23 @@ Api.interceptors.request.use(function (config) {
     if (!token) {
       token = localStorage.getItem("token");
     }
+    
+    // Validate token before sending
+    if (token && !isValidToken(token)) {
+      // Remove corrupted token
+      console.warn("Invalid token format detected, removing from storage");
+      localStorage.removeItem("token");
+      token = undefined;
+    }
+    
     langCode = state?.CurrentLanguage?.language?.code;
   }
 
-  if (token) config.headers.authorization = `Bearer ${token}`;
+  // Only send token if it's valid
+  if (token && isValidToken(token)) {
+    config.headers.authorization = `Bearer ${token}`;
+  }
+  
   if (langCode) config.headers["Content-Language"] = langCode;
 
   return config;
@@ -35,7 +99,22 @@ Api.interceptors.response.use(
   },
   function (error) {
     if (error.response && error.response.status === 401) {
-      // Call the logout function if the status code is 401
+      const url = error.config?.url || '';
+      
+      // For public endpoints, just clear the token and retry without it
+      if (isPublicEndpoint(url)) {
+        // Clear invalid token
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("token");
+        }
+        logoutSuccess();
+        
+        // Don't show unauthorized modal for public endpoints
+        // Just reject the error so the component can handle it
+        return Promise.reject(error);
+      }
+      
+      // For protected endpoints, show unauthorized modal
       logoutSuccess();
       if (!isUnauthorizedToastShown) {
         store.dispatch(setIsUnauthorized(true));
