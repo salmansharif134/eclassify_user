@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import SellerHubPageHeader from "@/components/SellerHub/SellerHubPageHeader";
@@ -16,6 +16,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Search, Plus, Edit, Trash2, RefreshCw, Tags, Loader2, Image as ImageIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { TableSkeleton } from "@/components/SellerHub/components/LoadingSkeleton";
+import CustomImage from "@/components/Common/CustomImage";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
@@ -34,6 +45,8 @@ const CategoriesPage = () => {
     image: null,
   });
   const [imagePreview, setImagePreview] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -111,6 +124,7 @@ const CategoriesPage = () => {
 
   const handleSave = async () => {
     try {
+      setIsSaving(true);
       const formData = new FormData();
       formData.append("name", form.name);
       if (form.slug) {
@@ -125,13 +139,18 @@ const CategoriesPage = () => {
 
       if (editingCategory) {
         await sellerHubApi.updateSellerCategory(editingCategory.id, formData);
-        toast.success("Category updated.");
+        toast.success("Category updated successfully.");
       } else {
         await sellerHubApi.createSellerCategory(formData);
-        toast.success("Category created.");
+        toast.success("Category created successfully.");
       }
       setDialogOpen(false);
       setPage(1);
+      // Refresh categories
+      const response = await sellerHubApi.getSellerCategories({ page, perPage, query });
+      const payload = response?.data?.data ?? response?.data;
+      const list = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : [];
+      setCategories(list);
     } catch (err) {
       const message =
         err?.response?.data?.message ||
@@ -144,7 +163,15 @@ const CategoriesPage = () => {
       } else {
         toast.error(message);
       }
+    } finally {
+      setIsSaving(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setPage(1);
+    setTimeout(() => setIsRefreshing(false), 500);
   };
 
   const handleDelete = async (categoryId) => {
@@ -159,82 +186,176 @@ const CategoriesPage = () => {
 
   return (
     <div className="space-y-6">
-      <SellerHubPageHeader
-        title="Categories"
-        description="Create and manage listing categories."
-        actionLabel="Add category"
-        onAction={openCreate}
-      />
+      <div className="flex items-center justify-between">
+        <SellerHubPageHeader
+          title="Categories"
+          description="Create and manage listing categories."
+          actionLabel="Add category"
+          onAction={openCreate}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
 
-      <Card>
-        <CardContent className="py-5">
-          <Input
-            placeholder="Search categories"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setPage(1);
-            }}
-          />
+      {/* Search Card */}
+      <Card className="border-2 shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Search className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="text-lg">Search Categories</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search categories by name or slug..."
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(1);
+              }}
+              className="pl-10"
+            />
+          </div>
         </CardContent>
       </Card>
 
       {error && (
-        <Card>
-          <CardContent className="py-3 text-sm text-red-600">{error}</CardContent>
+        <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
+          <CardContent className="py-3 text-sm text-red-600 dark:text-red-400">{error}</CardContent>
         </Card>
       )}
 
-      <Card>
+      <Card className="border-2 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
+          <div className="flex items-center gap-2">
+            <Tags className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">Category List</CardTitle>
+          </div>
+          <Badge variant="outline" className="text-xs">
+            {categories.length} {categories.length === 1 ? 'category' : 'categories'}
+          </Badge>
+        </CardHeader>
         <CardContent className="py-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Icon</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Parent</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {categories.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell>
-                    {category.image ? (
-                      <img
-                        src={category.image}
-                        alt={category.name}
-                        className="w-10 h-10 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">
-                        No Icon
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">{category.name}</TableCell>
-                  <TableCell>{category.slug || "-"}</TableCell>
-                  <TableCell>{category.parent_name || "-"}</TableCell>
-                  <TableCell className="flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(category)}>
-                      Edit
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(category.id)}>
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {!isLoading && categories.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                    No categories found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          {isLoading ? (
+            <TableSkeleton rows={5} cols={5} />
+          ) : (
+            <div className="rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">Icon</TableHead>
+                    <TableHead className="font-semibold">Name</TableHead>
+                    <TableHead className="font-semibold">Slug</TableHead>
+                    <TableHead className="font-semibold">Parent</TableHead>
+                    <TableHead className="font-semibold text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categories.map((category, index) => (
+                    <TableRow 
+                      key={category.id}
+                      className="hover:bg-muted/50 transition-colors"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <TableCell>
+                        <div className="h-12 w-12 rounded-lg overflow-hidden border bg-slate-100">
+                          {category.image ? (
+                            <CustomImage
+                              src={category.image}
+                              alt={category.name}
+                              width={48}
+                              height={48}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center">
+                              <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-semibold text-slate-900">{category.name}</p>
+                          {category.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-1">{category.description}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {category.slug || "-"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {category.parent_name ? (
+                          <Badge variant="secondary">{category.parent_name}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => openEdit(category)}
+                            className="gap-1"
+                          >
+                            <Edit className="h-3 w-3" />
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleDelete(category.id)}
+                            className="gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {!isLoading && categories.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-12 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <Tags className="h-12 w-12 text-muted-foreground/50" />
+                          <p className="text-muted-foreground font-medium">No categories found</p>
+                          <p className="text-sm text-muted-foreground">
+                            {query ? "Try adjusting your search" : "Create your first category to get started"}
+                          </p>
+                          {!query && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={openCreate}
+                              className="mt-2 gap-1"
+                            >
+                              <Plus className="h-4 w-4" />
+                              Add Category
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
           <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
             <span>
               Showing {categories.length} of {meta.total || categories.length} categories
@@ -286,16 +407,28 @@ const CategoriesPage = () => {
               />
             </div>
             <div>
-              <Label htmlFor="parent_id">Parent ID (optional)</Label>
-              <Input
-                id="parent_id"
-                placeholder="Parent ID (optional)"
+              <Label htmlFor="parent_id">Parent Category (optional)</Label>
+              <Select
                 value={form.parent_id}
-                onChange={(event) => setForm((prev) => ({ ...prev, parent_id: event.target.value }))}
-              />
+                onValueChange={(value) => setForm((prev) => ({ ...prev, parent_id: value }))}
+              >
+                <SelectTrigger id="parent_id">
+                  <SelectValue placeholder="Select parent category (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None (Top Level)</SelectItem>
+                  {parentOptions
+                    .filter((item) => !editingCategory || item.id !== editingCategory.id)
+                    .map((item) => (
+                      <SelectItem key={item.id} value={String(item.id)}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
               {parentOptions.length > 0 && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Available parents: {parentOptions.map((item) => item.name).join(", ")}
+                  {parentOptions.length} parent {parentOptions.length === 1 ? 'category' : 'categories'} available
                 </p>
               )}
             </div>
@@ -320,11 +453,18 @@ const CategoriesPage = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={isSaving}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={!form.name}>
-              Save
+            <Button onClick={handleSave} disabled={!form.name || isSaving} className="gap-2">
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

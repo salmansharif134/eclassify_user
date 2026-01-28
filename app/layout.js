@@ -32,6 +32,13 @@ export const generateMetadata = () => {
 export default function RootLayout({ children }) {
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
+  // Validate Google Client ID
+  if (typeof window !== "undefined" && !googleClientId) {
+    console.warn(
+      "⚠️ NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set. Google OAuth will not work."
+    );
+  }
+
   return (
     <html
       lang="en"
@@ -43,12 +50,19 @@ export default function RootLayout({ children }) {
           crossOrigin="anonymous" strategy="afterInteractive" /> */}
       </head>
       <body className={`${manrope.className} !pointer-events-auto`}>
-        <GoogleOAuthProvider clientId={googleClientId}>
+        {googleClientId ? (
+          <GoogleOAuthProvider clientId={googleClientId}>
+            <Providers>
+              {children}
+              <Toaster position="top-center" />
+            </Providers>
+          </GoogleOAuthProvider>
+        ) : (
           <Providers>
             {children}
             <Toaster position="top-center" />
           </Providers>
-        </GoogleOAuthProvider>
+        )}
         <div id="recaptcha-container"></div>
       </body>
     </html>

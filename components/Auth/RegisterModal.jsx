@@ -71,6 +71,13 @@ const RegisterModal = ({
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
 
+  // Error states
+  const [errors, setErrors] = useState({
+    email: "",
+    username: "",
+    password: "",
+  });
+
   // Active authentication methods
   const mobile_authentication = Number(settings?.mobile_authentication);
   const google_authentication = Number(settings?.google_authentication);
@@ -217,8 +224,17 @@ const RegisterModal = ({
     }
   };
 
-  const handleGoogleSignupError = () => {
-    toast.error(t("somethingWentWrong"));
+  const handleGoogleSignupError = (error) => {
+    console.error("Google OAuth Error:", error);
+    if (error?.type === "popup_closed_by_user") {
+      toast.error("Sign up cancelled");
+    } else if (error?.error === "popup_blocked") {
+      toast.error("Popup blocked. Please allow popups for this site.");
+    } else {
+      toast.error(
+        "Google sign up failed. If you see 'origin_mismatch' error, please add your domain to Google Cloud Console."
+      );
+    }
   };
 
   const sendOtpWithTwillio = async (PhoneNumber) => {
@@ -273,24 +289,43 @@ const RegisterModal = ({
   const Signin = async (e) => {
     e.preventDefault();
 
+    const newErrors = {
+      email: "",
+      username: "",
+      password: "",
+    };
+
+    let hasErrors = false;
+
     if (!email) {
-      toast.error(t("emailRequired"));
-      return;
+      newErrors.email = t("emailRequired") || "Email is required";
+      hasErrors = true;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      toast.error(t("emailInvalid"));
-      return;
+      newErrors.email = t("emailInvalid") || "Invalid email format";
+      hasErrors = true;
     }
     if (username?.trim() === "") {
-      toast.error(t("usernameRequired"));
-      return;
+      newErrors.username = t("usernameRequired") || "Username is required";
+      hasErrors = true;
     }
     if (!password) {
-      toast.error(t("passwordRequired"));
-      return;
+      newErrors.password = t("passwordRequired") || "Password is required";
+      hasErrors = true;
     } else if (password.length < 6) {
-      toast.error(t("passwordTooShort"));
+      newErrors.password = t("passwordTooShort") || "Password must be at least 6 characters";
+      hasErrors = true;
+    }
+
+    setErrors(newErrors);
+
+    if (hasErrors) {
+      const firstError = Object.values(newErrors).find((error) => error);
+      if (firstError) {
+        toast.error(firstError);
+      }
       return;
     }
+
     try {
       setShowLoader(true);
       try {
@@ -302,6 +337,29 @@ const RegisterModal = ({
         OnHide();
         setIsMailSentSuccess(true);
       } catch (error) {
+        // Handle server-side validation errors
+        if (error?.response?.data?.errors) {
+          const serverErrors = error.response.data.errors;
+          const updatedErrors = { ...newErrors };
+          
+          if (serverErrors.email) {
+            updatedErrors.email = Array.isArray(serverErrors.email) 
+              ? serverErrors.email[0] 
+              : serverErrors.email;
+          }
+          if (serverErrors.name || serverErrors.username) {
+            updatedErrors.username = Array.isArray(serverErrors.name || serverErrors.username) 
+              ? (serverErrors.name || serverErrors.username)[0] 
+              : (serverErrors.name || serverErrors.username);
+          }
+          if (serverErrors.password) {
+            updatedErrors.password = Array.isArray(serverErrors.password) 
+              ? serverErrors.password[0] 
+              : serverErrors.password;
+          }
+          
+          setErrors(updatedErrors);
+        }
         toast.error(error?.response?.data?.message || t("somethingWentWrong"));
       }
     } catch (error) {
@@ -484,14 +542,25 @@ const RegisterModal = ({
             {IsPasswordScreen && (
               <RegPasswordForm
                 username={username}
-                setUsername={setUsername}
+                setUsername={(value) => {
+                  setUsername(value);
+                  if (errors.username) {
+                    setErrors((prev) => ({ ...prev, username: "" }));
+                  }
+                }}
                 password={password}
-                setPassword={setPassword}
+                setPassword={(value) => {
+                  setPassword(value);
+                  if (errors.password) {
+                    setErrors((prev) => ({ ...prev, password: "" }));
+                  }
+                }}
                 IsPasswordVisible={IsPasswordVisible}
                 setIsPasswordVisible={setIsPasswordVisible}
                 showLoader={showLoader}
                 Signin={Signin}
                 t={t}
+                errors={errors}
               />
             )}
 

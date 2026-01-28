@@ -169,8 +169,17 @@ const LoginModal = ({ IsLoginOpen, setIsRegisterModalOpen }) => {
     }
   };
 
-  const handleGoogleLoginError = () => {
-    toast.error("Google login failed. Please try again.");
+  const handleGoogleLoginError = (error) => {
+    console.error("Google OAuth Error:", error);
+    if (error?.type === "popup_closed_by_user") {
+      toast.error("Sign in cancelled");
+    } else if (error?.error === "popup_blocked") {
+      toast.error("Popup blocked. Please allow popups for this site.");
+    } else {
+      toast.error(
+        "Google login failed. If you see 'origin_mismatch' error, please add your domain to Google Cloud Console."
+      );
+    }
   };
 
   const handleCreateAnAccount = () => {

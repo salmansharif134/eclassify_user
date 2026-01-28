@@ -8,6 +8,12 @@ import SellerHubPageHeader from "@/components/SellerHub/SellerHubPageHeader";
 import { getStatusBadge } from "@/components/SellerHub/statusUtils";
 import { sellerHubApi } from "@/utils/api";
 import { useSearchParams } from "next/navigation";
+import { Wallet, RefreshCw, DollarSign, Clock, CheckCircle2, Download, Search } from "lucide-react";
+import StatCard from "@/components/SellerHub/components/StatCard";
+import { StatCardSkeleton, TableSkeleton, CardSkeleton } from "@/components/SellerHub/components/LoadingSkeleton";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 const PaymentsPage = () => {
   const searchParams = useSearchParams();
@@ -26,6 +32,7 @@ const PaymentsPage = () => {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const urlQuery = searchParams.get("query") || "";
@@ -46,7 +53,17 @@ const PaymentsPage = () => {
           perPage,
           query: query || undefined,
         });
+        console.log("=== PAYMENTS API DEBUG ===");
+        console.log("1. Full Response:", response);
+        console.log("2. Response Data:", response?.data);
+        console.log("3. Response Data Data:", response?.data?.data);
+        
         const payload = response?.data?.data ?? response?.data;
+        console.log("4. Final Payload:", payload);
+        console.log("5. Balance Summary from payload:", payload?.balanceSummary);
+        console.log("6. Summary from payload:", payload?.summary);
+        console.log("7. All payload keys:", Object.keys(payload || {}));
+        
         const list = Array.isArray(payload?.transactions)
           ? payload.transactions
           : Array.isArray(payload?.data)
@@ -59,10 +76,11 @@ const PaymentsPage = () => {
         };
         if (isMounted) {
           const nextSummary = payload?.balanceSummary || payload?.summary || summary;
+          console.log("Setting Summary:", nextSummary);
           setSummary({
-            balance: nextSummary?.balance ?? 0,
-            available: nextSummary?.available ?? 0,
-            pending: nextSummary?.pending ?? 0,
+            balance: Number(nextSummary?.balance ?? 0),
+            available: Number(nextSummary?.available ?? 0),
+            pending: Number(nextSummary?.pending ?? 0),
             nextPayoutInDays:
               nextSummary?.nextPayoutInDays ??
               nextSummary?.next_payout_in_days ??
@@ -92,157 +110,259 @@ const PaymentsPage = () => {
     };
   }, [page, perPage, query]);
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setPage(1);
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
+
   return (
     <div className="space-y-6">
-      <SellerHubPageHeader
-        title="Payments"
-        description="Review balances, payouts, and transaction activity."
-      />
+      <div className="flex items-center justify-between">
+        <SellerHubPageHeader
+          title="Payments"
+          description="Review balances, payouts, and transaction activity."
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
 
       {error && (
-        <Card>
-          <CardContent className="py-3 text-sm text-red-600">{error}</CardContent>
+        <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
+          <CardContent className="py-3 text-sm text-red-600 dark:text-red-400">{error}</CardContent>
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <p className="text-sm text-muted-foreground">Balance</p>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">
-              ${Number(summary.balance || 0).toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">Available for payout</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <p className="text-sm text-muted-foreground">Available funds</p>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">
-              ${Number(summary.available || 0).toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {summary.nextPayoutInDays !== null
-                ? `Next payout in ${summary.nextPayoutInDays} days`
-                : "Next payout scheduled"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <p className="text-sm text-muted-foreground">Pending</p>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">
-              ${Number(summary.pending || 0).toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {summary.pendingLabel || "Orders in processing"}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {isLoading ? (
+        <div className="grid gap-4 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-3">
+          <StatCard
+            label="Balance"
+            value={`$${Number(summary.balance || 0).toLocaleString()}`}
+            helper="Available for payout"
+            icon={Wallet}
+            color="blue"
+          />
+          <StatCard
+            label="Available Funds"
+            value={`$${Number(summary.available || 0).toLocaleString()}`}
+            helper={summary.nextPayoutInDays !== null
+              ? `Next payout in ${summary.nextPayoutInDays} days`
+              : "Next payout scheduled"}
+            icon={DollarSign}
+            color="green"
+          />
+          <StatCard
+            label="Pending"
+            value={`$${Number(summary.pending || 0).toLocaleString()}`}
+            helper={summary.pendingLabel || "Orders in processing"}
+            icon={Clock}
+            color="amber"
+          />
+        </div>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Payout history</CardTitle>
+      {/* Search */}
+      <Card className="border-2 shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Search className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="text-lg">Search Transactions</CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Payout ID</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {payouts.map((payout) => (
-                <TableRow key={payout.id}>
-                  <TableCell className="font-medium">{payout.id}</TableCell>
-                  <TableCell>{payout.date}</TableCell>
-                  <TableCell>{payout.method}</TableCell>
-                  <TableCell>{getStatusBadge(payout.status)}</TableCell>
-                  <TableCell>${Number(payout.amount || 0).toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
-              {!isLoading && payouts.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                    No payouts found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Transaction ID</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell className="font-medium">{transaction.id}</TableCell>
-                  <TableCell>{transaction.date}</TableCell>
-                  <TableCell>{transaction.type}</TableCell>
-                  <TableCell>{getStatusBadge(transaction.status)}</TableCell>
-                  <TableCell>${Number(transaction.amount || 0).toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
-              {!isLoading && transactions.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                    No transactions found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              Showing {transactions.length} of {meta.total || transactions.length} transactions
-            </span>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page * perPage >= (meta.total || 0)}
-                onClick={() => setPage((prev) => prev + 1)}
-              >
-                Next
-              </Button>
-            </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by transaction ID or type..."
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(1);
+              }}
+              className="pl-10"
+            />
           </div>
         </CardContent>
       </Card>
+
+      {isLoading ? (
+        <CardSkeleton />
+      ) : (
+        <Card className="border-2 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Payout History</CardTitle>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              {payouts.length} {payouts.length === 1 ? 'payout' : 'payouts'}
+            </Badge>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">Payout ID</TableHead>
+                    <TableHead className="font-semibold">Date</TableHead>
+                    <TableHead className="font-semibold">Method</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {payouts.map((payout, index) => (
+                    <TableRow 
+                      key={payout.id}
+                      className="hover:bg-muted/50 transition-colors"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <TableCell className="font-medium font-mono text-sm">{payout.id}</TableCell>
+                      <TableCell>{payout.date}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{payout.method || "N/A"}</Badge>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(payout.status)}</TableCell>
+                      <TableCell className="text-right">
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          ${Number(payout.amount || 0).toFixed(2)}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {!isLoading && payouts.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-12 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <Wallet className="h-12 w-12 text-muted-foreground/50" />
+                          <p className="text-muted-foreground font-medium">No payouts found</p>
+                          <p className="text-sm text-muted-foreground">
+                            Payout history will appear here once payments are processed
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {isLoading ? (
+        <CardSkeleton />
+      ) : (
+        <Card className="border-2 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Transactions</CardTitle>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              {transactions.length} {transactions.length === 1 ? 'transaction' : 'transactions'}
+            </Badge>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">Transaction ID</TableHead>
+                    <TableHead className="font-semibold">Date</TableHead>
+                    <TableHead className="font-semibold">Type</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {transactions.map((transaction, index) => (
+                    <TableRow 
+                      key={transaction.id}
+                      className="hover:bg-muted/50 transition-colors"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <TableCell className="font-medium font-mono text-sm">{transaction.id}</TableCell>
+                      <TableCell>{transaction.date}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{transaction.type || "N/A"}</Badge>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(transaction.status)}</TableCell>
+                      <TableCell className="text-right">
+                        <span className={cn(
+                          "font-semibold",
+                          (transaction.type || "").toLowerCase().includes("refund") 
+                            ? "text-red-600 dark:text-red-400" 
+                            : "text-emerald-600 dark:text-emerald-400"
+                        )}>
+                          ${(transaction.type || "").toLowerCase().includes("refund") ? "-" : ""}
+                          {Number(transaction.amount || 0).toFixed(2)}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {!isLoading && transactions.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-12 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <DollarSign className="h-12 w-12 text-muted-foreground/50" />
+                          <p className="text-muted-foreground font-medium">No transactions found</p>
+                          <p className="text-sm text-muted-foreground">
+                            {query ? "Try adjusting your search" : "Transaction history will appear here"}
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            {!isLoading && (
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Showing <span className="font-semibold text-foreground">{transactions.length}</span> of{" "}
+                  <span className="font-semibold text-foreground">{meta.total || transactions.length}</span> transactions
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1 || isLoading}
+                    onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                  >
+                    Previous
+                  </Button>
+                  <div className="text-sm text-muted-foreground px-2">
+                    Page {page} of {Math.ceil((meta.total || 0) / perPage) || 1}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page * perPage >= (meta.total || 0) || isLoading}
+                    onClick={() => setPage((prev) => prev + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

@@ -21,13 +21,22 @@ const BuyerSignup = () => {
   const isLoggedIn = useSelector(getIsLoggedIn);
   const fetchFCM = useSelector(Fcmtoken);
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
     IsPasswordVisible: false,
     IsConfirmPasswordVisible: false,
     showLoader: false,
+  });
+
+  const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   useEffect(() => {
@@ -38,43 +47,104 @@ const BuyerSignup = () => {
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
 
-    if (!formData.name) {
-      toast.error("Name is required");
-      return;
+    // Reset errors
+    const newErrors = {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    };
+
+    let hasErrors = false;
+
+    if (!formData.firstName) {
+      newErrors.firstName = "First name is required";
+      hasErrors = true;
+    }
+    if (!formData.lastName) {
+      newErrors.lastName = "Last name is required";
+      hasErrors = true;
     }
     if (!formData.email) {
-      toast.error(t("emailRequired"));
-      return;
+      newErrors.email = t("emailRequired") || "Email is required";
+      hasErrors = true;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      toast.error(t("emailInvalid"));
-      return;
+      newErrors.email = t("emailInvalid") || "Invalid email format";
+      hasErrors = true;
     }
     if (!formData.password) {
-      toast.error(t("passwordRequired"));
-      return;
+      newErrors.password = t("passwordRequired") || "Password is required";
+      hasErrors = true;
     } else if (formData.password.length < 6) {
-      toast.error(t("passwordTooShort"));
-      return;
+      newErrors.password = t("passwordTooShort") || "Password must be at least 6 characters";
+      hasErrors = true;
     }
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match");
+      newErrors.confirmPassword = "Passwords do not match";
+      hasErrors = true;
+    }
+
+    setErrors(newErrors);
+
+    if (hasErrors) {
+      // Show toast for first error
+      const firstError = Object.values(newErrors).find((error) => error);
+      if (firstError) {
+        toast.error(firstError);
+      }
       return;
     }
 
     try {
       setFormData((prev) => ({ ...prev, showLoader: true }));
       const response = await authApi.register({
-        name: formData.name,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
         email: formData.email,
         password: formData.password,
       });
 
       const data = response.data;
+      
+      // Handle server-side validation errors
+      if (response?.data?.errors) {
+        const serverErrors = response.data.errors;
+        const newErrors = { ...errors };
+        
+        if (serverErrors.first_name) {
+          newErrors.firstName = Array.isArray(serverErrors.first_name) 
+            ? serverErrors.first_name[0] 
+            : serverErrors.first_name;
+        }
+        if (serverErrors.last_name) {
+          newErrors.lastName = Array.isArray(serverErrors.last_name) 
+            ? serverErrors.last_name[0] 
+            : serverErrors.last_name;
+        }
+        if (serverErrors.email) {
+          newErrors.email = Array.isArray(serverErrors.email) 
+            ? serverErrors.email[0] 
+            : serverErrors.email;
+        }
+        if (serverErrors.password) {
+          newErrors.password = Array.isArray(serverErrors.password) 
+            ? serverErrors.password[0] 
+            : serverErrors.password;
+        }
+        
+        setErrors(newErrors);
+      }
+      
       if (data?.error === false || data?.error === "false") {
         // Auto login after signup
         const loginResponse = await authApi.login({
@@ -89,7 +159,7 @@ const BuyerSignup = () => {
           navigate("/");
         } else {
           toast.success("Account created! Please login.");
-          navigate("/buyer-login");
+          navigate("/login");
         }
       } else {
         toast.error(data?.message || t("somethingWentWrong"));
@@ -98,6 +168,36 @@ const BuyerSignup = () => {
       const serverMessage =
         error?.response?.data?.message ||
         (error?.response?.data ? JSON.stringify(error.response.data) : null);
+      
+      // Handle server-side validation errors
+      if (error?.response?.data?.errors) {
+        const serverErrors = error.response.data.errors;
+        const newErrors = { ...errors };
+        
+        if (serverErrors.first_name) {
+          newErrors.firstName = Array.isArray(serverErrors.first_name) 
+            ? serverErrors.first_name[0] 
+            : serverErrors.first_name;
+        }
+        if (serverErrors.last_name) {
+          newErrors.lastName = Array.isArray(serverErrors.last_name) 
+            ? serverErrors.last_name[0] 
+            : serverErrors.last_name;
+        }
+        if (serverErrors.email) {
+          newErrors.email = Array.isArray(serverErrors.email) 
+            ? serverErrors.email[0] 
+            : serverErrors.email;
+        }
+        if (serverErrors.password) {
+          newErrors.password = Array.isArray(serverErrors.password) 
+            ? serverErrors.password[0] 
+            : serverErrors.password;
+        }
+        
+        setErrors(newErrors);
+      }
+      
       toast.error(serverMessage || t("somethingWentWrong"));
     } finally {
       setFormData((prev) => ({ ...prev, showLoader: false }));
@@ -140,14 +240,33 @@ const BuyerSignup = () => {
         <CardContent className="space-y-6">
           <form onSubmit={handleSignup} className="flex flex-col gap-6">
             <div className="labelInputCont">
-              <Label className="requiredInputLabel">Full Name</Label>
+              <Label className="requiredInputLabel">First Name</Label>
               <Input
                 type="text"
-                placeholder="Enter your full name"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
+                placeholder="Enter your first name"
+                value={formData.firstName}
+                onChange={(e) => handleInputChange("firstName", e.target.value)}
+                className={errors.firstName ? "border-red-500 focus-visible:ring-red-500" : ""}
                 required
               />
+              {errors.firstName && (
+                <p className="text-sm text-red-500 mt-1">{errors.firstName}</p>
+              )}
+            </div>
+
+            <div className="labelInputCont">
+              <Label className="requiredInputLabel">Last Name</Label>
+              <Input
+                type="text"
+                placeholder="Enter your last name"
+                value={formData.lastName}
+                onChange={(e) => handleInputChange("lastName", e.target.value)}
+                className={errors.lastName ? "border-red-500 focus-visible:ring-red-500" : ""}
+                required
+              />
+              {errors.lastName && (
+                <p className="text-sm text-red-500 mt-1">{errors.lastName}</p>
+              )}
             </div>
 
             <div className="labelInputCont">
@@ -157,8 +276,12 @@ const BuyerSignup = () => {
                 placeholder={t("enterEmail")}
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
+                className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
                 required
               />
+              {errors.email && (
+                <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+              )}
             </div>
 
             <div className="labelInputCont">
@@ -167,7 +290,7 @@ const BuyerSignup = () => {
                 <Input
                   type={formData.IsPasswordVisible ? "text" : "password"}
                   placeholder={t("enterPassword")}
-                  className="ltr:pr-9 rtl:pl-9"
+                  className={`ltr:pr-9 rtl:pl-9 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                   value={formData.password}
                   onChange={(e) => handleInputChange("password", e.target.value)}
                   required
@@ -186,6 +309,10 @@ const BuyerSignup = () => {
                   )}
                 </button>
               </div>
+              <p className="text-sm text-muted-foreground mt-1">Minimum 6 characters</p>
+              {errors.password && (
+                <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+              )}
             </div>
 
             <div className="labelInputCont">
@@ -194,7 +321,7 @@ const BuyerSignup = () => {
                 <Input
                   type={formData.IsConfirmPasswordVisible ? "text" : "password"}
                   placeholder="Confirm your password"
-                  className="ltr:pr-9 rtl:pl-9"
+                  className={`ltr:pr-9 rtl:pl-9 ${errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                   value={formData.confirmPassword}
                   onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                   required
@@ -216,6 +343,9 @@ const BuyerSignup = () => {
                   )}
                 </button>
               </div>
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-500 mt-1">{errors.confirmPassword}</p>
+              )}
             </div>
 
             <Button
@@ -244,8 +374,17 @@ const BuyerSignup = () => {
           <div className="flex justify-center">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
-              onError={() => {
-                toast.error("Google sign in failed");
+              onError={(error) => {
+                console.error("Google OAuth Error:", error);
+                if (error?.type === "popup_closed_by_user") {
+                  toast.error("Sign in cancelled");
+                } else if (error?.error === "popup_blocked") {
+                  toast.error("Popup blocked. Please allow popups for this site.");
+                } else {
+                  toast.error(
+                    "Google sign in failed. Please check that your domain is authorized in Google Cloud Console."
+                  );
+                }
               }}
             />
           </div>

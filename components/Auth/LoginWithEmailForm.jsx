@@ -22,22 +22,45 @@ const LoginWithEmailForm = ({ OnHide }) => {
     showLoader: false,
   });
 
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+  });
+
   const { email, password, IsPasswordVisible, showLoader } = loginStates;
 
   const Signin = async (e) => {
     e.preventDefault();
 
+    const newErrors = {
+      email: "",
+      password: "",
+    };
+
+    let hasErrors = false;
+
     if (!email) {
-      toast.error(t("emailRequired"));
-      return;
+      newErrors.email = t("emailRequired") || "Email is required";
+      hasErrors = true;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      toast.error(t("emailInvalid"));
-      return;
-    } else if (!password) {
-      toast.error(t("passwordRequired"));
-      return;
+      newErrors.email = t("emailInvalid") || "Invalid email format";
+      hasErrors = true;
+    }
+    if (!password) {
+      newErrors.password = t("passwordRequired") || "Password is required";
+      hasErrors = true;
     } else if (password.length < 6) {
-      toast.error(t("passwordTooShort"));
+      newErrors.password = t("passwordTooShort") || "Password must be at least 6 characters";
+      hasErrors = true;
+    }
+
+    setErrors(newErrors);
+
+    if (hasErrors) {
+      const firstError = Object.values(newErrors).find((error) => error);
+      if (firstError) {
+        toast.error(firstError);
+      }
       return;
     }
 
@@ -53,6 +76,17 @@ const LoginWithEmailForm = ({ OnHide }) => {
       if (data?.error === false || data?.error === "false") {
         loadUpdateData(data);
         toast.success(data.message);
+        
+        // Check if user has seller account and redirect accordingly
+        const hasSellerAccount = Boolean(
+          data?.data?.seller_id ||
+          data?.data?.seller?.id ||
+          data?.data?.is_seller === 1 ||
+          data?.data?.is_seller === true
+        );
+
+        // Call OnHide callback which will handle navigation
+        // The parent component (Login page) will check user role and redirect
         OnHide();
       } else {
         toast.error(data?.message || t("somethingWentWrong"));
@@ -63,6 +97,26 @@ const LoginWithEmailForm = ({ OnHide }) => {
         (error?.response?.data
           ? JSON.stringify(error.response.data)
           : null);
+      
+      // Handle server-side validation errors
+      if (error?.response?.data?.errors) {
+        const serverErrors = error.response.data.errors;
+        const newErrors = { ...errors };
+        
+        if (serverErrors.email) {
+          newErrors.email = Array.isArray(serverErrors.email) 
+            ? serverErrors.email[0] 
+            : serverErrors.email;
+        }
+        if (serverErrors.password) {
+          newErrors.password = Array.isArray(serverErrors.password) 
+            ? serverErrors.password[0] 
+            : serverErrors.password;
+        }
+        
+        setErrors(newErrors);
+      }
+      
       console.error("Login error response:", error?.response || error);
       toast.error(serverMessage || t("somethingWentWrong"));
     } finally {
@@ -93,11 +147,18 @@ const LoginWithEmailForm = ({ OnHide }) => {
             type="email"
             placeholder={t("enterEmail")}
             value={email}
-            onChange={(e) =>
-              setLoginStates((prev) => ({ ...prev, email: e.target.value }))
-            }
+            onChange={(e) => {
+              setLoginStates((prev) => ({ ...prev, email: e.target.value }));
+              if (errors.email) {
+                setErrors((prev) => ({ ...prev, email: "" }));
+              }
+            }}
+            className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
             ref={emailRef}
           />
+          {errors.email && (
+            <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+          )}
         </div>
         <div className="labelInputCont">
           <Label className="requiredInputLabel">{t("password")}</Label>
@@ -105,14 +166,17 @@ const LoginWithEmailForm = ({ OnHide }) => {
             <Input
               type={IsPasswordVisible ? "text" : "password"}
               placeholder={t("enterPassword")}
-              className="ltr:pr-9 rtl:pl-9"
+              className={`ltr:pr-9 rtl:pl-9 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
               value={password}
-              onChange={(e) =>
+              onChange={(e) => {
                 setLoginStates((prev) => ({
                   ...prev,
                   password: e.target.value,
-                }))
-              }
+                }));
+                if (errors.password) {
+                  setErrors((prev) => ({ ...prev, password: "" }));
+                }
+              }}
             />
             <button
               type="button"
@@ -131,6 +195,10 @@ const LoginWithEmailForm = ({ OnHide }) => {
               )}
             </button>
           </div>
+          <p className="text-sm text-muted-foreground mt-1">Minimum 6 characters</p>
+          {errors.password && (
+            <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+          )}
           <button
             className="text-right font-semibold text-primary"
             onClick={handleForgotModal}

@@ -85,7 +85,12 @@ const ProductDetailCard = ({ productDetails, setProductDetails }) => {
       setIsLoginOpen(true);
       return;
     }
-    navigate(`/checkout?product_id=${productDetails?.id}`);
+    // Use slug instead of id for more reliable product lookup
+    if (productDetails?.slug) {
+      navigate(`/checkout?product_slug=${productDetails.slug}`);
+    } else if (productDetails?.id) {
+      navigate(`/checkout?product_id=${productDetails.id}`);
+    }
   };
 
   return (

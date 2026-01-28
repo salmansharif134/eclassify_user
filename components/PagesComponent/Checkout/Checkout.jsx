@@ -33,6 +33,7 @@ const Checkout = () => {
   const searchParams = useSearchParams();
   const userData = useSelector(userSignUpData);
   const productId = searchParams.get("product_id");
+  const productSlug = searchParams.get("product_slug");
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -50,33 +51,43 @@ const Checkout = () => {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [clientSecret, setClientSecret] = useState(null);
   const [orderSummary, setOrderSummary] = useState(null);
+  const [orderId, setOrderId] = useState(null);
   const [updatingCart, setUpdatingCart] = useState({});
 
   useEffect(() => {
-    if (productId) {
+    if (productId || productSlug) {
       // Single product checkout
       fetchProductForCheckout();
     } else {
       // Cart checkout
       fetchCart();
     }
-  }, [productId]);
+  }, [productId, productSlug]);
 
   const fetchProductForCheckout = async () => {
     try {
       setLoading(true);
-      // Fetch product details by ID
-      const response = await allItemApi.getItems({ id: productId });
+      // Fetch product details by slug (preferred) or ID
+      const params = productSlug ? { slug: productSlug } : { id: productId };
+      const response = await allItemApi.getItems(params);
       if (response.data.error === false && response.data.data?.data?.length > 0) {
-        const product = response.data.data.data[0];
+        const item = response.data.data.data[0];
+        
+        // Check if item has a product_id (required for checkout)
+        if (!item.product_id) {
+          toast.error("This item cannot be purchased directly. Please contact the seller.");
+          navigate("/");
+          return;
+        }
+        
         setCart([{
-          id: product.id,
-          product_id: product.id,
-          name: product.translated_item?.name || product.name,
-          price: product.price,
+          id: item.id,
+          product_id: item.product_id, // Use the actual product_id from products table, not item.id
+          name: item.translated_item?.name || item.name,
+          price: item.price,
           quantity: 1,
-          image: product.image,
-          product: product
+          image: item.image,
+          product: item
         }]);
       } else {
         toast.error("Product not found");
@@ -179,8 +190,10 @@ const Checkout = () => {
   };
 
   const handleCheckout = async () => {
-    // Validate shipping info
-    if (!shippingInfo.full_name || !shippingInfo.email || !shippingInfo.phone || !shippingInfo.address) {
+    // Validate shipping info - all fields are required by backend
+    if (!shippingInfo.full_name || !shippingInfo.email || !shippingInfo.phone || 
+        !shippingInfo.address || !shippingInfo.city || !shippingInfo.state || 
+        !shippingInfo.zip_code || !shippingInfo.country) {
       toast.error("Please fill in all required shipping information");
       return;
     }
@@ -193,14 +206,29 @@ const Checkout = () => {
     try {
       setSubmitting(true);
       
-      // Create order with payment intent
+      // Validate that all cart items have valid product_id
+      const invalidItems = cart.filter(item => !item.product_id);
+      if (invalidItems.length > 0) {
+        toast.error("Some items in your cart are invalid. Please remove them and try again.");
+        return;
+      }
+      
+      // Create order with payment intent - payment is required before order is confirmed
+      // Map zip_code to zip as expected by backend API
+      const shippingInfoForApi = {
+        ...shippingInfo,
+        zip: shippingInfo.zip_code, // Backend expects 'zip' not 'zip_code'
+      };
+      // Remove zip_code from the object since we're using zip
+      delete shippingInfoForApi.zip_code;
+      
       const checkoutData = {
         items: cart.map(item => ({
-          product_id: item.product_id || item.id,
+          product_id: item.product_id, // Must be a valid product_id from products table
           quantity: item.quantity || 1,
         })),
-        shipping_info: shippingInfo,
-        payment_method: paymentMethod,
+        shipping_info: shippingInfoForApi,
+        payment_method: paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1), // Backend expects capitalized (e.g., "Stripe" not "stripe")
       };
 
       const response = await buyerApi.checkout(checkoutData);
@@ -208,29 +236,76 @@ const Checkout = () => {
       if (response.data.error === false) {
         const orderData = response.data.data;
         
-        if (orderData.payment_intent?.client_secret) {
-          setClientSecret(orderData.payment_intent.client_secret);
+        // Check for client_secret in different possible locations
+        // Backend returns it as: payment_intent.payment_gateway_response.client_secret for Stripe
+        const clientSecret = 
+          orderData.payment_intent?.client_secret || 
+          orderData.payment_intent?.payment_gateway_response?.client_secret;
+        
+        if (clientSecret) {
+          // Payment is required - show payment form
+          setClientSecret(clientSecret);
           setOrderSummary(orderData.order_summary);
+          // Store order ID for navigation after payment success
+          // Backend returns order_id (single) or order_ids (array), use the first one
+          const firstOrderId = orderData.order_id || (orderData.order_ids && orderData.order_ids[0]) || 
+            (orderData.orders && orderData.orders[0]?.order_id) ||
+            (orderData.orders && orderData.orders[0]?.id?.replace(/^ORD-/i, ''));
+          setOrderId(firstOrderId);
           setShowPaymentForm(true);
+          toast.info("Please complete payment to confirm your order");
         } else {
-          // Order created without payment (free items or different flow)
-          toast.success("Order placed successfully!");
-          navigate("/buyer-orders");
+          // Log the response structure for debugging
+          console.error("Payment setup failed - Response structure:", {
+            payment_intent: orderData.payment_intent,
+            has_payment_intent: !!orderData.payment_intent,
+            payment_method: paymentMethod,
+            full_response: orderData
+          });
+          
+          // Check if payment intent exists but client_secret is missing
+          if (orderData.payment_intent) {
+            toast.error("Payment setup incomplete. The payment gateway may not be properly configured. Please contact support or try again.");
+          } else {
+            // Payment intent creation likely failed on backend
+            toast.error("Payment setup failed. This may be due to payment gateway configuration issues. Please try again or contact support.");
+          }
         }
       } else {
         toast.error(response.data.message || "Failed to process checkout");
       }
     } catch (error) {
       console.error("Checkout error:", error);
-      toast.error("Failed to process checkout");
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to process checkout";
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handlePaymentSuccess = () => {
-    toast.success("Payment successful! Order placed.");
-    navigate("/buyer-orders");
+  const handlePaymentSuccess = (paymentIntent) => {
+    toast.success("Payment successful! Your order has been confirmed.");
+    // Navigate to order details page after a short delay to show success message
+    setTimeout(() => {
+      // Use stored orderId, or try to extract from paymentIntent metadata
+      let targetOrderId = orderId;
+      
+      if (!targetOrderId && paymentIntent?.metadata) {
+        // Try to get order ID from payment intent metadata if available
+        targetOrderId = paymentIntent.metadata.order_id || 
+                       paymentIntent.metadata.transaction_id;
+      }
+      
+      if (targetOrderId) {
+        // Remove 'ORD-' prefix if present to get numeric ID
+        const numericOrderId = String(targetOrderId).replace(/^ORD-/i, '');
+        navigate(`/buyer-orders/${numericOrderId}`);
+      } else {
+        // Fallback to orders list if order ID is not available
+        console.warn("Order ID not found, redirecting to orders list");
+        navigate("/buyer-orders");
+      }
+    }, 1500);
   };
 
   if (loading) {
@@ -312,27 +387,30 @@ const Checkout = () => {
                     />
                   </div>
                   <div>
-                    <Label>Country</Label>
+                    <Label className="requiredInputLabel">Country</Label>
                     <Input
                       value={shippingInfo.country}
                       onChange={(e) => handleInputChange("country", e.target.value)}
                       placeholder="Enter country"
+                      required
                     />
                   </div>
                   <div>
-                    <Label>State</Label>
+                    <Label className="requiredInputLabel">State</Label>
                     <Input
                       value={shippingInfo.state}
                       onChange={(e) => handleInputChange("state", e.target.value)}
                       placeholder="Enter state"
+                      required
                     />
                   </div>
                   <div>
-                    <Label>City</Label>
+                    <Label className="requiredInputLabel">City</Label>
                     <Input
                       value={shippingInfo.city}
                       onChange={(e) => handleInputChange("city", e.target.value)}
                       placeholder="Enter city"
+                      required
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -345,11 +423,12 @@ const Checkout = () => {
                     />
                   </div>
                   <div>
-                    <Label>Zip Code</Label>
+                    <Label className="requiredInputLabel">Zip Code</Label>
                     <Input
                       value={shippingInfo.zip_code}
                       onChange={(e) => handleInputChange("zip_code", e.target.value)}
                       placeholder="Enter zip code"
+                      required
                     />
                   </div>
                 </div>
@@ -387,7 +466,13 @@ const Checkout = () => {
             {showPaymentForm && clientSecret && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Complete Payment</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard size={20} />
+                    Complete Payment to Confirm Order
+                  </CardTitle>
+                  <CardDescription>
+                    Your order will be confirmed only after successful payment
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <StripePayment
@@ -417,7 +502,7 @@ const Checkout = () => {
                     const quantity = item.quantity || 1;
                     const price = item.price || item.product?.price || 0;
                     const isUpdating = updatingCart[itemId];
-                    const isSingleProduct = !!productId;
+                    const isSingleProduct = !!(productId || productSlug);
 
                     return (
                       <div key={index} className="flex items-center gap-3 pb-3 border-b last:border-0">
@@ -501,20 +586,33 @@ const Checkout = () => {
                   </div>
                 </div>
                 {!showPaymentForm && (
-                  <Button
-                    className="w-full"
-                    onClick={handleCheckout}
-                    disabled={submitting}
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      "Place Order"
-                    )}
-                  </Button>
+                  <>
+                    <Button
+                      className="w-full"
+                      onClick={handleCheckout}
+                      disabled={submitting}
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="mr-2 h-4 w-4" />
+                          Proceed to Payment
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-xs text-center text-muted-foreground mt-2">
+                      Payment is required to confirm your order
+                    </p>
+                  </>
+                )}
+                {showPaymentForm && (
+                  <div className="text-center text-sm text-muted-foreground pt-2">
+                    <p>Complete payment to confirm your order</p>
+                  </div>
                 )}
               </CardContent>
             </Card>

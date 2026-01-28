@@ -53,6 +53,14 @@ const SellerSignupWizard = ({ onComplete }) => {
     isCreating: false,
     isCreated: false,
   });
+
+  // Account creation errors
+  const [accountErrors, setAccountErrors] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   
   // Step 1: Patent Status
   const [hasPatent, setHasPatent] = useState(null);
@@ -494,28 +502,46 @@ const SellerSignupWizard = ({ onComplete }) => {
 
   const handleCreateAccount = async (e) => {
     e.preventDefault();
+    
+    const newErrors = {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    };
+
+    let hasErrors = false;
+
     if (!accountState.name.trim()) {
-      toast.error("Please enter your name");
-      return;
+      newErrors.name = "Please enter your name";
+      hasErrors = true;
     }
     if (!accountState.email.trim()) {
-      toast.error("Please enter your email");
-      return;
-    }
-    if (!/\S+@\S+\.\S+/.test(accountState.email)) {
-      toast.error("Please enter a valid email");
-      return;
+      newErrors.email = "Please enter your email";
+      hasErrors = true;
+    } else if (!/\S+@\S+\.\S+/.test(accountState.email)) {
+      newErrors.email = "Please enter a valid email";
+      hasErrors = true;
     }
     if (!accountState.password) {
-      toast.error("Please enter a password");
-      return;
-    }
-    if (accountState.password.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
+      newErrors.password = "Please enter a password";
+      hasErrors = true;
+    } else if (accountState.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+      hasErrors = true;
     }
     if (accountState.password !== accountState.confirmPassword) {
-      toast.error("Passwords do not match");
+      newErrors.confirmPassword = "Passwords do not match";
+      hasErrors = true;
+    }
+
+    setAccountErrors(newErrors);
+
+    if (hasErrors) {
+      const firstError = Object.values(newErrors).find((error) => error);
+      if (firstError) {
+        toast.error(firstError);
+      }
       return;
     }
     const persistAuthData = (authData) => {
@@ -558,9 +584,55 @@ const SellerSignupWizard = ({ onComplete }) => {
           );
         }
       } else {
+        // Handle server-side validation errors
+        if (error?.response?.data?.errors) {
+          const serverErrors = error.response.data.errors;
+          const updatedErrors = { ...accountErrors };
+          
+          if (serverErrors.name) {
+            updatedErrors.name = Array.isArray(serverErrors.name) 
+              ? serverErrors.name[0] 
+              : serverErrors.name;
+          }
+          if (serverErrors.email) {
+            updatedErrors.email = Array.isArray(serverErrors.email) 
+              ? serverErrors.email[0] 
+              : serverErrors.email;
+          }
+          if (serverErrors.password) {
+            updatedErrors.password = Array.isArray(serverErrors.password) 
+              ? serverErrors.password[0] 
+              : serverErrors.password;
+          }
+          
+          setAccountErrors(updatedErrors);
+        }
         toast.error(data?.message || "Failed to create account");
       }
     } catch (error) {
+      // Handle server-side validation errors
+      if (error?.response?.data?.errors) {
+        const serverErrors = error.response.data.errors;
+        const updatedErrors = { ...accountErrors };
+        
+        if (serverErrors.name) {
+          updatedErrors.name = Array.isArray(serverErrors.name) 
+            ? serverErrors.name[0] 
+            : serverErrors.name;
+        }
+        if (serverErrors.email) {
+          updatedErrors.email = Array.isArray(serverErrors.email) 
+            ? serverErrors.email[0] 
+            : serverErrors.email;
+        }
+        if (serverErrors.password) {
+          updatedErrors.password = Array.isArray(serverErrors.password) 
+            ? serverErrors.password[0] 
+            : serverErrors.password;
+        }
+        
+        setAccountErrors(updatedErrors);
+      }
       toast.error(error?.response?.data?.message || "Failed to create account");
     } finally {
       setAccountState((prev) => ({ ...prev, isCreating: false }));
@@ -594,7 +666,7 @@ const SellerSignupWizard = ({ onComplete }) => {
   return (
     <div className="container max-w-4xl mx-auto py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Become a Seller</h1>
+        <h1 className="text-3xl font-bold mb-2">Sign Up</h1>
         <p className="text-muted-foreground">Sign in to your account to list your patent and connect with buyers</p>
       </div>
 
@@ -643,7 +715,7 @@ const SellerSignupWizard = ({ onComplete }) => {
               {!isLoggedIn && !accountState.isCreated && (
                 <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
                   <div>
-                    <h3 className="text-lg font-semibold">Seller Login</h3>
+                    <h3 className="text-lg font-semibold">Login</h3>
                     <p className="text-sm text-muted-foreground">
                       Sign in to access your seller account and list your patents.
                     </p>

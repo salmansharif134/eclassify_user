@@ -15,7 +15,7 @@ const SellerLogin = () => {
     <div className="container max-w-lg mx-auto py-12">
       <Card>
         <CardHeader>
-          <CardTitle>Seller Login</CardTitle>
+          <CardTitle> Login</CardTitle>
           <CardDescription>Sign in to access your seller dashboard.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -23,7 +23,7 @@ const SellerLogin = () => {
           <div className="text-sm text-center">
             Don’t have an account?{" "}
             <CustomLink href="/seller-signup" className="text-primary underline">
-              Become a Seller
+               Sign Up
             </CustomLink>
           </div>
         </CardContent>

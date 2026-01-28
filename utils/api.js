@@ -105,8 +105,10 @@ export const authApi = {
   login: ({ email, password, fcm_id } = {}) => {
     return Api.post(AUTH_LOGIN, { email, password, fcm_id });
   },
-  register: ({ name, email, password } = {}) => {
-    return Api.post(AUTH_REGISTER, { name, email, password });
+  // Accept dynamic payload so we can support both legacy {name,email,password}
+  // and new {first_name,last_name,email,password} registration.
+  register: (payload = {}) => {
+    return Api.post(AUTH_REGISTER, payload);
   },
   googleLogin: ({ token, fcm_id } = {}) => {
     return Api.post(AUTH_GOOGLE, { token, fcm_id });
@@ -1231,6 +1233,7 @@ export const sellerHubApi = {
     Api.get(SELLER_ORDERS, { params: { page, perPage, status, payment, query, date } }),
   getOrder: (orderId) => Api.get(`${SELLER_ORDERS}/${orderId}`),
   shipOrder: (orderId) => Api.post(`${SELLER_ORDERS}/${orderId}/ship`),
+  deliverOrder: (orderId) => Api.post(`${SELLER_ORDERS}/${orderId}/deliver`),
   refundOrder: (orderId) => Api.post(`${SELLER_ORDERS}/${orderId}/refund`),
   getListings: ({ page, perPage, status, query } = {}) =>
     Api.get(SELLER_LISTINGS, { params: { page, perPage, status, query } }),

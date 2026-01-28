@@ -14,6 +14,7 @@ const RegPasswordForm = ({
   showLoader,
   Signin,
   t,
+  errors = {},
 }) => {
   return (
     <form className="flex flex-col gap-6" onSubmit={Signin}>
@@ -26,7 +27,11 @@ const RegPasswordForm = ({
           required
           onChange={(e) => setUsername(e.target.value)}
           value={username}
+          className={errors.username ? "border-red-500 focus-visible:ring-red-500" : ""}
         />
+        {errors.username && (
+          <p className="text-sm text-red-500 mt-1">{errors.username}</p>
+        )}
       </div>
 
       <div className="labelInputCont">
@@ -39,6 +44,7 @@ const RegPasswordForm = ({
             name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            className={errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}
           />
           <button
             className="absolute ltr:right-3 rtl:left-3 cursor-pointer"
@@ -52,6 +58,10 @@ const RegPasswordForm = ({
             )}
           </button>
         </div>
+        <p className="text-sm text-muted-foreground mt-1">Minimum 6 characters</p>
+        {errors.password && (
+          <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+        )}
       </div>
 
       <Button
