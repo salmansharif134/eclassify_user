@@ -15,7 +15,13 @@ const UnauthorizedModal = () => {
   const open = useSelector(getIsUnauthorized);
 
   const handleOk = () => {
+    // Clear any corrupted token from localStorage
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+    }
     dispatch(setIsUnauthorized(false));
+    // Optionally reload the page to clear state
+    // window.location.reload();
   };
 
   return (

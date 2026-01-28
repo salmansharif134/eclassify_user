@@ -101,20 +101,20 @@ Api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       const url = error.config?.url || '';
       
-      // For public endpoints, just clear the token and retry without it
+      // Clear invalid token from localStorage
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+      }
+      
+      // For public endpoints, don't show unauthorized modal
+      // Just clear token and let the request fail gracefully
       if (isPublicEndpoint(url)) {
-        // Clear invalid token
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("token");
-        }
         logoutSuccess();
-        
-        // Don't show unauthorized modal for public endpoints
-        // Just reject the error so the component can handle it
+        // Don't show modal for public endpoints - they should work without auth
         return Promise.reject(error);
       }
       
-      // For protected endpoints, show unauthorized modal
+      // For protected endpoints, show unauthorized modal only once
       logoutSuccess();
       if (!isUnauthorizedToastShown) {
         store.dispatch(setIsUnauthorized(true));
@@ -122,7 +122,7 @@ Api.interceptors.response.use(
         // Reset the flag after a certain period
         setTimeout(() => {
           isUnauthorizedToastShown = false;
-        }, 3000); // 3 seconds delay before allowing another toast
+        }, 5000); // 5 seconds delay before allowing another toast
       }
     }
     return Promise.reject(error);

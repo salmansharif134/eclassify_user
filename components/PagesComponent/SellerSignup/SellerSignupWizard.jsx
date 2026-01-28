@@ -230,7 +230,13 @@ const SellerSignupWizard = ({ onComplete }) => {
         return;
       }
       if (!selectedPackage) {
-        toast.error("Please wait while we load the membership plan.");
+        if (isPackagesLoading) {
+          toast.error("Please wait while we load membership options...");
+        } else {
+          toast.error(
+            "No matching membership package found for this plan. Please contact support."
+          );
+        }
         return;
       }
       setCurrentStep(5);
@@ -1321,8 +1327,7 @@ const SellerSignupWizard = ({ onComplete }) => {
               onClick={handleNext}
               disabled={
                 loading ||
-                isCreatingPaymentIntent ||
-                (currentStep === 4 && !selectedPackage)
+                isCreatingPaymentIntent
               }
             >
               {loading ? (
