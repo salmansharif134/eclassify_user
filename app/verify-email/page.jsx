@@ -39,7 +39,11 @@ const VerifyEmailPage = () => {
 
       if (id && hash && expires && signature) {
         try {
-          const response = await fetch("/api/auth/email/verify", {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+          const endpoint = process.env.NEXT_PUBLIC_END_POINT || "/api/";
+          const fullUrl = `${apiUrl}${endpoint}auth/email/verify`;
+          
+          const response = await fetch(fullUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -49,6 +53,15 @@ const VerifyEmailPage = () => {
               signature,
             }),
           });
+          
+          // Check if response is ok (status 200-299)
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            setStatus("error");
+            setMessage(errorData?.message || `Verification failed. Status: ${response.status}`);
+            return;
+          }
+          
           const data = await response.json();
           if (data?.error === false || data?.error === "false") {
             setStatus("success");
@@ -60,7 +73,7 @@ const VerifyEmailPage = () => {
           }
         } catch (error) {
           setStatus("error");
-          setMessage("An error occurred. Please try again.");
+          setMessage("An error occurred. Please try again. " + (error.message || ""));
         }
       } else {
         setStatus("error");
