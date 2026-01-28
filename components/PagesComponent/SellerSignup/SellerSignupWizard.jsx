@@ -8,7 +8,7 @@ import { Loader2, CheckCircle2, Upload, ArrowRight, ArrowLeft } from "lucide-rea
 import { toast } from "sonner";
 import {
   authApi,
-  getPackageApi,
+  membershipPlansApi,
   getPaymentSettingsApi,
   patentLookupApi,
   sellerSignupApi,
@@ -86,7 +86,7 @@ const SellerSignupWizard = ({ onComplete }) => {
   // Step 4: Membership Plan
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [selectedPackage, setSelectedPackage] = useState(null);
-  const [listingPackages, setListingPackages] = useState([]);
+  const [listingPackages, setListingPackages] = useState([]); // membership plans from API
   const [packageSettings, setPackageSettings] = useState(null);
   const [isPackagesLoading, setIsPackagesLoading] = useState(false);
   const [isPaymentSettingsLoading, setIsPaymentSettingsLoading] = useState(false);
@@ -330,17 +330,31 @@ const SellerSignupWizard = ({ onComplete }) => {
     }
   };
 
-  const mapPlanToPackage = (planKey, packages) => {
-    if (!packages?.length) return null;
-    const targetPrice = planKey === "monthly" ? 29 : 199;
-    const exactMatch = packages.find(
-      (pkg) => Number(pkg?.final_price) === targetPrice
-    );
-    if (exactMatch) return exactMatch;
-    const sorted = [...packages].sort(
-      (a, b) => Number(a?.final_price || 0) - Number(b?.final_price || 0)
-    );
-    return planKey === "monthly" ? sorted[0] : sorted[sorted.length - 1];
+  // Map selected plan key ("monthly" | "yearly") to a membership plan from API.
+  // We treat membership plans as "packages" by adding a synthetic final_price field.
+  const mapPlanToPackage = (planKey, plans) => {
+    if (!plans?.length) return null;
+    const targetType = planKey === "monthly" ? "monthly" : "yearly";
+
+    // Prefer matching by type if backend uses 'monthly'/'yearly' types
+    let plan =
+      plans.find((p) => (p?.type || "").toLowerCase() === targetType) || null;
+
+    // Fallback: choose first or last plan by price
+    if (!plan) {
+      const sorted = [...plans].sort(
+        (a, b) => Number(a?.price || 0) - Number(b?.price || 0)
+      );
+      plan = planKey === "monthly" ? sorted[0] : sorted[sorted.length - 1];
+    }
+
+    if (!plan) return null;
+
+    return {
+      ...plan,
+      // Keep compatibility with existing Stripe/payment UI that expects final_price
+      final_price: Number(plan.price ?? (planKey === "monthly" ? 29 : 199)),
+    };
   };
 
   const planPackages = useMemo(() => {
@@ -359,19 +373,43 @@ const SellerSignupWizard = ({ onComplete }) => {
     }
   }, [selectedPlan, planPackages, selectedPackage]);
 
+  // Load membership plans from MustangIP backend for Step 4
   useEffect(() => {
-    const fetchPackages = async () => {
+    const fetchMembershipPlans = async () => {
       try {
         setIsPackagesLoading(true);
-        const res = await getPackageApi.getPackage({ type: "item_listing" });
-        setListingPackages(res?.data?.data || []);
+        const res = await membershipPlansApi.getPlans();
+        console.log("Membership plans API response:", res?.data);
+        if (res?.data?.error === false && Array.isArray(res?.data?.data)) {
+          setListingPackages(res.data.data);
+        } else if (Array.isArray(res?.data)) {
+          // Some APIs return plain array as data
+          setListingPackages(res.data);
+        } else {
+          console.warn(
+            "Membership plans API returned error or no data:",
+            res?.data
+          );
+          setListingPackages([]);
+        }
       } catch (error) {
-        console.error("Failed to fetch packages:", error);
+        console.error("Failed to fetch membership plans:", error);
+        console.error("Membership plans error details:", {
+          message: error?.message,
+          response: error?.response?.data,
+          status: error?.response?.status,
+          config: {
+            url: error?.config?.url,
+            baseURL: error?.config?.baseURL,
+            method: error?.config?.method,
+          },
+        });
+        setListingPackages([]);
       } finally {
         setIsPackagesLoading(false);
       }
     };
-    fetchPackages();
+    fetchMembershipPlans();
   }, []);
 
   useEffect(() => {

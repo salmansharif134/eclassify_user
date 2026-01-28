@@ -7,6 +7,7 @@ export const GET_CATEGORIES = "get-categories";
 export const GET_PARENT_CATEGORIES = "get-parent-categories";
 export const GET_ITEM = "get-item";
 export const GET_PACKAGE = "get-package";
+export const GET_MEMBERSHIP_PLANS = "membership-plans";
 export const GET_BLOGS = "blogs";
 export const GET_BLOG_TAGS = "blog-tags";
 export const GET_FEATURED_SECTION = "get-featured-section";
@@ -261,6 +262,14 @@ export const getPackageApi = {
       params: {
         type,
       },
+    });
+  },
+};
+
+export const membershipPlansApi = {
+  getPlans: () => {
+    return Api.get(GET_MEMBERSHIP_PLANS, {
+      params: {},
     });
   },
 };

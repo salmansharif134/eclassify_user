@@ -3,8 +3,27 @@ import { setIsUnauthorized } from "@/redux/reducer/globalStateSlice";
 import { store } from "@/redux/store";
 import axios from "axios";
 
+// Use Next.js proxy in development to avoid CORS issues
+// In production, use direct backend URL
+const getBaseURL = () => {
+  if (typeof window === 'undefined') {
+    // Server-side: use direct backend URL
+    return `${process.env.NEXT_PUBLIC_API_URL || ''}${process.env.NEXT_PUBLIC_END_POINT || '/api/'}`;
+  }
+  
+  // Client-side: use Next.js proxy in development to avoid CORS
+  const isDev = process.env.NODE_ENV === 'development';
+  if (isDev && process.env.NEXT_PUBLIC_API_URL) {
+    // Use relative path to proxy through Next.js
+    return `${process.env.NEXT_PUBLIC_END_POINT || '/api/'}`;
+  }
+  
+  // Production or no proxy: use direct backend URL
+  return `${process.env.NEXT_PUBLIC_API_URL || ''}${process.env.NEXT_PUBLIC_END_POINT || '/api/'}`;
+};
+
 const Api = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_API_URL}${process.env.NEXT_PUBLIC_END_POINT}`,
+  baseURL: getBaseURL(),
 });
 
 let isUnauthorizedToastShown = false;
