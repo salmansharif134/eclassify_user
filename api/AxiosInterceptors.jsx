@@ -52,23 +52,31 @@ const publicEndpoints = [
   'auth/forgot-password',
 ];
 
-// Function to check if token is valid JWT format
+// Function to check if token is valid
+// - If it looks like a JWT (has dots), validate its structure
+// - Otherwise treat it as an opaque token (e.g. Laravel Sanctum) and accept it
 function isValidToken(token) {
-  if (!token || typeof token !== 'string') return false;
-  
+  if (!token || typeof token !== "string") return false;
+  const trimmed = token.trim();
+  if (!trimmed) return false;
+
+  // Opaque tokens (no dots) – accept as-is
+  if (!trimmed.includes(".")) {
+    return true;
+  }
+
+  // JWT-style tokens – basic structural validation
   try {
-    // JWT tokens have 3 parts separated by dots
-    const parts = token.split('.');
+    const parts = trimmed.split(".");
     if (parts.length !== 3) return false;
-    
-    // Try to decode the payload (second part) to check if it's valid base64
+    // Validate payload segment is decodable base64
     try {
       atob(parts[1]);
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -92,7 +100,7 @@ Api.interceptors.request.use(function (config) {
     
     // Validate token before sending
     if (token && !isValidToken(token)) {
-      // Remove corrupted token
+      // Only remove clearly invalid tokens
       console.warn("Invalid token format detected, removing from storage");
       localStorage.removeItem("token");
       token = undefined;
