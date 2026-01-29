@@ -1,4 +1,5 @@
 "use client";
+import { usePathname } from "next/navigation";
 import Header from "../Common/Header";
 import Footer from "../Footer/Footer";
 import PushNotificationLayout from "./PushNotificationLayout";
@@ -10,8 +11,10 @@ import CustomImage from "../Common/CustomImage";
 import ScrollToTopButton from "./ScrollToTopButton";
 
 export default function Layout({ children }) {
+  const pathname = usePathname();
   const { isLoading, isMaintenanceMode, isRedirectToLanding } =
     useClientLayoutLogic();
+  const isListYourPatentFlow = pathname === "/seller-signup";
 
   if (isLoading) {
     return <Loading />;
@@ -38,10 +41,10 @@ export default function Layout({ children }) {
   return (
     <PushNotificationLayout>
       <div className="flex flex-col min-h-screen">
-        <Header />
+        {!isListYourPatentFlow && <Header />}
         <div className="flex-1">{children}</div>
-        <ScrollToTopButton />
-        <Footer />
+        {!isListYourPatentFlow && <ScrollToTopButton />}
+        {!isListYourPatentFlow && <Footer />}
       </div>
     </PushNotificationLayout>
   );

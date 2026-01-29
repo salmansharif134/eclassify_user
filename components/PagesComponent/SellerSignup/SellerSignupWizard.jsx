@@ -70,7 +70,7 @@ const SellerSignupWizard = ({ onComplete }) => {
   const [patentData, setPatentData] = useState(null);
   const [manualPatentData, setManualPatentData] = useState({
     title: "",
-    inventor: "",
+    inventors: [{ first_name: "", last_name: "" }],
     assignee: "",
     filing_date: "",
     issue_date: "",
@@ -179,10 +179,7 @@ const SellerSignupWizard = ({ onComplete }) => {
 
   const handleNext = () => {
     if (currentStep === 1) {
-      if (!isLoggedIn && !accountState.isCreated) {
-        toast.error("Please create an account to continue");
-        return;
-      }
+      // Step 1 & 2: no sign-in required
       if (hasPatent === null) {
         toast.error("Please select if you have a patent");
         return;
@@ -198,22 +195,32 @@ const SellerSignupWizard = ({ onComplete }) => {
       }
     } else if (currentStep === 2) {
       if (!patentData) {
-        const requiredFields = [
-          "title",
-          "inventor",
-          "assignee",
-          "filing_date",
-          "issue_date",
-          "abstract",
-          "claims",
-          "description",
-        ];
-        const missingFields = requiredFields.filter((field) => {
-          const value = manualPatentData[field];
-          return !value || (typeof value === "string" && !value.trim());
-        });
-        if (missingFields.length > 0) {
-          toast.error("Please fill in all required patent fields");
+        const { title, inventors, assignee, filing_date, issue_date, abstract } = manualPatentData;
+        if (!title?.trim()) {
+          toast.error("Please enter Patent Title");
+          return;
+        }
+        const hasInventor = Array.isArray(inventors) && inventors.some(
+          (inv) => (inv?.first_name?.trim() || inv?.last_name?.trim())
+        );
+        if (!hasInventor) {
+          toast.error("Please enter at least one inventor (First and Last name)");
+          return;
+        }
+        if (!assignee?.trim()) {
+          toast.error("Please enter Assignee");
+          return;
+        }
+        if (!filing_date?.trim()) {
+          toast.error("Please enter Filing Date");
+          return;
+        }
+        if (!issue_date?.trim()) {
+          toast.error("Please enter Issue Date");
+          return;
+        }
+        if (!abstract?.trim()) {
+          toast.error("Please enter Abstract (Summary of patent)");
           return;
         }
       }
@@ -225,24 +232,24 @@ const SellerSignupWizard = ({ onComplete }) => {
       }
       setCurrentStep(4);
     } else if (currentStep === 4) {
+      // Step 4: Additional Services – sign-in required
+      if (!isLoggedIn && !accountState.isCreated) {
+        toast.error("Please sign in or sign up to continue");
+        return;
+      }
+      setCurrentStep(5);
+    } else if (currentStep === 5) {
+      // Step 5: Membership plan required
       if (!selectedPlan) {
         toast.error("Please select a membership plan");
         return;
       }
-      // Do NOT block progression on packages.
-      // Packages can fail to load (API/CORS/auth issues). We only truly need the plan here.
-      if (!selectedPackage && isPackagesLoading) {
-        toast.message("Loading membership options… you can continue.");
-      } else if (!selectedPackage && listingPackages?.length === 0) {
-        toast.message(
-          "Membership packages couldn't be loaded. You can continue, but payment may fail until this is fixed."
-        );
-      }
-      setCurrentStep(5);
-    } else if (currentStep === 5) {
       setCartTotal(calculateTotal());
       setCurrentStep(6);
     } else if (currentStep === 6) {
+      // Step 6: What happens next – continue to payment
+      setCurrentStep(7);
+    } else if (currentStep === 7) {
       if (showPaymentForm || clientSecret) return;
       if (!packageSettings) {
         toast.error("Payment settings are unavailable right now.");
@@ -413,7 +420,7 @@ const SellerSignupWizard = ({ onComplete }) => {
   }, []);
 
   useEffect(() => {
-    if (currentStep !== 6 || packageSettings) return;
+    if (currentStep !== 7 || packageSettings) return;
     const fetchPaymentSettings = async () => {
       try {
         setIsPaymentSettingsLoading(true);
@@ -429,7 +436,7 @@ const SellerSignupWizard = ({ onComplete }) => {
   }, [currentStep, packageSettings]);
 
   useEffect(() => {
-    if (currentStep !== 6 || !selectedPlan) return;
+    if (currentStep !== 7 || !selectedPlan) return;
     const fetchOrderSummary = async () => {
       try {
         setIsOrderSummaryLoading(true);
@@ -708,34 +715,31 @@ const SellerSignupWizard = ({ onComplete }) => {
 
   return (
     <div className="container max-w-4xl mx-auto py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Sign Up</h1>
-        <p className="text-muted-foreground">Sign in to your account to list your patent and connect with buyers</p>
-      </div>
-
-      {/* Progress Steps */}
-      <div className="flex items-center justify-between mb-8">
-        {[1, 2, 3, 4, 5, 6].map((step) => (
-          <div key={step} className="flex items-center flex-1">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                currentStep >= step
-                  ? "bg-primary text-white"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {currentStep > step ? <CheckCircle2 size={20} /> : step}
-            </div>
-            {step < 6 && (
+      {/* Progress Steps – hide on step 6 (What happens next) per feedback R */}
+      {currentStep !== 6 && (
+        <div className="flex items-center justify-between mb-8">
+          {[1, 2, 3, 4, 5, 6, 7].map((step) => (
+            <div key={step} className="flex items-center flex-1">
               <div
-                className={`flex-1 h-1 mx-2 ${
-                  currentStep > step ? "bg-primary" : "bg-muted"
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm ${
+                  currentStep >= step
+                    ? "bg-primary text-white"
+                    : "bg-muted text-muted-foreground"
                 }`}
-              />
-            )}
-          </div>
-        ))}
-      </div>
+              >
+                {currentStep > step ? <CheckCircle2 size={18} /> : step}
+              </div>
+              {step < 7 && (
+                <div
+                  className={`flex-1 h-1 mx-1 sm:mx-2 ${
+                    currentStep > step ? "bg-primary" : "bg-muted"
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       <Card className="shadow-sm border-muted/60">
         <CardHeader>
@@ -743,83 +747,47 @@ const SellerSignupWizard = ({ onComplete }) => {
             {currentStep === 1 && "Do you already have a patent?"}
             {currentStep === 2 && "Patent Information"}
             {currentStep === 3 && "Upload Images"}
-            {currentStep === 4 && "Perfect, now choose a membership plan that will place your idea into the marketplace"}
-            {currentStep === 5 && "Additional Services"}
-            {currentStep === 6 && "Review & Complete"}
+            {currentStep === 4 && "Additional Services"}
+            {currentStep === 5 && "Listing Advertising Packages"}
+            {currentStep === 6 && "What happens next"}
+            {currentStep === 7 && "Review Order"}
           </CardTitle>
-          <CardDescription>
-            Step {currentStep} of 6
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Step 1: Patent Status */}
+          {/* Step 1: Do you already have a patent? Two choices only; no "Signed in as" */}
           {currentStep === 1 && (
             <div className="space-y-6">
-              {!isLoggedIn && !accountState.isCreated && (
-                <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
-                  <div>
-                    <h3 className="text-lg font-semibold">Login</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Sign in to access your seller account and list your patents.
-                    </p>
-                  </div>
-                  <LoginWithEmailForm 
-                    OnHide={() => {
-                      // After successful login, continue with seller signup flow
-                      setAccountState((prev) => ({ ...prev, isCreated: true }));
-                    }} 
+              <div className="flex gap-4">
+                <Button
+                  variant={hasPatent === true ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setHasPatent(true)}
+                >
+                  Yes, I have a patent
+                </Button>
+                <Button
+                  variant={hasPatent === false ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setHasPatent(false)}
+                >
+                  No, input data manually
+                </Button>
+              </div>
+              {hasPatent === true && (
+                <div className="space-y-2">
+                  <Label htmlFor="patentNumber">USPTO Patent Number</Label>
+                  <Input
+                    id="patentNumber"
+                    placeholder="e.g., US12345678"
+                    value={patentNumber}
+                    onChange={(e) => setPatentNumber(e.target.value)}
                   />
-                  <div className="text-sm text-center">
-                    Don't have an account?{" "}
-                    <CustomLink href="/buyer-signup" className="text-primary underline">
-                      Sign Up First
-                    </CustomLink>
-                  </div>
                 </div>
-              )}
-              {(isLoggedIn || accountState.isCreated) && (
-                <div className="rounded-lg border bg-muted/20 p-4 text-sm">
-                  Signed in as{" "}
-                  <span className="font-medium">
-                    {userData?.name || accountState.name || "your account"}
-                  </span>
-                </div>
-              )}
-              {(isLoggedIn || accountState.isCreated) && (
-                <>
-                  <div className="flex gap-4">
-                    <Button
-                      variant={hasPatent === true ? "default" : "outline"}
-                      className="flex-1"
-                      onClick={() => setHasPatent(true)}
-                    >
-                      Yes, I have a patent
-                    </Button>
-                    <Button
-                      variant={hasPatent === false ? "default" : "outline"}
-                      className="flex-1"
-                      onClick={() => setHasPatent(false)}
-                    >
-                      No, input data manually
-                    </Button>
-                  </div>
-                  {hasPatent === true && (
-                    <div className="space-y-2">
-                      <Label htmlFor="patentNumber">USPTO Patent Number</Label>
-                      <Input
-                        id="patentNumber"
-                        placeholder="e.g., US12345678"
-                        value={patentNumber}
-                        onChange={(e) => setPatentNumber(e.target.value)}
-                      />
-                    </div>
-                  )}
-                </>
               )}
             </div>
           )}
 
-          {/* Step 2: Patent Data (Manual Entry or Review Auto-populated) */}
+          {/* Step 2: Patent Information (Manual Entry or Review Auto-populated) */}
           {currentStep === 2 && (
             <div className="space-y-4">
               {patentData ? (
@@ -835,77 +803,109 @@ const SellerSignupWizard = ({ onComplete }) => {
                   </p>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Patent Title</Label>
-                  <Input
-                    value={patentData?.title || manualPatentData.title}
-                    onChange={(e) => {
-                      if (patentData) {
-                        setPatentData({ ...patentData, title: e.target.value });
-                      } else {
-                        setManualPatentData({ ...manualPatentData, title: e.target.value });
-                      }
-                    }}
-                  />
-                </div>
-                <div>
-                  <Label>Inventor Name</Label>
-                  <Input
-                    value={patentData?.inventor || manualPatentData.inventor}
-                    onChange={(e) => {
-                      if (patentData) {
-                        setPatentData({ ...patentData, inventor: e.target.value });
-                      } else {
-                        setManualPatentData({ ...manualPatentData, inventor: e.target.value });
-                      }
-                    }}
-                  />
-                </div>
-                <div>
-                  <Label>Assignee</Label>
-                  <Input
-                    value={patentData?.assignee || manualPatentData.assignee}
-                    onChange={(e) => {
-                      if (patentData) {
-                        setPatentData({ ...patentData, assignee: e.target.value });
-                      } else {
-                        setManualPatentData({ ...manualPatentData, assignee: e.target.value });
-                      }
-                    }}
-                  />
-                </div>
-                <div>
-                  <Label>Filing Date</Label>
-                  <Input
-                    type="date"
-                    value={patentData?.filing_date || manualPatentData.filing_date}
-                    onChange={(e) => {
-                      if (patentData) {
-                        setPatentData({ ...patentData, filing_date: e.target.value });
-                      } else {
-                        setManualPatentData({ ...manualPatentData, filing_date: e.target.value });
-                      }
-                    }}
-                  />
-                </div>
-                <div>
-                  <Label>Issue Date</Label>
-                  <Input
-                    type="date"
-                    value={patentData?.issue_date || manualPatentData.issue_date}
-                    onChange={(e) => {
-                      if (patentData) {
-                        setPatentData({ ...patentData, issue_date: e.target.value });
-                      } else {
-                        setManualPatentData({ ...manualPatentData, issue_date: e.target.value });
-                      }
-                    }}
-                  />
-                </div>
+              <div>
+                <Label>Patent Title</Label>
+                <Input
+                  value={patentData?.title || manualPatentData.title}
+                  onChange={(e) => {
+                    if (patentData) {
+                      setPatentData({ ...patentData, title: e.target.value });
+                    } else {
+                      setManualPatentData({ ...manualPatentData, title: e.target.value });
+                    }
+                  }}
+                />
+              </div>
+              {/* Inventors: First name, Last name; + Add Inventor */}
+              <div className="space-y-2">
+                <Label>Inventors</Label>
+                {(patentData ? [{ first_name: patentData.inventor || "", last_name: "" }] : manualPatentData.inventors).map((inv, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <Input
+                      placeholder="Inventor First Name"
+                      value={patentData ? (idx === 0 ? patentData.inventor : "") : inv.first_name}
+                      onChange={(e) => {
+                        if (patentData) {
+                          setPatentData({ ...patentData, inventor: e.target.value });
+                        } else {
+                          const next = [...manualPatentData.inventors];
+                          next[idx] = { ...next[idx], first_name: e.target.value };
+                          setManualPatentData({ ...manualPatentData, inventors: next });
+                        }
+                      }}
+                    />
+                    <Input
+                      placeholder="Inventor Last Name"
+                      value={patentData ? "" : inv.last_name}
+                      onChange={(e) => {
+                        if (!patentData) {
+                          const next = [...manualPatentData.inventors];
+                          next[idx] = { ...next[idx], last_name: e.target.value };
+                          setManualPatentData({ ...manualPatentData, inventors: next });
+                        }
+                      }}
+                    />
+                  </div>
+                ))}
+                {!patentData && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setManualPatentData({
+                        ...manualPatentData,
+                        inventors: [...manualPatentData.inventors, { first_name: "", last_name: "" }],
+                      })
+                    }
+                  >
+                    + Add Inventor
+                  </Button>
+                )}
               </div>
               <div>
-                <Label>Abstract</Label>
+                <Label>Issue Date</Label>
+                <Input
+                  type="date"
+                  value={patentData?.issue_date || manualPatentData.issue_date}
+                  onChange={(e) => {
+                    if (patentData) {
+                      setPatentData({ ...patentData, issue_date: e.target.value });
+                    } else {
+                      setManualPatentData({ ...manualPatentData, issue_date: e.target.value });
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <Label>Assignee</Label>
+                <Input
+                  value={patentData?.assignee || manualPatentData.assignee}
+                  onChange={(e) => {
+                    if (patentData) {
+                      setPatentData({ ...patentData, assignee: e.target.value });
+                    } else {
+                      setManualPatentData({ ...manualPatentData, assignee: e.target.value });
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <Label>Filing Date</Label>
+                <Input
+                  type="date"
+                  value={patentData?.filing_date || manualPatentData.filing_date}
+                  onChange={(e) => {
+                    if (patentData) {
+                      setPatentData({ ...patentData, filing_date: e.target.value });
+                    } else {
+                      setManualPatentData({ ...manualPatentData, filing_date: e.target.value });
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <Label>Abstract (Summary of patent)</Label>
                 <textarea
                   className="w-full min-h-[100px] p-2 border rounded-md"
                   value={patentData?.abstract || manualPatentData.abstract}
@@ -918,41 +918,11 @@ const SellerSignupWizard = ({ onComplete }) => {
                   }}
                 />
               </div>
-              <div>
-                <Label>Claims</Label>
-                <textarea
-                  className="w-full min-h-[100px] p-2 border rounded-md"
-                  value={patentData?.claims || manualPatentData.claims}
-                  onChange={(e) => {
-                    if (patentData) {
-                      setPatentData({ ...patentData, claims: e.target.value });
-                    } else {
-                      setManualPatentData({ ...manualPatentData, claims: e.target.value });
-                    }
-                  }}
-                />
-              </div>
-              <div>
-                <Label>Description</Label>
-                <textarea
-                  className="w-full min-h-[100px] p-2 border rounded-md"
-                  value={patentData?.description || manualPatentData.description}
-                  onChange={(e) => {
-                    if (patentData) {
-                      setPatentData({ ...patentData, description: e.target.value });
-                    } else {
-                      setManualPatentData({
-                        ...manualPatentData,
-                        description: e.target.value,
-                      });
-                    }
-                  }}
-                />
-              </div>
+              {/* Claims & Description hidden for now */}
             </div>
           )}
 
-          {/* Step 3: Image Upload */}
+          {/* Step 3: Image Upload (no sign-in required) */}
           {currentStep === 3 && (
             <div className="space-y-6">
               <div>
@@ -999,79 +969,24 @@ const SellerSignupWizard = ({ onComplete }) => {
             </div>
           )}
 
-          {/* Step 4: Membership Plans */}
+          {/* Step 4: Additional Services first (N); sign-in required; image on side (N2, O) */}
           {currentStep === 4 && (
             <div className="space-y-4">
-              {isPackagesLoading && (
-                <p className="text-sm text-muted-foreground">
-                  Loading membership options...
-                </p>
-              )}
-              <Card
-                className={`cursor-pointer transition-all ${
-                  selectedPlan === "monthly" ? "border-primary border-2" : ""
-                }`}
-                onClick={() => handleSelectPlan("monthly")}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    Monthly Plan
-                    {selectedPlan === "monthly" && <CheckCircle2 className="text-primary" />}
-                  </CardTitle>
-                  <CardDescription>$29/month</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm">
-                    <li>✓ 15-day free trial</li>
-                    <li>✓ Cancel anytime</li>
-                    <li>✓ List your patent</li>
-                    <li>✓ Access to marketplace</li>
-                  </ul>
-                </CardContent>
-              </Card>
-              <Card
-                className={`cursor-pointer transition-all ${
-                  selectedPlan === "yearly" ? "border-primary border-2" : ""
-                }`}
-                onClick={() => handleSelectPlan("yearly")}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    Yearly Plan <span className="text-sm text-green-600">15% OFF</span>
-                    {selectedPlan === "yearly" && <CheckCircle2 className="text-primary" />}
-                  </CardTitle>
-                  <CardDescription>$199/year (Save $149)</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm">
-                    <li>✓ 15-day free trial</li>
-                    <li>✓ Best value - 15% discount</li>
-                    <li>✓ Recommended for serious sellers</li>
-                    <li>✓ Meaningful partnerships or sales take time</li>
-                    <li>✓ Full marketplace access</li>
-                  </ul>
-                </CardContent>
-              </Card>
-              {selectedPackage?.final_price > 0 && (
-                <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                  Payment is required to activate this membership plan.
+              {!isLoggedIn && !accountState.isCreated ? (
+                <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
+                  <LoginWithEmailForm 
+                    OnHide={() => setAccountState((prev) => ({ ...prev, isCreated: true }))} 
+                  />
+                  <div className="text-sm text-center">
+                    Don&apos;t have an account?{" "}
+                    <CustomLink href="/buyer-signup" className="text-primary underline">
+                      Sign Up
+                    </CustomLink>
+                  </div>
                 </div>
-              )}
-              {selectedPlan &&
-                !selectedPackage &&
-                !isPackagesLoading &&
-                listingPackages?.length > 0 && (
-                <div className="rounded-lg border border-dashed p-4 text-sm text-destructive">
-                  No matching package found for this plan. Please check your
-                  packages in the backend.
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Step 5: Additional Services */}
-          {currentStep === 5 && (
-            <div className="space-y-4">
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                  <div className="lg:col-span-3 space-y-4">
               <Card
                 className={`cursor-pointer transition-all ${
                   selectedServices.drawing2D3D ? "border-primary border-2" : ""
@@ -1217,12 +1132,102 @@ const SellerSignupWizard = ({ onComplete }) => {
                   </Button>
                 </CardContent>
               </Card>
+                  </div>
+                  <div className="hidden lg:block">
+                    <div className="sticky top-4 rounded-lg border bg-muted/30 p-4 aspect-square max-h-[280px] flex items-center justify-center">
+                      <span className="text-muted-foreground text-sm text-center">Service image area</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Step 6: Review & Complete */}
-          {currentStep === 6 && (
+          {/* Step 5: Listing Advertising Packages (monthly or annual) */}
+          {currentStep === 5 && (
             <div className="space-y-4">
+              {isPackagesLoading && (
+                <p className="text-sm text-muted-foreground">Loading membership options...</p>
+              )}
+              <Card
+                className={`cursor-pointer transition-all ${selectedPlan === "monthly" ? "border-primary border-2" : ""}`}
+                onClick={() => handleSelectPlan("monthly")}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Monthly Plan
+                    {selectedPlan === "monthly" && <CheckCircle2 className="text-primary" />}
+                  </CardTitle>
+                  <CardDescription>$29/month</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li>✓ 15-day free trial</li>
+                    <li>✓ Cancel anytime</li>
+                    <li>✓ List your patent</li>
+                    <li>✓ Access to marketplace</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card
+                className={`cursor-pointer transition-all ${selectedPlan === "yearly" ? "border-primary border-2" : ""}`}
+                onClick={() => handleSelectPlan("yearly")}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Yearly Plan <span className="text-sm text-green-600">15% OFF</span>
+                    {selectedPlan === "yearly" && <CheckCircle2 className="text-primary" />}
+                  </CardTitle>
+                  <CardDescription>$199/year (Save $149)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li>✓ 15-day free trial</li>
+                    <li>✓ Best value - 15% discount</li>
+                    <li>✓ Recommended for serious sellers</li>
+                    <li>✓ Meaningful partnerships or sales take time</li>
+                    <li>✓ Full marketplace access</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Step 6: What happens next (R) – no status bar; circle image, 1) 2) 3), phone/email on right */}
+          {currentStep === 6 && (
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+              <div className="flex-1 space-y-4">
+                <p className="font-medium">What happens next?</p>
+                <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+                  <li>An account manager will be assigned to help you stay engaged.</li>
+                  <li>A sales person will call to confirm everything.</li>
+                  <li>You&apos;ll receive a welcome email with next steps.</li>
+                </ol>
+              </div>
+              <div className="w-full md:w-auto flex flex-col items-center gap-2 shrink-0">
+                <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-primary/20">
+                  <span className="text-muted-foreground text-xs text-center px-2">Photo</span>
+                </div>
+                <div className="text-center text-sm">
+                  <p className="font-medium">{userData?.name || accountState?.name || "Your account manager"}</p>
+                  <p>{userData?.email || accountState?.email || "—"}</p>
+                  <p>{[userData?.country_code, userData?.mobile].filter(Boolean).join(" ") || "—"}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 7: Review Order (S) – order summary, edit links, payment at bottom */}
+          {currentStep === 7 && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2 text-sm">
+                <Button variant="outline" size="sm" onClick={() => setCurrentStep(4)}>
+                  Edit Additional Services
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setCurrentStep(5)}>
+                  Edit Plan
+                </Button>
+              </div>
               <div className="bg-muted p-4 rounded-lg">
                 <h3 className="font-semibold mb-4">Order Summary</h3>
                 <div className="space-y-2 text-sm">
@@ -1337,16 +1342,6 @@ const SellerSignupWizard = ({ onComplete }) => {
                   />
                 </div>
               )}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-sm">
-                  <strong>What happens next?</strong>
-                </p>
-                <ul className="text-sm mt-2 space-y-1 list-disc list-inside">
-                  <li>An account manager will be assigned to help you</li>
-                  <li>A sales person will call to confirm everything</li>
-                  <li>You'll receive a welcome email with next steps</li>
-                </ul>
-              </div>
             </div>
           )}
 
@@ -1362,16 +1357,21 @@ const SellerSignupWizard = ({ onComplete }) => {
             </Button>
             <Button
               onClick={handleNext}
-              
+              disabled={currentStep === 7 && (isCreatingPaymentIntent || !packageSettings)}
             >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 animate-spin" size={16} />
                   Processing...
                 </>
-              ) : currentStep === 6 ? (
+              ) : currentStep === 7 ? (
                 <>
                   {isCreatingPaymentIntent ? "Preparing Payment..." : "Complete Signup"}
+                  <ArrowRight className="ml-2" size={16} />
+                </>
+              ) : currentStep === 6 ? (
+                <>
+                  Continue to Payment
                   <ArrowRight className="ml-2" size={16} />
                 </>
               ) : (

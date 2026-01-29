@@ -1,7 +1,7 @@
 "use client";
 import LanguageDropdown from "@/components/Common/LanguageDropdown";
 import { CurrentLanguageData } from "@/redux/reducer/languageSlice";
-import { getIsFreAdListing, settingsData } from "@/redux/reducer/settingSlice";
+import { settingsData } from "@/redux/reducer/settingSlice";
 import { t, truncate } from "@/utils";
 import CustomLink from "@/components/Common/CustomLink";
 import { useSelector } from "react-redux";
@@ -29,7 +29,7 @@ import {
   setIsLoginOpen,
 } from "@/redux/reducer/globalStateSlice.js";
 import ReusableAlertDialog from "@/components/Common/ReusableAlertDialog";
-import { deleteUserApi, getLimitsApi, logoutApi } from "@/utils/api.js";
+import { deleteUserApi, logoutApi } from "@/utils/api.js";
 import { useMediaQuery } from "usehooks-ts";
 import UnauthorizedModal from "@/components/Auth/UnauthorizedModal.jsx";
 import CustomImage from "@/components/Common/CustomImage.jsx";
@@ -85,7 +85,6 @@ const HomeHeader = () => {
   // Ads & Categories
   const isCategoryLoading = useSelector(getIsCatLoading);
   const cateData = useSelector(CategoryData);
-  const IsFreeAdListing = useSelector(getIsFreAdListing);
 
   // Location
   const cityData = useSelector(getCityData);
@@ -107,8 +106,6 @@ const HomeHeader = () => {
   // Profile
   const [IsUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
-  // Ad Listing
-  const [IsAdListingClicked, setIsAdListingClicked] = useState(false);
 
   // Email Status
   const [IsMailSentSuccess, setIsMailSentSuccess] = useState(false);
@@ -147,36 +144,9 @@ const HomeHeader = () => {
     }
   };
 
-  const handleAdListing = async () => {
-    if (!IsLoggedin) {
-      setIsLoginOpen(true);
-      return;
-    }
-    if (!userData?.name || !userData?.email) {
-      setIsUpdatingProfile(true);
-      return;
-    }
-
-    if (IsFreeAdListing) {
-      navigate("/ad-listing");
-      return;
-    }
-    try {
-      setIsAdListingClicked(true);
-      const res = await getLimitsApi.getLimits({
-        package_type: "item_listing",
-      });
-      if (res?.data?.error === false) {
-        navigate("/ad-listing");
-      } else {
-        toast.error(t("purchasePlan"));
-        navigate("/subscription");
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsAdListingClicked(false);
-    }
+  // List Your Patent: take user to post-patent flow first (no sign-in required); sign-in asked at end of flow
+  const handleAdListing = () => {
+    navigate("/seller-signup");
   };
 
   const handleUpdateProfile = () => {
@@ -234,38 +204,38 @@ const HomeHeader = () => {
 
             {/* Action buttons */}
             <div className="flex items-center gap-4">
-              <CustomLink
-                href="/seller-signup"
-                className="text-sm sm:text-base font-medium text-primary hover:underline"
-              >
-                Become a Seller
-              </CustomLink>
+              {!IsLoggedin && (
+                <CustomLink
+                  href="/seller-signup"
+                  className="text-sm sm:text-base font-medium text-primary hover:underline"
+                >
+                  Become a Seller
+                </CustomLink>
+              )}
               <CustomLink
                 href="/free-evaluation"
                 className="text-sm sm:text-base font-medium text-primary hover:underline"
               >
                 FREE Evaluation
               </CustomLink>
-               {IsLoggedin && (
-                <button
-                  type="button"
-                  className="text-sm sm:text-base font-medium text-primary hover:underline"
-                  onClick={() => setIsLogout(true)}
-                >
-                  Logout
-                </button>
-              )} 
+              {IsLoggedin && (
+                <>
+                  <ProfileDropdown />
+                  <button
+                    type="button"
+                    className="text-sm sm:text-base font-medium text-primary hover:underline"
+                    onClick={() => setIsLogout(true)}
+                  >
+                    Logout
+                  </button>
+                </>
+              )}
               <button
                 className="bg-primary px-2 xl:px-4 py-2 items-center text-white rounded-md flex gap-1"
-                disabled={IsAdListingClicked}
                 onClick={handleAdListing}
                 title="List Your Patent"
               >
-                {IsAdListingClicked ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <IoIosAddCircleOutline size={18} />
-                )}
+                <IoIosAddCircleOutline size={18} />
                 <span className="hidden sm:inline">List Your Patent</span>
               </button>
             </div>

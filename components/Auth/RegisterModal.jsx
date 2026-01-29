@@ -540,9 +540,13 @@ const RegisterModal = ({
             )}
 
             {IsPasswordScreen && (
-              <RegPasswordForm
-                username={username}
-                setUsername={(value) => {
+              <>
+                <p className="text-red-600 text-sm font-medium -mt-2 mb-2">
+                  We&apos;ve sent a verification link to your email. Please verify your email to continue. Check your inbox.
+                </p>
+                <RegPasswordForm
+                  username={username}
+                  setUsername={(value) => {
                   setUsername(value);
                   if (errors.username) {
                     setErrors((prev) => ({ ...prev, username: "" }));
@@ -562,6 +566,7 @@ const RegisterModal = ({
                 t={t}
                 errors={errors}
               />
+              </>
             )}
 
             {IsOTPScreen && (

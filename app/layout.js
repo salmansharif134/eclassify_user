@@ -14,7 +14,7 @@ const manrope = Manrope({
 export const generateMetadata = () => {
   const defaultTitle = "Mustang IP";
   const title = process.env.NEXT_PUBLIC_META_TITLE 
-    ? process.env.NEXT_PUBLIC_META_TITLE.replace(/eClassify/gi, "Mustang IP")
+    ? process.env.NEXT_PUBLIC_META_TITLE.replace(/eClassify/gi, "MustangIP")
     : defaultTitle;
   
   return {

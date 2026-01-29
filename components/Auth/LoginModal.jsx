@@ -83,58 +83,45 @@ const LoginModal = ({ IsLoginOpen, setIsRegisterModalOpen }) => {
   const generateRecaptcha = () => {
     // Ensure auth object is properly initialized
 
-    if (!window.recaptchaVerifier) {
-      // Check if container element exists
-      const recaptchaContainer = document.getElementById("recaptcha-container");
+    const RECAPTCHA_CONTAINER_ID = "recaptcha-container-login";
+    if (!window.recaptchaVerifierLogin) {
+      const recaptchaContainer = document.getElementById(RECAPTCHA_CONTAINER_ID);
       if (!recaptchaContainer) {
-        console.error("Container element 'recaptcha-container' not found.");
-        return null; // Return null if container element not found
+        console.error("Login: recaptcha container not found.");
+        return null;
       }
-
       try {
-        // Clear any existing reCAPTCHA instance
         recaptchaContainer.innerHTML = "";
-
-        // Initialize RecaptchaVerifier
-        window.recaptchaVerifier = new RecaptchaVerifier(
+        window.recaptchaVerifierLogin = new RecaptchaVerifier(
           auth,
-          "recaptcha-container",
-          {
-            size: "invisible",
-          }
+          RECAPTCHA_CONTAINER_ID,
+          { size: "invisible" }
         );
-        return window.recaptchaVerifier;
+        return window.recaptchaVerifierLogin;
       } catch (error) {
-        console.error("Error initializing RecaptchaVerifier:", error.message);
-        return null; // Return null if error occurs during initialization
+        console.error("Error initializing RecaptchaVerifier (login):", error?.message);
+        return null;
       }
     }
-    return window.recaptchaVerifier;
+    return window.recaptchaVerifierLogin;
   };
 
   useEffect(() => {
-    generateRecaptcha();
-
     return () => {
-      // Clean up recaptcha container and verifier when component unmounts
-      const recaptchaContainer = document.getElementById("recaptcha-container");
-      if (recaptchaContainer) {
-        recaptchaContainer.innerHTML = "";
-      }
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = null; // Clear the recaptchaVerifier reference
+      const recaptchaContainer = document.getElementById("recaptcha-container-login");
+      if (recaptchaContainer) recaptchaContainer.innerHTML = "";
+      if (window.recaptchaVerifierLogin) {
+        try { window.recaptchaVerifierLogin.clear(); } catch (_) {}
+        window.recaptchaVerifierLogin = null;
       }
     };
   }, []);
 
   const recaptchaClear = async () => {
-    const recaptchaContainer = document.getElementById("recaptcha-container");
-    if (recaptchaContainer) {
-      recaptchaContainer.innerHTML = "";
-    }
-    if (window.recaptchaVerifier) {
-      window?.recaptchaVerifier?.recaptcha?.reset();
+    const recaptchaContainer = document.getElementById("recaptcha-container-login");
+    if (recaptchaContainer) recaptchaContainer.innerHTML = "";
+    if (window.recaptchaVerifierLogin?.recaptcha?.reset) {
+      window.recaptchaVerifierLogin.recaptcha.reset();
     }
   };
 
@@ -194,6 +181,7 @@ const LoginModal = ({ IsLoginOpen, setIsRegisterModalOpen }) => {
           onInteractOutside={(e) => e.preventDefault()}
           className="px-[40px] sm:py-[50px] sm:px-[90px]"
         >
+          <div id="recaptcha-container-login" className="sr-only" aria-hidden="true" />
           <DialogHeader>
             <DialogTitle className="text-3xl sm:text-4xl font-light">
               {IsOTPScreen ? (

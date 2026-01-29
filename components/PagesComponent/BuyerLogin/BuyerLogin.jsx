@@ -12,22 +12,26 @@ const BuyerLogin = () => {
   };
 
   return (
-    <div className="container max-w-lg mx-auto py-12">
-      <Card>
-        <CardHeader>
-          <CardTitle>Buyer Login</CardTitle>
-          <CardDescription>Sign in to browse and purchase products.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <LoginWithEmailForm OnHide={handleLoginSuccess} />
-          <div className="text-sm text-center">
-            Don't have an account?{" "}
-            <CustomLink href="/buyer-signup" className="text-primary underline">
-              Sign Up as Buyer
-            </CustomLink>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary/5 px-4 py-12">
+      <div className="w-full max-w-md">
+        <Card className="border-0 shadow-xl shadow-primary/5 rounded-2xl overflow-hidden">
+          <CardHeader className="space-y-1.5 pb-2 text-center px-8 pt-8">
+            <CardTitle className="text-2xl font-semibold tracking-tight">Welcome back</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Sign in to browse and purchase products.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6 px-8 pb-8">
+            <LoginWithEmailForm OnHide={handleLoginSuccess} />
+            <p className="text-center text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <CustomLink href="/buyer-signup" className="font-medium text-primary hover:underline">
+                Create account
+              </CustomLink>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

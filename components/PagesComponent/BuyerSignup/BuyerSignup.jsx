@@ -15,11 +15,13 @@ import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 import { Loader2 } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 import { Fcmtoken } from "@/redux/reducer/settingSlice";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const BuyerSignup = () => {
   const { navigate } = useNavigate();
   const isLoggedIn = useSelector(getIsLoggedIn);
   const fetchFCM = useSelector(Fcmtoken);
+  const [signupAsType, setSignupAsType] = useState("buyer"); // "buyer" | "seller"
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -112,6 +114,7 @@ const BuyerSignup = () => {
         last_name: formData.lastName,
         email: formData.email,
         password: formData.password,
+        user_type: signupAsType, // "buyer" | "seller" for backend
       });
 
       const data = response.data;
@@ -156,7 +159,12 @@ const BuyerSignup = () => {
         if (loginResponse.data?.error === false) {
           loadUpdateData(loginResponse.data);
           toast.success("Account created successfully! Welcome!");
-          navigate("/");
+          // Redirect by type: buyer → home, seller → seller signup wizard
+          if (signupAsType === "seller") {
+            navigate("/seller-signup");
+          } else {
+            navigate("/");
+          }
         } else {
           toast.success("Account created! Please login.");
           navigate("/login");
@@ -216,7 +224,12 @@ const BuyerSignup = () => {
       if (data?.error === false || data?.error === "false") {
         loadUpdateData(data);
         toast.success("Signed in successfully!");
-        navigate("/");
+        // If they had chosen seller signup, redirect to seller wizard
+        if (signupAsType === "seller") {
+          navigate("/seller-signup");
+        } else {
+          navigate("/");
+        }
       } else {
         toast.error(data?.message || t("somethingWentWrong"));
       }
@@ -231,172 +244,215 @@ const BuyerSignup = () => {
   };
 
   return (
-    <div className="container max-w-lg mx-auto py-12">
-      <Card>
-        <CardHeader>
-          <CardTitle>Buyer Sign Up</CardTitle>
-          <CardDescription>Create an account to start shopping for products.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <form onSubmit={handleSignup} className="flex flex-col gap-6">
-            <div className="labelInputCont">
-              <Label className="requiredInputLabel">First Name</Label>
-              <Input
-                type="text"
-                placeholder="Enter your first name"
-                value={formData.firstName}
-                onChange={(e) => handleInputChange("firstName", e.target.value)}
-                className={errors.firstName ? "border-red-500 focus-visible:ring-red-500" : ""}
-                required
-              />
-              {errors.firstName && (
-                <p className="text-sm text-red-500 mt-1">{errors.firstName}</p>
-              )}
-            </div>
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary/5 px-4 py-12">
+      <div className="w-full max-w-md">
+        <Card className="border-0 shadow-xl shadow-primary/5 rounded-2xl overflow-hidden">
+          <CardHeader className="space-y-1.5 pb-2 text-center px-8 pt-8">
+            <CardTitle className="text-2xl font-semibold tracking-tight">Create your account</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Join as a buyer or seller. Choose your role below.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6 px-8 pb-8">
+            <form onSubmit={handleSignup} className="space-y-5">
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-foreground">I want to sign up as</Label>
+                <RadioGroup
+                  value={signupAsType}
+                  onValueChange={setSignupAsType}
+                  className="grid grid-cols-2 gap-3"
+                >
+                  <label
+                    htmlFor="signup-buyer"
+                    className={`flex items-center justify-center gap-2 rounded-xl border-2 py-3.5 px-4 cursor-pointer transition-all ${
+                      signupAsType === "buyer"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-muted hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <RadioGroupItem value="buyer" id="signup-buyer" className="sr-only" />
+                    <span className="font-medium text-sm">Buyer</span>
+                  </label>
+                  <label
+                    htmlFor="signup-seller"
+                    className={`flex items-center justify-center gap-2 rounded-xl border-2 py-3.5 px-4 cursor-pointer transition-all ${
+                      signupAsType === "seller"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-muted hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <RadioGroupItem value="seller" id="signup-seller" className="sr-only" />
+                    <span className="font-medium text-sm">Seller</span>
+                  </label>
+                </RadioGroup>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {signupAsType === "buyer"
+                    ? "Start shopping for products and patents."
+                    : "Complete onboarding after signup to list your patents."}
+                </p>
+              </div>
 
-            <div className="labelInputCont">
-              <Label className="requiredInputLabel">Last Name</Label>
-              <Input
-                type="text"
-                placeholder="Enter your last name"
-                value={formData.lastName}
-                onChange={(e) => handleInputChange("lastName", e.target.value)}
-                className={errors.lastName ? "border-red-500 focus-visible:ring-red-500" : ""}
-                required
-              />
-              {errors.lastName && (
-                <p className="text-sm text-red-500 mt-1">{errors.lastName}</p>
-              )}
-            </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">First name</Label>
+                  <Input
+                    type="text"
+                    placeholder="John"
+                    value={formData.firstName}
+                    onChange={(e) => handleInputChange("firstName", e.target.value)}
+                    className={`h-11 rounded-lg ${errors.firstName ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                    required
+                  />
+                  {errors.firstName && (
+                    <p className="text-xs text-red-500">{errors.firstName}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Last name</Label>
+                  <Input
+                    type="text"
+                    placeholder="Doe"
+                    value={formData.lastName}
+                    onChange={(e) => handleInputChange("lastName", e.target.value)}
+                    className={`h-11 rounded-lg ${errors.lastName ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                    required
+                  />
+                  {errors.lastName && (
+                    <p className="text-xs text-red-500">{errors.lastName}</p>
+                  )}
+                </div>
+              </div>
 
-            <div className="labelInputCont">
-              <Label className="requiredInputLabel">{t("email")}</Label>
-              <Input
-                type="email"
-                placeholder={t("enterEmail")}
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
-                required
-              />
-              {errors.email && (
-                <p className="text-sm text-red-500 mt-1">{errors.email}</p>
-              )}
-            </div>
-
-            <div className="labelInputCont">
-              <Label className="requiredInputLabel">{t("password")}</Label>
-              <div className="flex items-center relative">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">{t("email")}</Label>
                 <Input
-                  type={formData.IsPasswordVisible ? "text" : "password"}
-                  placeholder={t("enterPassword")}
-                  className={`ltr:pr-9 rtl:pl-9 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                  value={formData.password}
-                  onChange={(e) => handleInputChange("password", e.target.value)}
+                  type="email"
+                  placeholder={t("enterEmail")}
+                  value={formData.email}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  className={`h-11 rounded-lg ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                   required
                 />
-                <button
-                  type="button"
-                  className="absolute ltr:right-3 rtl:left-3 cursor-pointer"
-                  onClick={() =>
-                    handleInputChange("IsPasswordVisible", !formData.IsPasswordVisible)
-                  }
-                >
-                  {formData.IsPasswordVisible ? (
-                    <FaRegEye size={20} />
-                  ) : (
-                    <FaRegEyeSlash size={20} />
-                  )}
-                </button>
+                {errors.email && (
+                  <p className="text-xs text-red-500">{errors.email}</p>
+                )}
               </div>
-              <p className="text-sm text-muted-foreground mt-1">Minimum 6 characters</p>
-              {errors.password && (
-                <p className="text-sm text-red-500 mt-1">{errors.password}</p>
-              )}
-            </div>
 
-            <div className="labelInputCont">
-              <Label className="requiredInputLabel">Confirm Password</Label>
-              <div className="flex items-center relative">
-                <Input
-                  type={formData.IsConfirmPasswordVisible ? "text" : "password"}
-                  placeholder="Confirm your password"
-                  className={`ltr:pr-9 rtl:pl-9 ${errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                  value={formData.confirmPassword}
-                  onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  className="absolute ltr:right-3 rtl:left-3 cursor-pointer"
-                  onClick={() =>
-                    handleInputChange(
-                      "IsConfirmPasswordVisible",
-                      !formData.IsConfirmPasswordVisible
-                    )
-                  }
-                >
-                  {formData.IsConfirmPasswordVisible ? (
-                    <FaRegEye size={20} />
-                  ) : (
-                    <FaRegEyeSlash size={20} />
-                  )}
-                </button>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">{t("password")}</Label>
+                <div className="relative">
+                  <Input
+                    type={formData.IsPasswordVisible ? "text" : "password"}
+                    placeholder={t("enterPassword")}
+                    className={`h-11 rounded-lg ltr:pr-10 rtl:pl-10 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute top-1/2 -translate-y-1/2 ltr:right-3 rtl:left-3 text-muted-foreground hover:text-foreground"
+                    onClick={() =>
+                      handleInputChange("IsPasswordVisible", !formData.IsPasswordVisible)
+                    }
+                  >
+                    {formData.IsPasswordVisible ? (
+                      <FaRegEye size={18} />
+                    ) : (
+                      <FaRegEyeSlash size={18} />
+                    )}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
+                {errors.password && (
+                  <p className="text-xs text-red-500">{errors.password}</p>
+                )}
               </div>
-              {errors.confirmPassword && (
-                <p className="text-sm text-red-500 mt-1">{errors.confirmPassword}</p>
-              )}
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Confirm password</Label>
+                <div className="relative">
+                  <Input
+                    type={formData.IsConfirmPasswordVisible ? "text" : "password"}
+                    placeholder="Confirm your password"
+                    className={`h-11 rounded-lg ltr:pr-10 rtl:pl-10 ${errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute top-1/2 -translate-y-1/2 ltr:right-3 rtl:left-3 text-muted-foreground hover:text-foreground"
+                    onClick={() =>
+                      handleInputChange(
+                        "IsConfirmPasswordVisible",
+                        !formData.IsConfirmPasswordVisible
+                      )
+                    }
+                  >
+                    {formData.IsConfirmPasswordVisible ? (
+                      <FaRegEye size={18} />
+                    ) : (
+                      <FaRegEyeSlash size={18} />
+                    )}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-xs text-red-500">{errors.confirmPassword}</p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-12 rounded-lg font-medium text-base mt-1"
+                disabled={formData.showLoader}
+              >
+                {formData.showLoader ? (
+                  <Loader2 className="size-5 animate-spin" />
+                ) : (
+                  "Create account"
+                )}
+              </Button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-muted" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-card px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
             </div>
 
-            <Button
-              type="submit"
-              className="text-xl text-white font-light px-4 py-2"
-              size="big"
-              disabled={formData.showLoader}
-            >
-              {formData.showLoader ? (
-                <Loader2 className="size-6 animate-spin" />
-              ) : (
-                "Sign Up"
-              )}
-            </Button>
-          </form>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={(error) => {
+                  console.error("Google OAuth Error:", error);
+                  if (error?.type === "popup_closed_by_user") {
+                    toast.error("Sign in cancelled");
+                  } else if (error?.error === "popup_blocked") {
+                    toast.error("Popup blocked. Please allow popups for this site.");
+                  } else {
+                    toast.error(
+                      "Google sign in failed. Please check that your domain is authorized in Google Cloud Console."
+                    );
+                  }
+                }}
+              />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
 
-          <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={(error) => {
-                console.error("Google OAuth Error:", error);
-                if (error?.type === "popup_closed_by_user") {
-                  toast.error("Sign in cancelled");
-                } else if (error?.error === "popup_blocked") {
-                  toast.error("Popup blocked. Please allow popups for this site.");
-                } else {
-                  toast.error(
-                    "Google sign in failed. Please check that your domain is authorized in Google Cloud Console."
-                  );
-                }
-              }}
-            />
-          </div>
-
-          <div className="text-sm text-center">
-            Already have an account?{" "}
-            <CustomLink href="/buyer-login" className="text-primary underline">
-              Sign In
-            </CustomLink>
-          </div>
-        </CardContent>
-      </Card>
+            <p className="text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <CustomLink href="/buyer-login" className="font-medium text-primary hover:underline">
+                Sign in
+              </CustomLink>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

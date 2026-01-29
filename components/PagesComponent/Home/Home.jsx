@@ -6,6 +6,7 @@ import { FeaturedSectionApi, sliderApi } from "@/utils/api";
 import { getCurrentLangCode } from "@/redux/reducer/languageSlice";
 import { useSelector } from "react-redux";
 import { getCityData, getKilometerRange } from "@/redux/reducer/locationSlice";
+import { getIsLoggedIn } from "@/redux/reducer/authSlice";
 import OfferSliderSkeleton from "@/components/PagesComponent/Home/OfferSliderSkeleton";
 import FeaturedSectionsSkeleton from "./FeaturedSectionsSkeleton";
 import PopularCategories from "./PopularCategories";
@@ -22,6 +23,7 @@ const Home = () => {
   const KmRange = useSelector(getKilometerRange);
   const cityData = useSelector(getCityData);
   const currentLanguageCode = useSelector(getCurrentLangCode);
+  const IsLoggedin = useSelector(getIsLoggedIn);
   const [IsFeaturedLoading, setIsFeaturedLoading] = useState(false);
   const [featuredData, setFeaturedData] = useState([]);
   const [Slider, setSlider] = useState([]);
@@ -120,14 +122,15 @@ const Home = () => {
   }, [cityData.lat, cityData.long, KmRange, currentLanguageCode]);
   return (
     <>
-      {IsSliderLoading ? (
+      {/* Hide slider for logged-in users; show categories directly for clearer UI */}
+      {!IsLoggedin && (IsSliderLoading ? (
         <OfferSliderSkeleton />
       ) : (
         Slider &&
         Slider.length > 0 && (
           <OfferSlider Slider={Slider} IsLoading={IsSliderLoading} />
         )
-      )}
+      ))}
       {/* Categories and Items Tabs - Products and Patents */}
       <div className="container mt-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

@@ -20,8 +20,7 @@ const VerifyEmailPage = () => {
 
       if (statusParam === "verified") {
         setStatus("success");
-        setMessage("Email verified successfully! You can now log in.");
-        setTimeout(() => router.push("/"), 3000);
+        setMessage("Account is now verified. Continue to List your patent or search for an investment.");
         return;
       }
 
@@ -65,8 +64,7 @@ const VerifyEmailPage = () => {
           const data = await response.json();
           if (data?.error === false || data?.error === "false") {
             setStatus("success");
-            setMessage(data?.message || "Email verified successfully!");
-            setTimeout(() => router.push("/"), 3000);
+            setMessage("Account is now verified. Continue to List your patent or search for an investment.");
           } else {
             setStatus("error");
             setMessage(data?.message || "Verification failed.");
@@ -110,8 +108,13 @@ const VerifyEmailPage = () => {
           )}
 
           {status !== "loading" && (
-            <div className="flex justify-center">
-              <Button onClick={() => router.push("/")}>Go to Home</Button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <Button variant="default" onClick={() => router.push("/seller-signup")}>
+                List your patent
+              </Button>
+              <Button variant="outline" onClick={() => router.push("/")}>
+                Search for an investment
+              </Button>
             </div>
           )}
         </div>

@@ -66,7 +66,7 @@ const PopularCategories = ({ categoryType = "products" }) => {
       <section className="container mt-12">
         <div className="space-between">
           <h5 className="text-xl sm:text-2xl font-medium">
-            {categoryType === "patents" ? "Patent Categories" : "Product Categories"}
+            {categoryType === "patents" ? t("investmentOpportunities") : t("popularIdeasNearYou")}
           </h5>
           <div className="flex items-center justify-center gap-2 sm:gap-4">
             <button

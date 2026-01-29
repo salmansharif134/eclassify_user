@@ -12,12 +12,14 @@ import { GiHamburgerMenu } from "react-icons/gi";
 import { useSelector } from "react-redux";
 import LanguageDropdown from "../../Common/LanguageDropdown";
 import { CurrentLanguageData } from "@/redux/reducer/languageSlice";
+import { getIsLoggedIn } from "@/redux/reducer/authSlice";
 import CustomImage from "@/components/Common/CustomImage";
 import CustomLink from "@/components/Common/CustomLink";
 
 const LandingMobileMenu = ({ isOpen, setIsOpen, activeSection }) => {
   const CurrentLanguage = useSelector(CurrentLanguageData);
   const settings = useSelector(settingsData);
+  const IsLoggedin = useSelector(getIsLoggedIn);
 
   const scrollToSection = (id) => {
     const section = document.getElementById(id);
@@ -40,7 +42,6 @@ const LandingMobileMenu = ({ isOpen, setIsOpen, activeSection }) => {
       <SheetContent className="[&>button:first-child]:hidden] p-0">
         <SheetHeader className="py-4 px-6 border-b border">
           <SheetTitle>
-            console.log(settings?.header_logo);
             <CustomImage
               src={settings?.header_logo || "/assets/MustangIPLog01.png"}
               width={195}
@@ -92,14 +93,16 @@ const LandingMobileMenu = ({ isOpen, setIsOpen, activeSection }) => {
             >
               {t("blog")}
             </li>
-            <li className="py-3 border-b border-dashed">
-              <CustomLink
-                href="/seller-signup"
-                className="block hover:text-primary"
-              >
-                Become a Seller
-              </CustomLink>
-            </li>
+            {!IsLoggedin && (
+              <li className="py-3 border-b border-dashed">
+                <CustomLink
+                  href="/seller-signup"
+                  className="block hover:text-primary"
+                >
+                  Become a Seller
+                </CustomLink>
+              </li>
+            )}
             <li className="py-3">
               <LanguageDropdown />
             </li>

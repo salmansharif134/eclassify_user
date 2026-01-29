@@ -38,7 +38,7 @@ export default function Footer() {
         {showDownloadLinks && (
           <div className="relative bg-[#FF7F50] top-[-140px] lg:top-[-125px] xl:top-[-150px] p-6 xl:p-12 rounded-md flex flex-col lg:flex-row items-center justify-between">
             <h2 className="text-3xl md:text-4xl xl:text-5xl text-center lg:text-left text-balance font-light mb-4 md:mb-0 w-full">
-              {t("experienceTheMagic")} {settings?.company_name} {t("app")}
+              {t("stayInTheMixDownloadApp")}
             </h2>
             <div className="flex flex-row lg:flex-row items-center">
               {settings?.app_store_link && (

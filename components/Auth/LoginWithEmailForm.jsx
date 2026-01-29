@@ -139,87 +139,87 @@ const LoginWithEmailForm = ({ OnHide }) => {
   };
 
   return (
-    <>
-      <form className="flex flex-col gap-6" onSubmit={Signin}>
-        <div className="labelInputCont">
-          <Label className="requiredInputLabel">{t("email")}</Label>
-          <Input
-            type="email"
-            placeholder={t("enterEmail")}
-            value={email}
-            onChange={(e) => {
-              setLoginStates((prev) => ({ ...prev, email: e.target.value }));
-              if (errors.email) {
-                setErrors((prev) => ({ ...prev, email: "" }));
-              }
-            }}
-            className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
-            ref={emailRef}
-          />
-          {errors.email && (
-            <p className="text-sm text-red-500 mt-1">{errors.email}</p>
-          )}
-        </div>
-        <div className="labelInputCont">
-          <Label className="requiredInputLabel">{t("password")}</Label>
-          <div className="flex items-center relative">
-            <Input
-              type={IsPasswordVisible ? "text" : "password"}
-              placeholder={t("enterPassword")}
-              className={`ltr:pr-9 rtl:pl-9 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-              value={password}
-              onChange={(e) => {
-                setLoginStates((prev) => ({
-                  ...prev,
-                  password: e.target.value,
-                }));
-                if (errors.password) {
-                  setErrors((prev) => ({ ...prev, password: "" }));
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="absolute ltr:right-3 rtl:left-3 cursor-pointer"
-              onClick={() =>
-                setLoginStates((prev) => ({
-                  ...prev,
-                  IsPasswordVisible: !prev.IsPasswordVisible,
-                }))
-              }
-            >
-              {IsPasswordVisible ? (
-                <FaRegEye size={20} />
-              ) : (
-                <FaRegEyeSlash size={20} />
-              )}
-            </button>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">Minimum 6 characters</p>
-          {errors.password && (
-            <p className="text-sm text-red-500 mt-1">{errors.password}</p>
-          )}
+    <form className="space-y-5" onSubmit={Signin}>
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">{t("email")}</Label>
+        <Input
+          type="email"
+          placeholder={t("enterEmail")}
+          value={email}
+          onChange={(e) => {
+            setLoginStates((prev) => ({ ...prev, email: e.target.value }));
+            if (errors.email) {
+              setErrors((prev) => ({ ...prev, email: "" }));
+            }
+          }}
+          className={`h-11 rounded-lg ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+          ref={emailRef}
+        />
+        {errors.email && (
+          <p className="text-xs text-red-500">{errors.email}</p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium">{t("password")}</Label>
           <button
-            className="text-right font-semibold text-primary"
-            onClick={handleForgotModal}
             type="button"
+            onClick={handleForgotModal}
+            className="text-xs font-medium text-primary hover:underline"
           >
             {t("forgtPassword")}
           </button>
         </div>
-        <Button
-          className="text-xl text-white font-light px-4 py-2"
-          size="big"
-          disabled={showLoader}
-        >
-          {showLoader ? (
-            <Loader2 className="size-6 animate-spin" />
-          ) : (
-            t("signIn")
-          )}
-        </Button>
-      </form>
-    </>
+        <div className="relative">
+          <Input
+            type={IsPasswordVisible ? "text" : "password"}
+            placeholder={t("enterPassword")}
+            className={`h-11 rounded-lg ltr:pr-10 rtl:pl-10 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+            value={password}
+            onChange={(e) => {
+              setLoginStates((prev) => ({
+                ...prev,
+                password: e.target.value,
+              }));
+              if (errors.password) {
+                setErrors((prev) => ({ ...prev, password: "" }));
+              }
+            }}
+          />
+          <button
+            type="button"
+            className="absolute top-1/2 -translate-y-1/2 ltr:right-3 rtl:left-3 text-muted-foreground hover:text-foreground"
+            onClick={() =>
+              setLoginStates((prev) => ({
+                ...prev,
+                IsPasswordVisible: !prev.IsPasswordVisible,
+              }))
+            }
+          >
+            {IsPasswordVisible ? (
+              <FaRegEye size={18} />
+            ) : (
+              <FaRegEyeSlash size={18} />
+            )}
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
+        {errors.password && (
+          <p className="text-xs text-red-500">{errors.password}</p>
+        )}
+      </div>
+      <Button
+        type="submit"
+        className="w-full h-12 rounded-lg font-medium text-base"
+        disabled={showLoader}
+      >
+        {showLoader ? (
+          <Loader2 className="size-5 animate-spin" />
+        ) : (
+          t("signIn")
+        )}
+      </Button>
+    </form>
   );
 };
 

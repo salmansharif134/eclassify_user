@@ -1,141 +1,80 @@
 "use client";
 import { t } from "@/utils";
 import { useSelector } from "react-redux";
-import { CurrentLanguageData } from "@/redux/reducer/languageSlice";
 import { settingsData } from "@/redux/reducer/settingSlice";
-import LanguageDropdown from "../../Common/LanguageDropdown";
 import LandingMobileMenu from "@/components/PagesComponent/LandingPage/LandingMobileMenu";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import CustomImage from "@/components/Common/CustomImage";
 import CustomLink from "@/components/Common/CustomLink";
+import { useNavigate } from "@/components/Common/useNavigate";
+import { IoIosAddCircleOutline } from "react-icons/io";
+import { FaSearch } from "react-icons/fa";
 
 const LandingHeader = () => {
-  const CurrentLanguage = useSelector(CurrentLanguageData);
   const settings = useSelector(settingsData);
   const [isShowMobileMenu, setIsShowMobileMenu] = useState(false);
-  const [activeSection, setActiveSection] = useState("anythingYouWant");
+  const [searchQuery, setSearchQuery] = useState("");
+  const { navigate } = useNavigate();
 
-  const handleMobileMenuClose = () => {
-    if (isShowMobileMenu) {
-      setIsShowMobileMenu(false);
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      navigate("/");
     }
   };
-
-  // Intersection Observer to track which section is currently visible
-  useEffect(() => {
-    const sections = ["anythingYouWant", "work_process", "faq", "ourBlogs"];
-    const observerOptions = {
-      root: null,
-      rootMargin: "0px", // Trigger when section is 20% from top
-      threshold: 0.7,
-    };
-    const observerCallback = (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setActiveSection(entry.target.id);
-        }
-      });
-    };
-    const observer = new IntersectionObserver(
-      observerCallback,
-      observerOptions
-    );
-    // Observe all sections
-    sections.forEach((sectionId) => {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        observer.observe(element);
-      }
-    });
-    // Cleanup observer on component unmount
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
 
   return (
     <>
       <header className="sticky top-0 z-50 bg-white shadow-xs">
         <nav className="shadow-md">
-          <div className="container py-5 lg:flex lg:items-center lg:justify-between">
-            <div className="flex w-100 items-center justify-between">
-              <CustomImage
-                src={settings?.header_logo || "/assets/MustangIPLog01.png"}
-                className="w-full h-[52px] object-contain ltr:object-left rtl:object-right max-w-[195px]"
-                alt="MustangIP Logo"
-                width={195}
-                height={52}
-              />
+          <div className="container py-5 lg:flex lg:items-center lg:justify-between gap-4">
+            <div className="flex w-full items-center justify-between">
+              <CustomLink href="/landing#anythingYouWant" className="flex-shrink-0">
+                <CustomImage
+                  src={settings?.header_logo || "/assets/MustangIPLog01.png"}
+                  className="w-full h-[52px] object-contain ltr:object-left rtl:object-right max-w-[195px]"
+                  alt="MustangIP Logo"
+                  width={195}
+                  height={52}
+                />
+              </CustomLink>
 
               <LandingMobileMenu
                 isOpen={isShowMobileMenu}
                 setIsOpen={setIsShowMobileMenu}
-                activeSection={activeSection}
               />
             </div>
-            <div className="hidden lg:flex gap-6">
-              <ul className="flex items-center gap-6">
-                <li>
-                  <CustomLink
-                    href="#anythingYouWant"
-                    className={`cursor-pointer transition-all duration-200 ${
-                      activeSection === "anythingYouWant"
-                        ? "text-primary"
-                        : "hover:text-primary"
-                    }`}
-                  >
-                    {t("home")}
-                  </CustomLink>
-                </li>
-                <li>
-                  <CustomLink
-                    href="#work_process"
-                    className={`cursor-pointer transition-all duration-200 ${
-                      activeSection === "work_process"
-                        ? "text-primary"
-                        : "hover:text-primary"
-                    }`}
-                    onClick={handleMobileMenuClose}
-                  >
-                    {t("whyChooseUs")}
-                  </CustomLink>
-                </li>
-                <li>
-                  <CustomLink
-                    href="#faq"
-                    className={`cursor-pointer transition-all duration-200 ${
-                      activeSection === "faq"
-                        ? "text-primary"
-                        : "hover:text-primary"
-                    }`}
-                    onClick={handleMobileMenuClose}
-                  >
-                    {t("faqs")}
-                  </CustomLink>
-                </li>
-                <li>
-                  <CustomLink
-                    href="#ourBlogs"
-                    className={`cursor-pointer transition-all duration-200 ${
-                      activeSection === "ourBlogs"
-                        ? "text-primary"
-                        : "hover:text-primary"
-                    }`}
-                    onClick={handleMobileMenuClose}
-                  >
-                    {t("blog")}
-                  </CustomLink>
-                </li>
-              </ul>
+            <div className="hidden lg:flex items-center gap-4 flex-1 max-w-xl">
+              <form
+                onSubmit={handleSearchSubmit}
+                className="flex items-center gap-2 border rounded-md py-2 px-3 flex-1"
+              >
+                <FaSearch size={14} className="text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder={t("searchForPatent")}
+                  className="text-sm outline-none w-full bg-transparent"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </form>
             </div>
             <div className="hidden lg:flex items-center gap-4">
               <CustomLink
-                href="/seller-signup"
+                href="/free-evaluation"
                 className="text-sm sm:text-base font-medium text-primary hover:underline"
               >
-                Become a Seller
+                FREE Evaluation
               </CustomLink>
-              <LanguageDropdown />
+              <CustomLink
+                href="/seller-signup"
+                className="bg-primary px-4 py-2 rounded-md text-white flex items-center gap-2 font-medium hover:opacity-90"
+              >
+                <IoIosAddCircleOutline size={18} />
+                List Your Patent
+              </CustomLink>
             </div>
           </div>
         </nav>

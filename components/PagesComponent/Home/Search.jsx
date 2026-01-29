@@ -137,7 +137,7 @@ const Search = () => {
         <BiPlanet color="#595B6C" className="min-w-4 min-h-4" />
         <input
           type="text"
-          placeholder="Search for patent"
+          placeholder={t("searchForPatent")}
           className="text-sm outline-none w-full"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}

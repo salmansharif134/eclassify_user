@@ -21,7 +21,6 @@ import LocationModal from "../../Location/LocationModal";
 import { toast } from "sonner";
 import { FaLocationCrosshairs } from "react-icons/fa6";
 import SearchAutocomplete from "@/components/Location/SearchAutocomplete";
-import { getCompanyName } from "@/redux/reducer/settingSlice";
 import CustomLink from "@/components/Common/CustomLink";
 import { ArrowRight } from "lucide-react";
 import { setIsVisitedLandingPage } from "@/redux/reducer/globalStateSlice";
@@ -33,7 +32,6 @@ const AnythingYouWant = () => {
   const { navigate } = useNavigate();
   const CurrentLanguage = useSelector(CurrentLanguageData);
   const LocationData = useSelector(getCityData);
-  const companyName = useSelector(getCompanyName);
   const [selectedCity, setSelectedCity] = useState(LocationData);
   const IsBrowserSupported = useSelector(getIsBrowserSupported);
   const [IsLocationModalOpen, setIsLocationModalOpen] = useState(false);
@@ -76,8 +74,7 @@ const AnythingYouWant = () => {
               <h1>{t("anythingYouWant")}</h1>
             </div>
             <p className="text-sm font-light md:w-1/2">
-              {t("discoverEndlessPossibilitiesAt")} {companyName}{" "}
-              {t("goToMarketplace")}
+              {t("landingTagline")}
             </p>
             <div className="space-between gap-3 rounded border w-full lg:w-[60%] bg-white py-2 px-3 relative">
               <div className="flex items-center w-full gap-2">
