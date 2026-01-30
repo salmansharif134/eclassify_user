@@ -721,8 +721,6 @@ const SellerSignupWizard = ({ onComplete }) => {
       setAccountState((prev) => ({ ...prev, isCreating: false }));
     }
   };
-console.log({patentData});
-console.log({manualPatentData});
   return (
     <div className="container max-w-4xl mx-auto py-10">
       {/* Progress Steps – hide on step 6 (What happens next) per feedback R */}
