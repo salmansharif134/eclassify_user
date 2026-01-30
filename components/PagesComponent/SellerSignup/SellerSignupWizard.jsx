@@ -14,17 +14,23 @@ import {
   sellerSignupApi,
   sellerOrderApi,
 } from "@/utils/api";
-import { GoogleLogin } from "@react-oauth/google";
+import D2D3 from '@/public/assets/Gemini_Generated_Image_4fdka74fdka74fdk.png'
 import { useSelector } from "react-redux";
 import { getIsLoggedIn, loadUpdateData, userSignUpData } from "@/redux/reducer/authSlice";
 import CustomLink from "@/components/Common/CustomLink";
 import StripePayment from "@/components/PagesComponent/Subscription/StripePayment";
 import { useNavigate } from "@/components/Common/useNavigate";
 import LoginWithEmailForm from "@/components/Auth/LoginWithEmailForm";
-
+import Image from "next/image";
+import good from '@/public/assets/good.png'
+import better from '@/public/assets/better.png'
+import best from '@/public/assets/best.png'
+import { Circle } from "lucide-react";
+import PitchDeck from '@/public/assets/PitchDeck.png'
+import Paperwork from '@/public/assets/paperwork.png'
 const SellerSignupWizard = ({ onComplete }) => {
   const { navigate } = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(4);
   const [loading, setLoading] = useState(false);
   const isLoggedIn = useSelector(getIsLoggedIn);
   const userData = useSelector(userSignUpData);
@@ -980,6 +986,9 @@ const SellerSignupWizard = ({ onComplete }) => {
           {/* Step 4: Additional Services first (N); sign-in required; image on side (N2, O) */}
           {currentStep === 4 && (
             <div className="space-y-4">
+              <p className="text-sm font-semibold -mt-4 text-gray-500">
+                Please select the services you want to avail
+              </p>
               {!isLoggedIn && !accountState.isCreated ? (
                 <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
                   <LoginWithEmailForm 
@@ -994,23 +1003,23 @@ const SellerSignupWizard = ({ onComplete }) => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                  <div className="lg:col-span-3 space-y-4">
+                  <div className="col-span-4 space-y-4">
               <Card
-                className={`cursor-pointer transition-all ${
-                  selectedServices.drawing2D3D ? "border-primary border-2" : ""
+                className={`cursor-pointer flex items-stretch gap-2 relative shadow-xl transition-all ${
+                  selectedServices.drawing2D3D ? "border-primary border-2" : "border-0"
                 }`}
                 onClick={() =>
                   setSelectedServices({ ...selectedServices, drawing2D3D: !selectedServices.drawing2D3D })
                 }
               >
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
+                <CardHeader className="p-0 relative aspect-[1/] flex-shrink-0 ">
+                    <Image src={D2D3} alt="2D/3D Drawing of Your Idea" height={150} width={300} className="object-cover rounded-l-lg " />
+                </CardHeader>
+                <CardContent >
+                  <CardTitle className="flex items-center justify-between pt-3">
                     2D/3D Drawing of Your Idea
-                    {selectedServices.drawing2D3D && <CheckCircle2 className="text-primary" />}
                   </CardTitle>
                   <CardDescription>$20</CardDescription>
-                </CardHeader>
-                <CardContent>
                   <p className="text-sm text-muted-foreground mb-2">
                     Professional visualization of your patent idea
                   </p>
@@ -1018,6 +1027,11 @@ const SellerSignupWizard = ({ onComplete }) => {
                     View Sample
                   </Button>
                 </CardContent>
+                    {selectedServices.drawing2D3D ? 
+                  <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                  :
+                  <Circle  className="text-gray-500 absolute top-2 right-2" />
+                  }
               </Card>
 
               <Card>
@@ -1026,9 +1040,10 @@ const SellerSignupWizard = ({ onComplete }) => {
                   <CardDescription>Starting at $250</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div
-                    className={`p-3 border rounded-lg cursor-pointer ${
-                      selectedServices.evaluation === "good" ? "border-primary" : ""
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div
+                    className={`p-3 shadow-lg rounded-lg cursor-pointer relative ${
+                      selectedServices.evaluation === "good" ? "border border-primary" : ""
                     }`}
                     onClick={() =>
                       setSelectedServices({ ...selectedServices, evaluation: "good" })
@@ -1036,17 +1051,18 @@ const SellerSignupWizard = ({ onComplete }) => {
                   >
                     <div className="flex items-center justify-between">
                       <div>
+                        <Image src={good} alt="good" className="w-full" width={50} height={50} />
                         <p className="font-medium">Good - Basic Evaluation</p>
                         <p className="text-sm text-muted-foreground">$250 • 2 pages</p>
                       </div>
-                      {selectedServices.evaluation === "good" && (
-                        <CheckCircle2 className="text-primary" />
-                      )}
+                      {selectedServices.evaluation === "good" ? (
+                        <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                      ):<Circle  className="text-gray-500 absolute top-2 right-2" />}
                     </div>
                   </div>
                   <div
-                    className={`p-3 border rounded-lg cursor-pointer ${
-                      selectedServices.evaluation === "better" ? "border-primary" : ""
+                    className={`p-3 shadow-lg rounded-lg cursor-pointer relative ${
+                      selectedServices.evaluation === "better" ? "border border-primary" : ""
                     }`}
                     onClick={() =>
                       setSelectedServices({ ...selectedServices, evaluation: "better" })
@@ -1054,31 +1070,34 @@ const SellerSignupWizard = ({ onComplete }) => {
                   >
                     <div className="flex items-center justify-between">
                       <div>
+                        <Image src={better} alt="better" className="w-full" width={50} height={50} />
                         <p className="font-medium">Better - Comprehensive</p>
                         <p className="text-sm text-muted-foreground">$500 • 6-20 pages</p>
                       </div>
-                      {selectedServices.evaluation === "better" && (
-                        <CheckCircle2 className="text-primary" />
-                      )}
+                 {selectedServices.evaluation === "better" ? (
+                        <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                      ):<Circle  className="text-gray-500 absolute top-2 right-2" />}
                     </div>
                   </div>
                   <div
-                    className={`p-3 border rounded-lg cursor-pointer ${
-                      selectedServices.evaluation === "best" ? "border-primary" : ""
+                    className={`p-3 shadow-lg rounded-lg cursor-pointer relative ${
+                      selectedServices.evaluation === "best" ? "border border-primary" : ""
                     }`}
                     onClick={() =>
                       setSelectedServices({ ...selectedServices, evaluation: "best" })
                     }
                   >
                     <div className="flex items-center justify-between">
-                      <div>
+                      <div> 
+                        <Image src={best} alt="best" className="w-full" width={50} height={50} />
                         <p className="font-medium">Best - Detailed Report</p>
                         <p className="text-sm text-muted-foreground">$1,999 • 15-30 pages</p>
                       </div>
-                      {selectedServices.evaluation === "best" && (
-                        <CheckCircle2 className="text-primary" />
-                      )}
+                   {selectedServices.evaluation === "best" ? (
+                        <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                      ):<Circle  className="text-gray-500 absolute top-2 right-2" />}
                     </div>
+                  </div>
                   </div>
                   <Button variant="link" size="sm">
                     View Sample
@@ -1087,21 +1106,21 @@ const SellerSignupWizard = ({ onComplete }) => {
               </Card>
 
               <Card
-                className={`cursor-pointer transition-all ${
-                  selectedServices.pitchDeck ? "border-primary border-2" : ""
+                className={`cursor-pointer flex items-stretch gap-2 relative shadow-xl transition-all ${
+                  selectedServices.pitchDeck ? "border-primary border-2" : "border-0"
                 }`}
                 onClick={() =>
                   setSelectedServices({ ...selectedServices, pitchDeck: !selectedServices.pitchDeck })
                 }
               >
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    Professional Pitch Deck
-                    {selectedServices.pitchDeck && <CheckCircle2 className="text-primary" />}
-                  </CardTitle>
-                  <CardDescription>Price TBD</CardDescription>
+                <CardHeader className="p-0 relative aspect-[2/1] flex-shrink-0 w-[300px] ">
+                   <Image src={PitchDeck} alt="Professional Pitch Deck" fill className="object-cover rounded-l-lg" />
                 </CardHeader>
                 <CardContent>
+                  <CardTitle className="flex items-center justify-between pt-3">
+                    Professional Pitch Deck
+                  </CardTitle>
+                  <CardDescription>Price TBD</CardDescription>
                   <p className="text-sm text-muted-foreground mb-2">
                     Perfect for larger investors and partnerships
                   </p>
@@ -1109,11 +1128,18 @@ const SellerSignupWizard = ({ onComplete }) => {
                     View Sample
                   </Button>
                 </CardContent>
+                {selectedServices.pitchDeck ? (
+                    <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                  ) : (
+                    <Circle className="text-gray-500 absolute top-2 right-2" />
+                  )}
               </Card>
 
+
+
               <Card
-                className={`cursor-pointer transition-all ${
-                  selectedServices.attorneySupport ? "border-primary border-2" : ""
+                className={`cursor-pointer flex items-stretch gap-2 transition-all relative shadow-xl ${
+                  selectedServices.attorneySupport ? "border-primary border-2" : "border-0"
                 }`}
                 onClick={() =>
                   setSelectedServices({
@@ -1122,16 +1148,14 @@ const SellerSignupWizard = ({ onComplete }) => {
                   })
                 }
               >
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    Attorney Support
-                    {selectedServices.attorneySupport && (
-                      <CheckCircle2 className="text-primary" />
-                    )}
-                  </CardTitle>
-                  <CardDescription>Price TBD</CardDescription>
+                <CardHeader className="p-0 relative aspect-[2/1] flex-shrink-0 w-[300px]">
+                   <Image src={Paperwork} alt="Attorney Support" fill className="object-cover rounded-l-lg" />
                 </CardHeader>
                 <CardContent>
+                  <CardTitle className="flex items-center justify-between pt-3">
+                    Attorney Support
+                  </CardTitle>
+                  <CardDescription>Price TBD</CardDescription>
                   <p className="text-sm text-muted-foreground mb-2">
                     Help with paperwork for the sale or investment of your patent
                   </p>
@@ -1139,13 +1163,14 @@ const SellerSignupWizard = ({ onComplete }) => {
                     View Sample
                   </Button>
                 </CardContent>
+                {selectedServices.attorneySupport ? (
+                    <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                  ) : (
+                    <Circle className="text-gray-500 absolute top-2 right-2" />
+                  )}
               </Card>
                   </div>
-                  <div className="hidden lg:block">
-                    <div className="sticky top-4 rounded-lg border bg-muted/30 p-4 aspect-square max-h-[280px] flex items-center justify-center">
-                      <span className="text-muted-foreground text-sm text-center">Service image area</span>
-                    </div>
-                  </div>
+            
                 </div>
               )}
             </div>
