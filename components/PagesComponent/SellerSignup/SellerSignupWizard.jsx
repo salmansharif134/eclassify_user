@@ -730,7 +730,6 @@ const SellerSignupWizard = ({ onComplete }) => {
   return (
     <div className="container max-w-4xl mx-auto py-10">
       {/* Progress Steps – hide on step 6 (What happens next) per feedback R */}
-      {currentStep !== 6 && (
         <div className="flex items-center justify-between mb-8">
           {[1, 2, 3, 4, 5, 6, 7].map((step) => (
             <div key={step} className="flex items-center flex-1">
@@ -753,7 +752,6 @@ const SellerSignupWizard = ({ onComplete }) => {
             </div>
           ))}
         </div>
-      )}
 
       <Card className="shadow-sm border-muted/60">
         <CardHeader>
