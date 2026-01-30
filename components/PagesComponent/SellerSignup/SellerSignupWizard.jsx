@@ -64,7 +64,7 @@ const SellerSignupWizard = ({ onComplete }) => {
   
   // Step 1: Patent Status
   const [hasPatent, setHasPatent] = useState(null);
-  const [patentNumber, setPatentNumber] = useState("");
+  const [patentNumber, setPatentNumber] = useState("US92726905");
   
   // Step 2: Patent Data
   const [patentData, setPatentData] = useState(null);
@@ -118,7 +118,16 @@ const SellerSignupWizard = ({ onComplete }) => {
     try {
       const response = await patentLookupApi.lookup({ patent_number: patentNumber });
       if (response.data.error === false && response.data.data) {
-        setPatentData(response.data.data);
+        let { issue_date, filing_date } = response.data.data;
+        // Format dates safely if they exist
+        if (issue_date) {
+             issue_date = new Date(issue_date).toISOString().split('T')[0];
+        }
+        if (filing_date) {
+            filing_date = new Date(filing_date).toISOString().split('T')[0];
+        }
+        
+        setPatentData({...response.data.data, issue_date, filing_date});
         setCurrentStep(2);
         toast.success("Patent found! Data auto-populated.");
       } else {
@@ -712,7 +721,8 @@ const SellerSignupWizard = ({ onComplete }) => {
       setAccountState((prev) => ({ ...prev, isCreating: false }));
     }
   };
-
+console.log({patentData});
+console.log({manualPatentData});
   return (
     <div className="container max-w-4xl mx-auto py-10">
       {/* Progress Steps – hide on step 6 (What happens next) per feedback R */}
