@@ -48,7 +48,7 @@ import UserAvatar from "@/public/assets/user.jpg";
 
 const SellerSignupWizard = ({ onComplete }) => {
   const { navigate } = useNavigate();
-  const [currentStep, setCurrentStep] = useState(6);
+  const [currentStep, setCurrentStep] = useState(4);
   const [loading, setLoading] = useState(false);
   const isLoggedIn = useSelector(getIsLoggedIn);
   const userData = useSelector(userSignUpData);
@@ -88,7 +88,7 @@ const SellerSignupWizard = ({ onComplete }) => {
 
   // Step 1: Patent Status
   const [hasPatent, setHasPatent] = useState(null);
-  const [patentNumber, setPatentNumber] = useState("US92726905");
+  const [patentNumber, setPatentNumber] = useState("");
 
   // Step 2: Patent Data
   const [patentData, setPatentData] = useState(null);
@@ -187,17 +187,32 @@ const SellerSignupWizard = ({ onComplete }) => {
     if (selectedServices.evaluation === "good") total += 250;
     if (selectedServices.evaluation === "better") total += 500;
     if (selectedServices.evaluation === "best") total += 1999;
-    if (selectedServices.pitchDeck) total += 0; // Price TBD
-    if (selectedServices.attorneySupport) total += 0; // Price TBD
+    if (selectedServices.pitchDeck) total += 500;
+    if (selectedServices.attorneySupport) total += 750;
     return total;
   };
 
-  const buildSelectedServicesPayload = () => ({
-    drawing2D3D: Boolean(selectedServices.drawing2D3D),
-    pitchDeck: Boolean(selectedServices.pitchDeck),
-    attorneySupport: Boolean(selectedServices.attorneySupport),
-    evaluation: selectedServices.evaluation ?? null,
-  });
+  const buildSelectedServicesPayload = () => {
+    const payload = {};
+
+    if (selectedServices.drawing2D3D) {
+      payload.drawing2D3D = true;
+    }
+
+    if (selectedServices.pitchDeck) {
+      payload.pitchDeck = true;
+    }
+
+    if (selectedServices.attorneySupport) {
+      payload.attorneySupport = true;
+    }
+
+    if (selectedServices.evaluation) {
+      payload.evaluation = selectedServices.evaluation;
+    }
+
+    return payload;
+  };
 
   const formatValidationError = (data) => {
     if (!data) return null;
@@ -495,11 +510,6 @@ const SellerSignupWizard = ({ onComplete }) => {
     const fetchOrderSummary = async () => {
       try {
         setIsOrderSummaryLoading(true);
-        console.log({
-          membership_plan: selectedPlan,
-          selected_services: buildSelectedServicesPayload(),
-        });
-
         const res = await sellerOrderApi.calculateOrderTotal({
           membership_plan: selectedPlan,
           selected_services: buildSelectedServicesPayload(),
@@ -1305,7 +1315,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                         <CardTitle className="flex items-center justify-between pt-3">
                           Professional Pitch Deck
                         </CardTitle>
-                        <CardDescription>Price TBD</CardDescription>
+                        <CardDescription>$500</CardDescription>
                         <p className="text-sm text-muted-foreground mb-2">
                           Perfect for larger investors and partnerships
                         </p>
@@ -1345,7 +1355,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                         <CardTitle className="flex items-center justify-between pt-3">
                           Attorney Support
                         </CardTitle>
-                        <CardDescription>Price TBD</CardDescription>
+                        <CardDescription>$750</CardDescription>
                         <p className="text-sm text-muted-foreground mb-2">
                           Help with paperwork for the sale or investment of your
                           patent
@@ -1481,7 +1491,6 @@ const SellerSignupWizard = ({ onComplete }) => {
               </div>
             </div>
           )}
-
           {/* Step 7: Review Order (S) – order summary, edit links, payment at bottom */}
           {currentStep === 7 && (
             <div className="space-y-4">
@@ -1556,16 +1565,22 @@ const SellerSignupWizard = ({ onComplete }) => {
                       {selectedServices.pitchDeck && (
                         <div className="flex justify-between">
                           <span>Pitch Deck:</span>
-                          <span>TBD</span>
+                          <span>$500</span>
                         </div>
                       )}
                       {selectedServices.attorneySupport && (
                         <div className="flex justify-between">
                           <span>Attorney Support:</span>
-                          <span>TBD</span>
+                          <span>$750</span>
                         </div>
                       )}
                     </>
+                  )}
+                  {orderSummary?.discount?.eligible && orderSummary.discount.amount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount ({orderSummary.discount.percent}%):</span>
+                      <span>-${orderSummary.discount.amount}</span>
+                    </div>
                   )}
                   <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
                     <span>Total:</span>

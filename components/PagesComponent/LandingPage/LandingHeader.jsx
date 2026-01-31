@@ -30,8 +30,11 @@ const LandingHeader = () => {
       <header className="sticky top-0 z-50 bg-white shadow-xs">
         <nav className="shadow-md">
           <div className="container py-5 lg:flex lg:items-center lg:justify-between gap-4">
-            <div className="flex w-full items-center justify-between">
-              <CustomLink href="/landing#anythingYouWant" className="flex-shrink-0">
+            <div className="flex flex-1 items-center justify-between">
+              <CustomLink
+                href="/landing#anythingYouWant"
+                className="flex-shrink-0"
+              >
                 <CustomImage
                   src={settings?.header_logo || "/assets/MustangIPLog01.png"}
                   className="w-full h-[52px] object-contain ltr:object-left rtl:object-right max-w-[195px]"
