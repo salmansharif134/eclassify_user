@@ -142,8 +142,8 @@ export const sliderApi = {
 export const categoryApi = {
   getCategory: ({ category_id, page, type } = {}) => {
     return Api.get(GET_CATEGORIES, {
-      params: { 
-        category_id, 
+      params: {
+        category_id,
         page,
         ...(type && { type }) // Add type parameter if provided ('products' or 'patents')
       },
@@ -291,7 +291,7 @@ export const getBlogsApi = {
 };
 // BLOGS API
 export const getBlogTagsApi = {
-  getBlogs: ({} = {}) => {
+  getBlogs: ({ } = {}) => {
     return Api.get(GET_BLOG_TAGS, {
       params: {},
     });
@@ -659,6 +659,7 @@ export const createPaymentIntentApi = {
 };
 export const sellerOrderApi = {
   calculateOrderTotal: ({ membership_plan, selected_services } = {}) => {
+
     return Api.post(SELLER_CALCULATE_ORDER_TOTAL, {
       membership_plan,
       selected_services,
@@ -705,7 +706,7 @@ export const getCustomFieldsApi = {
 };
 
 export const tipsApi = {
-  tips: ({} = {}) => {
+  tips: ({ } = {}) => {
     return Api.get(TIPS, {
       params: {},
     });
@@ -969,7 +970,7 @@ export const getFavouriteApi = {
 };
 
 export const getReportReasonsApi = {
-  reportReasons: ({} = {}) => {
+  reportReasons: ({ } = {}) => {
     return Api.get(GET_REPORT_REASONS, {
       params: {},
     });
@@ -1038,7 +1039,7 @@ export const unBlockUserApi = {
 };
 
 export const getBlockedUsers = {
-  blockedUsers: ({} = {}) => {
+  blockedUsers: ({ } = {}) => {
     return Api.get(BLOCKED_USERS, {
       params: {},
     });
@@ -1253,13 +1254,13 @@ export const sellerHubApi = {
   getSellerCategories: ({ page, perPage, query } = {}) =>
     Api.get(SELLER_CATEGORIES, { params: { page, perPage, query } }),
   createSellerCategory: (payload) => {
-    const config = payload instanceof FormData 
+    const config = payload instanceof FormData
       ? { headers: { 'Content-Type': 'multipart/form-data' } }
       : {};
     return Api.post(SELLER_CATEGORIES, payload, config);
   },
   updateSellerCategory: (categoryId, payload) => {
-    const config = payload instanceof FormData 
+    const config = payload instanceof FormData
       ? { headers: { 'Content-Type': 'multipart/form-data' } }
       : {};
     return Api.put(`${SELLER_CATEGORIES}/${categoryId}`, payload, config);

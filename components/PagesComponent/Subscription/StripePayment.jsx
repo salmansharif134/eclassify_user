@@ -158,9 +158,7 @@ const StripePayment = ({
           return;
         }
         if (currentIntent?.status === "canceled") {
-          setPaymentError(
-            "Payment was canceled. Please create a new payment."
-          );
+          setPaymentError("Payment was canceled. Please create a new payment.");
           setIsProcessing(false);
           return;
         }
@@ -195,7 +193,7 @@ const StripePayment = ({
               console.log(
                 "Transaction ID from metadata:",
                 paymentIntent.metadata?.payment_transaction_id ||
-                  paymentIntent.metadata?.transaction_id
+                  paymentIntent.metadata?.transaction_id,
               );
               if (typeof onPaymentSuccess === "function") {
                 onPaymentSuccess(paymentIntent);
@@ -238,14 +236,13 @@ const StripePayment = ({
             {isProcessing
               ? "Processing..."
               : formattedAmount
-              ? `Pay ${formattedAmount}`
-              : t("pay")}
+                ? `Pay ${formattedAmount}`
+                : t("pay")}
           </button>
         </div>
       </form>
     );
   };
-
 
   return (
     <>
