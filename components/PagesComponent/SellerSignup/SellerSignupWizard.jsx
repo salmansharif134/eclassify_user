@@ -134,6 +134,85 @@ const SellerSignupWizard = ({ onComplete }) => {
   const [isCreatingPaymentIntent, setIsCreatingPaymentIntent] = useState(false);
   const [paymentInitError, setPaymentInitError] = useState("");
 
+  const STORAGE_KEY = "SELLER_WIZARD_STATE_V1";
+
+  // Load state from local storage on mount
+  useEffect(() => {
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (savedState) {
+      try {
+        const parsedState = JSON.parse(savedState);
+        
+        // Restore step (but clamp if data missing for step? - trust the user for now)
+        if (parsedState.currentStep) setCurrentStep(parsedState.currentStep);
+        
+        // Restore patent status
+        if (parsedState.hasPatent !== undefined) setHasPatent(parsedState.hasPatent);
+        if (parsedState.patentNumber) setPatentNumber(parsedState.patentNumber);
+        
+        // Restore patent data
+        if (parsedState.patentData) setPatentData(parsedState.patentData);
+        if (parsedState.manualPatentData) setManualPatentData(parsedState.manualPatentData);
+        
+        // Restore account state (careful with sensitive data)
+        if (parsedState.accountState) {
+             setAccountState(prev => ({
+                 ...prev,
+                 name: parsedState.accountState.name || prev.name,
+                 email: parsedState.accountState.email || prev.email,
+                 // Do not restore password
+             }));
+        }
+
+        // Restore selections
+        if (parsedState.selectedPlan) setSelectedPlan(parsedState.selectedPlan);
+        // selectedPackage is derived from selectedPlan in an effect, so we might skip it or rely on that effect.
+        // Actually, selectedPackage is state, but we have logic to set it when selectedPlan changes.
+        
+        if (parsedState.selectedServices) setSelectedServices(parsedState.selectedServices);
+        
+        // Warn about images if step is past 3 (images step)
+        if (parsedState.currentStep > 3) {
+             toast.info("Please re-upload your images if they are missing.", { duration: 5000 });
+        }
+      } catch (err) {
+        console.error("Failed to parse saved wizard state:", err);
+      }
+    }
+  }, []);
+
+  // Save state to local storage on change
+  useEffect(() => {
+    const stateToSave = {
+        currentStep,
+        hasPatent,
+        patentNumber,
+        patentData,
+        manualPatentData,
+        selectedPlan,
+        // selectedPackage: selectedPackage, // derived mostly
+        selectedServices,
+        accountState: {
+            name: accountState.name,
+            email: accountState.email
+        },
+        timestamp: Date.now()
+    };
+    
+    // Simple debounce could be good, but this is fine for now
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [
+    currentStep, 
+    hasPatent, 
+    patentNumber, 
+    patentData, 
+    manualPatentData, 
+    selectedPlan, 
+    selectedServices, 
+    accountState.name, 
+    accountState.email
+  ]);
+
   const handlePatentLookup = async () => {
     if (!patentNumber.trim()) {
       toast.error("Please enter a patent number");
@@ -424,6 +503,7 @@ const SellerSignupWizard = ({ onComplete }) => {
       const response = await sellerSignupApi.submit(formData);
 
       if (response.data.error === false || response.data.error === "false") {
+        localStorage.removeItem(STORAGE_KEY);
         toast.success(
           "Account created successfully! Redirecting to dashboard...",
         );
@@ -657,6 +737,7 @@ const SellerSignupWizard = ({ onComplete }) => {
       paymentIntentId: paymentIntent?.id,
       paymentTransactionId: transactionId,
     });
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   const handleCreateAccount = async (e) => {
@@ -1478,15 +1559,13 @@ const SellerSignupWizard = ({ onComplete }) => {
                 </div>
                 <div className="text-center text-sm">
                   <p className="font-medium">
-                    {userData?.name ||
-                      accountState?.name ||
-                      "Your account manager"}
+                    Toni Lexington
                   </p>
-                  <p>{userData?.email || accountState?.email || "—"}</p>
                   <p>
-                    {[userData?.country_code, userData?.mobile]
-                      .filter(Boolean)
-                      .join(" ") || "—"}
+                    toni@mustangip.com
+                  </p>
+                  <p>
+                   312-222-1234
                   </p>
                 </div>
               </div>
