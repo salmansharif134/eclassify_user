@@ -48,7 +48,7 @@ import UserAvatar from "@/public/assets/user.jpg";
 
 const SellerSignupWizard = ({ onComplete }) => {
   const { navigate } = useNavigate();
-  const [currentStep, setCurrentStep] = useState(4);
+  const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const isLoggedIn = useSelector(getIsLoggedIn);
   const userData = useSelector(userSignUpData);
@@ -154,7 +154,33 @@ const SellerSignupWizard = ({ onComplete }) => {
           filing_date = new Date(filing_date).toISOString().split("T")[0];
         }
 
+        // Parse inventors if multiple names exist or single string
+        const apiInventors = response.data.data.inventor || "";
+        // Simple heuristic: split by comma if multiple, or space for first/last
+        // But usually patent data might come as "Last, First" or just a string. 
+        // Let's assume the API returns a string "First Last" or similar.
+        // We will create one inventor entry for now, splitting on the last space.
+        
+        let inventorsList = [];
+        if (apiInventors) {
+            inventorsList.push({ first_name: apiInventors, last_name: "" });
+        } else {
+             inventorsList.push({ first_name: "", last_name: "" });
+        }
+
         setPatentData({ ...response.data.data, issue_date, filing_date });
+        // Hydrate manual form for editing
+        setManualPatentData({
+            title: response.data.data.title || "",
+            inventors: inventorsList,
+            assignee: response.data.data.assignee || "",
+            filing_date: filing_date || "",
+            issue_date: issue_date || "",
+            abstract: response.data.data.abstract || "",
+            claims: response.data.data.claims || "",
+            description: response.data.data.description || ""
+        });
+
         setCurrentStep(2);
         toast.success("Patent found! Data auto-populated.");
       } else {
@@ -347,7 +373,22 @@ const SellerSignupWizard = ({ onComplete }) => {
       if (patentData) {
         formData.append("has_patent", "true");
         formData.append("patent_number", patentNumber);
-        formData.append("patent_data", JSON.stringify(patentData));
+        
+        // Construct the payload from manualPatentData (which contains edits)
+        // But keep original IDs or extra fields from patentData if needed? 
+        // For now, we trust manualPatentData has the editable fields.
+        // We might need to reconstruct the "inventor" string from the array for backward compatibility
+        const combinedInventors = manualPatentData.inventors
+          .map(i => `${i.first_name || ""} ${i.last_name || ""}`.trim())
+          .filter(Boolean)
+          .join(", ");
+
+        const payload = {
+            ...patentData, // Keep original IDs and extra fields
+            ...manualPatentData, // Overwrite with edited fields
+            inventor: combinedInventors // Backward compatibility
+        };
+        formData.append("patent_data", JSON.stringify(payload));
       } else {
         formData.append("has_patent", "false");
         formData.append("patent_data", JSON.stringify(manualPatentData));
@@ -872,43 +913,24 @@ const SellerSignupWizard = ({ onComplete }) => {
               <div>
                 <Label>Patent Title</Label>
                 <Input
-                  value={patentData?.title || manualPatentData.title}
+                  value={manualPatentData.title}
                   onChange={(e) => {
-                    if (patentData) {
-                      setPatentData({ ...patentData, title: e.target.value });
-                    } else {
                       setManualPatentData({
                         ...manualPatentData,
                         title: e.target.value,
                       });
-                    }
                   }}
                 />
               </div>
               {/* Inventors: First name, Last name; + Add Inventor */}
               <div className="space-y-2">
                 <Label>Inventors</Label>
-                {(patentData
-                  ? [{ first_name: patentData.inventor || "", last_name: "" }]
-                  : manualPatentData.inventors
-                ).map((inv, idx) => (
+                {manualPatentData.inventors.map((inv, idx) => (
                   <div key={idx} className="flex gap-2 items-center">
                     <Input
                       placeholder="Inventor First Name"
-                      value={
-                        patentData
-                          ? idx === 0
-                            ? patentData.inventor
-                            : ""
-                          : inv.first_name
-                      }
+                      value={inv.first_name}
                       onChange={(e) => {
-                        if (patentData) {
-                          setPatentData({
-                            ...patentData,
-                            inventor: e.target.value,
-                          });
-                        } else {
                           const next = [...manualPatentData.inventors];
                           next[idx] = {
                             ...next[idx],
@@ -918,14 +940,12 @@ const SellerSignupWizard = ({ onComplete }) => {
                             ...manualPatentData,
                             inventors: next,
                           });
-                        }
                       }}
                     />
                     <Input
                       placeholder="Inventor Last Name"
-                      value={patentData ? "" : inv.last_name}
+                      value={inv.last_name}
                       onChange={(e) => {
-                        if (!patentData) {
                           const next = [...manualPatentData.inventors];
                           next[idx] = {
                             ...next[idx],
@@ -935,12 +955,10 @@ const SellerSignupWizard = ({ onComplete }) => {
                             ...manualPatentData,
                             inventors: next,
                           });
-                        }
                       }}
                     />
                   </div>
                 ))}
-                {!patentData && (
                   <Button
                     type="button"
                     variant="outline"
@@ -957,44 +975,42 @@ const SellerSignupWizard = ({ onComplete }) => {
                   >
                     + Add Inventor
                   </Button>
-                )}
+              </div>
+                 <div>
+                <Label>Abstract (Summary of patent)</Label>
+                <textarea
+                  className="w-full min-h-[100px] p-2 border rounded-md"
+                  value={manualPatentData.abstract}
+                  onChange={(e) => {
+                      setManualPatentData({
+                        ...manualPatentData,
+                        abstract: e.target.value,
+                      });
+                  }}
+                />
               </div>
               <div>
                 <Label>Issue Date</Label>
                 <Input
                   type="date"
-                  value={patentData?.issue_date || manualPatentData.issue_date}
+                  value={manualPatentData.issue_date}
                   onChange={(e) => {
-                    if (patentData) {
-                      setPatentData({
-                        ...patentData,
-                        issue_date: e.target.value,
-                      });
-                    } else {
                       setManualPatentData({
                         ...manualPatentData,
                         issue_date: e.target.value,
                       });
-                    }
                   }}
                 />
               </div>
               <div>
                 <Label>Assignee</Label>
                 <Input
-                  value={patentData?.assignee || manualPatentData.assignee}
+                  value={manualPatentData.assignee}
                   onChange={(e) => {
-                    if (patentData) {
-                      setPatentData({
-                        ...patentData,
-                        assignee: e.target.value,
-                      });
-                    } else {
                       setManualPatentData({
                         ...manualPatentData,
                         assignee: e.target.value,
                       });
-                    }
                   }}
                 />
               </div>
@@ -1002,44 +1018,16 @@ const SellerSignupWizard = ({ onComplete }) => {
                 <Label>Filing Date</Label>
                 <Input
                   type="date"
-                  value={
-                    patentData?.filing_date || manualPatentData.filing_date
-                  }
+                  value={manualPatentData.filing_date}
                   onChange={(e) => {
-                    if (patentData) {
-                      setPatentData({
-                        ...patentData,
-                        filing_date: e.target.value,
-                      });
-                    } else {
                       setManualPatentData({
                         ...manualPatentData,
                         filing_date: e.target.value,
                       });
-                    }
                   }}
                 />
               </div>
-              <div>
-                <Label>Abstract (Summary of patent)</Label>
-                <textarea
-                  className="w-full min-h-[100px] p-2 border rounded-md"
-                  value={patentData?.abstract || manualPatentData.abstract}
-                  onChange={(e) => {
-                    if (patentData) {
-                      setPatentData({
-                        ...patentData,
-                        abstract: e.target.value,
-                      });
-                    } else {
-                      setManualPatentData({
-                        ...manualPatentData,
-                        abstract: e.target.value,
-                      });
-                    }
-                  }}
-                />
-              </div>
+           
               {/* Claims & Description hidden for now */}
             </div>
           )}
