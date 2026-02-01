@@ -1085,6 +1085,19 @@ const SellerSignupWizard = ({ onComplete }) => {
                     className="max-w-xs mx-auto"
                   />
                 </div>
+                {additionalImages.length > 0 && (
+                  <div className="mt-4 grid grid-cols-4 gap-2">
+                    {additionalImages.map((img, idx) => (
+                      <div key={idx} className="relative">
+                        <img
+                          src={URL.createObjectURL(img)}
+                          alt={`Additional ${idx + 1}`}
+                          className="w-full h-24 object-cover rounded"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
