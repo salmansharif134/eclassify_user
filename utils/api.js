@@ -79,6 +79,7 @@ export const GET_SERVICES = "services";
 export const CREATE_SERVICE_ORDER = "service-orders/create";
 export const GET_SELLER_DASHBOARD = "sellers/dashboard";
 export const ADD_PATENT = "sellers/patents";
+export const GET_PATENTS = "patents"; // Maps to /api/patents when used with baseURL
 export const SELLER_DASHBOARD_OVERVIEW = "seller/dashboard";
 export const SELLER_ORDERS = "seller/orders";
 export const SELLER_LISTINGS = "seller/listings";
@@ -1305,4 +1306,15 @@ export const buyerApi = {
   removeFromCart: (itemId) => Api.delete(`${BUYER_REMOVE_FROM_CART}/${itemId}`),
   updateCartItem: (itemId, payload) => Api.put(`${BUYER_CART}/${itemId}`, payload),
   checkout: (payload) => Api.post(BUYER_CHECKOUT, payload),
+};
+
+// 6. PATENTS API
+export const patentsApi = {
+  getPatents: ({ page } = {}) => {
+    return Api.get(GET_PATENTS, {
+      params: {
+        page,
+      },
+    });
+  },
 };

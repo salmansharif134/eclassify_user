@@ -2,6 +2,7 @@ import Layout from "@/components/Layout/Layout";
 import StructuredData from "@/components/Layout/StructuredData";
 import Home from "@/components/PagesComponent/Home/Home";
 import { SEO_REVALIDATE_SECONDS } from "@/lib/constants";
+import { use } from "react";
 
 export const generateMetadata = async ({ searchParams }) => {
   if (process.env.NEXT_PUBLIC_SEO === "false") return;
@@ -19,7 +20,7 @@ export const generateMetadata = async ({ searchParams }) => {
         },
       }
     );
-    
+
     if (!res.ok || !res.headers.get('content-type')?.includes('application/json')) {
       return {
         title: process.env.NEXT_PUBLIC_META_TITLE,
@@ -27,7 +28,7 @@ export const generateMetadata = async ({ searchParams }) => {
         keywords: process.env.NEXT_PUBLIC_META_kEYWORDS,
       };
     }
-    
+
     const data = await res.json();
     const home = data?.data?.[0];
 
@@ -62,15 +63,15 @@ const fetchCategories = async (langCode) => {
           "Content-Language": langCode || "en",
         },
         next: {
-          revalidate: SEO_REVALIDATE_SECONDS,
+          revalidate: SEO_REVALIDATE_SECONDS * 60,
         },
       }
     );
-    
+
     if (!res.ok || !res.headers.get('content-type')?.includes('application/json')) {
       return [];
     }
-    
+
     const data = await res.json();
     return data?.data?.data || [];
   } catch (error) {
@@ -94,11 +95,11 @@ const fetchProductItems = async (langCode) => {
         },
       }
     );
-    
+
     if (!res.ok || !res.headers.get('content-type')?.includes('application/json')) {
       return [];
     }
-    
+
     const data = await res.json();
     return data?.data?.data || [];
   } catch (error) {
@@ -136,13 +137,12 @@ const fetchFeaturedSections = async (langCode) => {
 
 export default async function HomePage({ searchParams }) {
   const langCode = (await searchParams)?.lang;
-  const [categoriesData, productItemsData, featuredSectionsData] =
+  const [productItemsData, featuredSectionsData, categoriesData] =
     await Promise.all([
-      fetchCategories(langCode),
       fetchProductItems(langCode),
       fetchFeaturedSections(langCode),
+      fetchCategories(langCode),
     ]);
-
   let jsonLd = null;
 
   if (process.env.NEXT_PUBLIC_SEO !== "false") {
