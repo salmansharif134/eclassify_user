@@ -149,6 +149,19 @@ const BuyerSignup = () => {
       }
       
       if (data?.error === false || data?.error === "false") {
+        
+        // Reset form data but keep loader active
+        setFormData((prev) => ({
+          ...prev,
+          firstName: "",
+          lastName: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          IsPasswordVisible: false,
+          IsConfirmPasswordVisible: false,
+        }));
+
         // Auto login after signup
         const loginResponse = await authApi.login({
           email: formData.email,

@@ -45,10 +45,12 @@ import { Circle } from "lucide-react";
 import PitchDeck from "@/public/assets/PitchDeck.png";
 import Paperwork from "@/public/assets/paperwork.png";
 import UserAvatar from "@/public/assets/user.jpg";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 
 const SellerSignupWizard = ({ onComplete }) => {
   const { navigate } = useNavigate();
-  const [currentStep, setCurrentStep] = useState(4);
+  const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const isLoggedIn = useSelector(getIsLoggedIn);
   const userData = useSelector(userSignUpData);
@@ -134,6 +136,85 @@ const SellerSignupWizard = ({ onComplete }) => {
   const [isCreatingPaymentIntent, setIsCreatingPaymentIntent] = useState(false);
   const [paymentInitError, setPaymentInitError] = useState("");
 
+  const STORAGE_KEY = "SELLER_WIZARD_STATE_V1";
+
+  // Load state from local storage on mount
+  useEffect(() => {
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (savedState) {
+      try {
+        const parsedState = JSON.parse(savedState);
+
+        // Restore step (but clamp if data missing for step? - trust the user for now)
+        if (parsedState.currentStep) setCurrentStep(parsedState.currentStep);
+
+        // Restore patent status
+        if (parsedState.hasPatent !== undefined) setHasPatent(parsedState.hasPatent);
+        if (parsedState.patentNumber) setPatentNumber(parsedState.patentNumber);
+
+        // Restore patent data
+        if (parsedState.patentData) setPatentData(parsedState.patentData);
+        if (parsedState.manualPatentData) setManualPatentData(parsedState.manualPatentData);
+
+        // Restore account state (careful with sensitive data)
+        if (parsedState.accountState) {
+          setAccountState(prev => ({
+            ...prev,
+            name: parsedState.accountState.name || prev.name,
+            email: parsedState.accountState.email || prev.email,
+            // Do not restore password
+          }));
+        }
+
+        // Restore selections
+        if (parsedState.selectedPlan) setSelectedPlan(parsedState.selectedPlan);
+        // selectedPackage is derived from selectedPlan in an effect, so we might skip it or rely on that effect.
+        // Actually, selectedPackage is state, but we have logic to set it when selectedPlan changes.
+
+        if (parsedState.selectedServices) setSelectedServices(parsedState.selectedServices);
+
+        // Warn about images if step is past 3 (images step)
+        if (parsedState.currentStep > 3) {
+          toast.info("Please re-upload your images if they are missing.", { duration: 5000 });
+        }
+      } catch (err) {
+        console.error("Failed to parse saved wizard state:", err);
+      }
+    }
+  }, []);
+
+  // Save state to local storage on change
+  useEffect(() => {
+    const stateToSave = {
+      currentStep,
+      hasPatent,
+      patentNumber,
+      patentData,
+      manualPatentData,
+      selectedPlan,
+      // selectedPackage: selectedPackage, // derived mostly
+      selectedServices,
+      accountState: {
+        name: accountState.name,
+        email: accountState.email
+      },
+      timestamp: Date.now()
+    };
+
+    // Simple debounce could be good, but this is fine for now
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [
+    currentStep,
+    hasPatent,
+    patentNumber,
+    patentData,
+    manualPatentData,
+    selectedPlan,
+    selectedServices,
+    accountState.name,
+    accountState.email
+  ]);
+
   const handlePatentLookup = async () => {
     if (!patentNumber.trim()) {
       toast.error("Please enter a patent number");
@@ -154,7 +235,33 @@ const SellerSignupWizard = ({ onComplete }) => {
           filing_date = new Date(filing_date).toISOString().split("T")[0];
         }
 
+        // Parse inventors if multiple names exist or single string
+        const apiInventors = response.data.data.inventor || "";
+        // Simple heuristic: split by comma if multiple, or space for first/last
+        // But usually patent data might come as "Last, First" or just a string. 
+        // Let's assume the API returns a string "First Last" or similar.
+        // We will create one inventor entry for now, splitting on the last space.
+
+        let inventorsList = [];
+        if (apiInventors) {
+          inventorsList.push({ first_name: apiInventors, last_name: "" });
+        } else {
+          inventorsList.push({ first_name: "", last_name: "" });
+        }
+
         setPatentData({ ...response.data.data, issue_date, filing_date });
+        // Hydrate manual form for editing
+        setManualPatentData({
+          title: response.data.data.title || "",
+          inventors: inventorsList,
+          assignee: response.data.data.assignee || "",
+          filing_date: filing_date || "",
+          issue_date: issue_date || "",
+          abstract: response.data.data.abstract || "",
+          claims: response.data.data.claims || "",
+          description: response.data.data.description || ""
+        });
+
         setCurrentStep(2);
         toast.success("Patent found! Data auto-populated.");
       } else {
@@ -347,7 +454,22 @@ const SellerSignupWizard = ({ onComplete }) => {
       if (patentData) {
         formData.append("has_patent", "true");
         formData.append("patent_number", patentNumber);
-        formData.append("patent_data", JSON.stringify(patentData));
+
+        // Construct the payload from manualPatentData (which contains edits)
+        // But keep original IDs or extra fields from patentData if needed? 
+        // For now, we trust manualPatentData has the editable fields.
+        // We might need to reconstruct the "inventor" string from the array for backward compatibility
+        const combinedInventors = manualPatentData.inventors
+          .map(i => `${i.first_name || ""} ${i.last_name || ""}`.trim())
+          .filter(Boolean)
+          .join(", ");
+
+        const payload = {
+          ...patentData, // Keep original IDs and extra fields
+          ...manualPatentData, // Overwrite with edited fields
+          inventor: combinedInventors // Backward compatibility
+        };
+        formData.append("patent_data", JSON.stringify(payload));
       } else {
         formData.append("has_patent", "false");
         formData.append("patent_data", JSON.stringify(manualPatentData));
@@ -383,6 +505,7 @@ const SellerSignupWizard = ({ onComplete }) => {
       const response = await sellerSignupApi.submit(formData);
 
       if (response.data.error === false || response.data.error === "false") {
+        localStorage.removeItem(STORAGE_KEY);
         toast.success(
           "Account created successfully! Redirecting to dashboard...",
         );
@@ -390,8 +513,8 @@ const SellerSignupWizard = ({ onComplete }) => {
       } else {
         toast.error(
           response.data.message ||
-            (response.data ? JSON.stringify(response.data) : null) ||
-            "Failed to create account. Please try again.",
+          (response.data ? JSON.stringify(response.data) : null) ||
+          "Failed to create account. Please try again.",
         );
       }
     } catch (error) {
@@ -616,6 +739,7 @@ const SellerSignupWizard = ({ onComplete }) => {
       paymentIntentId: paymentIntent?.id,
       paymentTransactionId: transactionId,
     });
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   const handleCreateAccount = async (e) => {
@@ -698,7 +822,7 @@ const SellerSignupWizard = ({ onComplete }) => {
         } else {
           toast.error(
             loginData?.message ||
-              "Account created, but login failed. Please log in to continue.",
+            "Account created, but login failed. Please log in to continue.",
           );
         }
       } else {
@@ -781,25 +905,28 @@ const SellerSignupWizard = ({ onComplete }) => {
     }
   };
   return (
-    <div className="container max-w-4xl mx-auto py-10">
+    <div className="container max-w-4xl mx-auto py-10 ">
+      <Link href="/">
+        <Button variant="outline" className='fixed top-3 left-3'>
+          <ChevronLeft />
+        </Button>
+      </Link>
       {/* Progress Steps – hide on step 6 (What happens next) per feedback R */}
       <div className="flex items-center justify-between mb-8">
         {[1, 2, 3, 4, 5, 6, 7].map((step) => (
           <div key={step} className="flex items-center flex-1">
             <div
-              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm ${
-                currentStep >= step
-                  ? "bg-primary text-white"
-                  : "bg-muted text-muted-foreground"
-              }`}
+              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm ${currentStep >= step
+                ? "bg-primary text-white"
+                : "bg-muted text-muted-foreground"
+                }`}
             >
               {currentStep > step ? <CheckCircle2 size={18} /> : step}
             </div>
             {step < 7 && (
               <div
-                className={`flex-1 h-1 mx-1 sm:mx-2 ${
-                  currentStep > step ? "bg-primary" : "bg-muted"
-                }`}
+                className={`flex-1 h-1 mx-1 sm:mx-2 ${currentStep > step ? "bg-primary" : "bg-muted"
+                  }`}
               />
             )}
           </div>
@@ -872,129 +999,104 @@ const SellerSignupWizard = ({ onComplete }) => {
               <div>
                 <Label>Patent Title</Label>
                 <Input
-                  value={patentData?.title || manualPatentData.title}
+                  value={manualPatentData.title}
                   onChange={(e) => {
-                    if (patentData) {
-                      setPatentData({ ...patentData, title: e.target.value });
-                    } else {
-                      setManualPatentData({
-                        ...manualPatentData,
-                        title: e.target.value,
-                      });
-                    }
+                    setManualPatentData({
+                      ...manualPatentData,
+                      title: e.target.value,
+                    });
                   }}
                 />
               </div>
               {/* Inventors: First name, Last name; + Add Inventor */}
               <div className="space-y-2">
                 <Label>Inventors</Label>
-                {(patentData
-                  ? [{ first_name: patentData.inventor || "", last_name: "" }]
-                  : manualPatentData.inventors
-                ).map((inv, idx) => (
+                {manualPatentData.inventors.map((inv, idx) => (
                   <div key={idx} className="flex gap-2 items-center">
                     <Input
                       placeholder="Inventor First Name"
-                      value={
-                        patentData
-                          ? idx === 0
-                            ? patentData.inventor
-                            : ""
-                          : inv.first_name
-                      }
+                      value={inv.first_name}
                       onChange={(e) => {
-                        if (patentData) {
-                          setPatentData({
-                            ...patentData,
-                            inventor: e.target.value,
-                          });
-                        } else {
-                          const next = [...manualPatentData.inventors];
-                          next[idx] = {
-                            ...next[idx],
-                            first_name: e.target.value,
-                          };
-                          setManualPatentData({
-                            ...manualPatentData,
-                            inventors: next,
-                          });
-                        }
+                        const next = [...manualPatentData.inventors];
+                        next[idx] = {
+                          ...next[idx],
+                          first_name: e.target.value,
+                        };
+                        setManualPatentData({
+                          ...manualPatentData,
+                          inventors: next,
+                        });
                       }}
                     />
                     <Input
                       placeholder="Inventor Last Name"
-                      value={patentData ? "" : inv.last_name}
+                      value={inv.last_name}
                       onChange={(e) => {
-                        if (!patentData) {
-                          const next = [...manualPatentData.inventors];
-                          next[idx] = {
-                            ...next[idx],
-                            last_name: e.target.value,
-                          };
-                          setManualPatentData({
-                            ...manualPatentData,
-                            inventors: next,
-                          });
-                        }
+                        const next = [...manualPatentData.inventors];
+                        next[idx] = {
+                          ...next[idx],
+                          last_name: e.target.value,
+                        };
+                        setManualPatentData({
+                          ...manualPatentData,
+                          inventors: next,
+                        });
                       }}
                     />
                   </div>
                 ))}
-                {!patentData && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setManualPatentData({
-                        ...manualPatentData,
-                        inventors: [
-                          ...manualPatentData.inventors,
-                          { first_name: "", last_name: "" },
-                        ],
-                      })
-                    }
-                  >
-                    + Add Inventor
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setManualPatentData({
+                      ...manualPatentData,
+                      inventors: [
+                        ...manualPatentData.inventors,
+                        { first_name: "", last_name: "" },
+                      ],
+                    })
+                  }
+                >
+                  + Add Inventor
+                </Button>
+              </div>
+              <div>
+                <Label>Abstract (Summary of patent)</Label>
+                <textarea
+                  className="w-full min-h-[100px] p-2 border rounded-md"
+                  value={manualPatentData.abstract}
+                  onChange={(e) => {
+                    setManualPatentData({
+                      ...manualPatentData,
+                      abstract: e.target.value,
+                    });
+                  }}
+                />
               </div>
               <div>
                 <Label>Issue Date</Label>
                 <Input
                   type="date"
-                  value={patentData?.issue_date || manualPatentData.issue_date}
+                  value={manualPatentData.issue_date}
                   onChange={(e) => {
-                    if (patentData) {
-                      setPatentData({
-                        ...patentData,
-                        issue_date: e.target.value,
-                      });
-                    } else {
-                      setManualPatentData({
-                        ...manualPatentData,
-                        issue_date: e.target.value,
-                      });
-                    }
+                    setManualPatentData({
+                      ...manualPatentData,
+                      issue_date: e.target.value,
+                    });
                   }}
                 />
               </div>
               <div>
                 <Label>Assignee</Label>
                 <Input
-                  value={patentData?.assignee || manualPatentData.assignee}
+                  value={manualPatentData.assignee}
                   onChange={(e) => {
-                    if (patentData) {
-                      setPatentData({
-                        ...patentData,
-                        assignee: e.target.value,
-                      });
-                    } else {
-                      setManualPatentData({
-                        ...manualPatentData,
-                        assignee: e.target.value,
-                      });
-                    }
+                    setManualPatentData({
+                      ...manualPatentData,
+                      assignee: e.target.value,
+                    });
                   }}
                 />
               </div>
@@ -1002,44 +1104,16 @@ const SellerSignupWizard = ({ onComplete }) => {
                 <Label>Filing Date</Label>
                 <Input
                   type="date"
-                  value={
-                    patentData?.filing_date || manualPatentData.filing_date
-                  }
+                  value={manualPatentData.filing_date}
                   onChange={(e) => {
-                    if (patentData) {
-                      setPatentData({
-                        ...patentData,
-                        filing_date: e.target.value,
-                      });
-                    } else {
-                      setManualPatentData({
-                        ...manualPatentData,
-                        filing_date: e.target.value,
-                      });
-                    }
+                    setManualPatentData({
+                      ...manualPatentData,
+                      filing_date: e.target.value,
+                    });
                   }}
                 />
               </div>
-              <div>
-                <Label>Abstract (Summary of patent)</Label>
-                <textarea
-                  className="w-full min-h-[100px] p-2 border rounded-md"
-                  value={patentData?.abstract || manualPatentData.abstract}
-                  onChange={(e) => {
-                    if (patentData) {
-                      setPatentData({
-                        ...patentData,
-                        abstract: e.target.value,
-                      });
-                    } else {
-                      setManualPatentData({
-                        ...manualPatentData,
-                        abstract: e.target.value,
-                      });
-                    }
-                  }}
-                />
-              </div>
+
               {/* Claims & Description hidden for now */}
             </div>
           )}
@@ -1097,6 +1171,19 @@ const SellerSignupWizard = ({ onComplete }) => {
                     className="max-w-xs mx-auto"
                   />
                 </div>
+                {additionalImages.length > 0 && (
+                  <div className="mt-4 grid grid-cols-4 gap-2">
+                    {additionalImages.map((img, idx) => (
+                      <div key={idx} className="relative">
+                        <img
+                          src={URL.createObjectURL(img)}
+                          alt={`Additional ${idx + 1}`}
+                          className="w-full h-24 object-cover rounded"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1128,11 +1215,10 @@ const SellerSignupWizard = ({ onComplete }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                   <div className="col-span-4 space-y-4">
                     <Card
-                      className={`cursor-pointer flex items-stretch gap-2 relative shadow-xl transition-all ${
-                        selectedServices.drawing2D3D
-                          ? "border-primary border-2"
-                          : "border-0"
-                      }`}
+                      className={`cursor-pointer flex items-stretch gap-2 relative shadow-xl transition-all ${selectedServices.drawing2D3D
+                        ? "border-primary border-2"
+                        : "border-0"
+                        }`}
                       onClick={() =>
                         setSelectedServices({
                           ...selectedServices,
@@ -1176,11 +1262,10 @@ const SellerSignupWizard = ({ onComplete }) => {
                       <CardContent className="space-y-3">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                           <div
-                            className={`p-3 shadow-lg rounded-lg cursor-pointer relative ${
-                              selectedServices.evaluation === "good"
-                                ? "border border-primary"
-                                : ""
-                            }`}
+                            className={`p-3 shadow-lg rounded-lg cursor-pointer relative ${selectedServices.evaluation === "good"
+                              ? "border border-primary"
+                              : ""
+                              }`}
                             onClick={() =>
                               setSelectedServices({
                                 ...selectedServices,
@@ -1212,11 +1297,10 @@ const SellerSignupWizard = ({ onComplete }) => {
                             </div>
                           </div>
                           <div
-                            className={`p-3 shadow-lg rounded-lg cursor-pointer relative ${
-                              selectedServices.evaluation === "better"
-                                ? "border border-primary"
-                                : ""
-                            }`}
+                            className={`p-3 shadow-lg rounded-lg cursor-pointer relative ${selectedServices.evaluation === "better"
+                              ? "border border-primary"
+                              : ""
+                              }`}
                             onClick={() =>
                               setSelectedServices({
                                 ...selectedServices,
@@ -1248,11 +1332,10 @@ const SellerSignupWizard = ({ onComplete }) => {
                             </div>
                           </div>
                           <div
-                            className={`p-3 shadow-lg rounded-lg cursor-pointer relative ${
-                              selectedServices.evaluation === "best"
-                                ? "border border-primary"
-                                : ""
-                            }`}
+                            className={`p-3 shadow-lg rounded-lg cursor-pointer relative ${selectedServices.evaluation === "best"
+                              ? "border border-primary"
+                              : ""
+                              }`}
                             onClick={() =>
                               setSelectedServices({
                                 ...selectedServices,
@@ -1291,11 +1374,10 @@ const SellerSignupWizard = ({ onComplete }) => {
                     </Card>
 
                     <Card
-                      className={`cursor-pointer flex items-stretch gap-2 relative shadow-xl transition-all ${
-                        selectedServices.pitchDeck
-                          ? "border-primary border-2"
-                          : "border-0"
-                      }`}
+                      className={`cursor-pointer flex items-stretch gap-2 relative shadow-xl transition-all ${selectedServices.pitchDeck
+                        ? "border-primary border-2"
+                        : "border-0"
+                        }`}
                       onClick={() =>
                         setSelectedServices({
                           ...selectedServices,
@@ -1331,11 +1413,10 @@ const SellerSignupWizard = ({ onComplete }) => {
                     </Card>
 
                     <Card
-                      className={`cursor-pointer flex items-stretch gap-2 transition-all relative shadow-xl ${
-                        selectedServices.attorneySupport
-                          ? "border-primary border-2"
-                          : "border-0"
-                      }`}
+                      className={`cursor-pointer flex items-stretch gap-2 transition-all relative shadow-xl ${selectedServices.attorneySupport
+                        ? "border-primary border-2"
+                        : "border-0"
+                        }`}
                       onClick={() =>
                         setSelectedServices({
                           ...selectedServices,
@@ -1477,15 +1558,13 @@ const SellerSignupWizard = ({ onComplete }) => {
                 </div>
                 <div className="text-center text-sm">
                   <p className="font-medium">
-                    {userData?.name ||
-                      accountState?.name ||
-                      "Your account manager"}
+                    Toni Lexington
                   </p>
-                  <p>{userData?.email || accountState?.email || "—"}</p>
                   <p>
-                    {[userData?.country_code, userData?.mobile]
-                      .filter(Boolean)
-                      .join(" ") || "—"}
+                    toni@mustangip.com
+                  </p>
+                  <p>
+                    312-222-1234
                   </p>
                 </div>
               </div>
@@ -1517,11 +1596,10 @@ const SellerSignupWizard = ({ onComplete }) => {
                     <span>Membership Plan:</span>
                     <span>
                       {orderSummary?.membership_price !== undefined
-                        ? `$${orderSummary.membership_price}/${
-                            orderSummary?.membership_plan === "yearly"
-                              ? "year"
-                              : "month"
-                          }`
+                        ? `$${orderSummary.membership_price}/${orderSummary?.membership_plan === "yearly"
+                          ? "year"
+                          : "month"
+                        }`
                         : selectedPlan === "monthly"
                           ? "$29/month"
                           : "$199/year"}
@@ -1617,8 +1695,8 @@ const SellerSignupWizard = ({ onComplete }) => {
                     selectedPackage={selectedPackage}
                     packageSettings={packageSettings}
                     PaymentModalClose={() => setShowPaymentForm(false)}
-                    setShowStripePayment={() => {}}
-                    updateActivePackage={() => {}}
+                    setShowStripePayment={() => { }}
+                    updateActivePackage={() => { }}
                     clientSecretOverride={clientSecret}
                     onPaymentSuccess={handlePaymentSuccess}
                     amountDue={
