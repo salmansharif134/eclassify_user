@@ -2,7 +2,9 @@
 import { useEffect, useState } from "react";
 import AllItems from "./AllItems";
 import FeaturedSections from "./FeaturedSections";
-import { FeaturedSectionApi, sliderApi } from "@/utils/api";
+import { FeaturedSectionApi, sliderApi, patentsApi } from "@/utils/api";
+import PatentCard from "@/components/Common/PatentCard";
+import NoData from "@/components/EmptyStates/NoData";
 import { getCurrentLangCode } from "@/redux/reducer/languageSlice";
 import { useSelector } from "react-redux";
 import { getCityData, getKilometerRange } from "@/redux/reducer/locationSlice";
@@ -29,6 +31,8 @@ const Home = () => {
   const [Slider, setSlider] = useState([]);
   const [IsSliderLoading, setIsSliderLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("products"); // 'products' or 'patents'
+  const [patentsData, setPatentsData] = useState([]);
+  const [isPatentsLoading, setIsPatentsLoading] = useState(false);
   const allEmpty = featuredData?.every((ele) => ele?.section_data.length === 0);
 
   // Static slider images - MustangIP banners
@@ -63,7 +67,7 @@ const Home = () => {
     // Use static slider images directly
     setSlider(staticSliderImages);
     setIsSliderLoading(false);
-    
+
     // Optional: Uncomment below if you want to fetch from API first, then fallback to static
     /*
     const fetchSliderData = async () => {
@@ -120,6 +124,25 @@ const Home = () => {
     };
     fetchFeaturedSectionData();
   }, [cityData.lat, cityData.long, KmRange, currentLanguageCode]);
+
+  useEffect(() => {
+    const fetchPatents = async () => {
+      if (activeTab === "patents") {
+        setIsPatentsLoading(true);
+        try {
+          const response = await patentsApi.getPatents({ page: 1 });
+          if (!response?.data?.error) {
+            setPatentsData(response.data.data || []);
+          }
+        } catch (error) {
+          console.error("Error fetching patents:", error);
+        } finally {
+          setIsPatentsLoading(false);
+        }
+      }
+    };
+    fetchPatents();
+  }, [activeTab]);
   return (
     <>
       {/* Hide slider for logged-in users; show categories directly for clearer UI */}
@@ -144,26 +167,37 @@ const Home = () => {
               Patents
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="products" className="mt-0">
             <PopularCategories categoryType="products" />
             <div className="mt-12">
-              <AllItems 
-                cityData={cityData} 
-                KmRange={KmRange} 
+              <AllItems
+                cityData={cityData}
+                KmRange={KmRange}
                 itemType="products"
               />
             </div>
           </TabsContent>
-          
+
           <TabsContent value="patents" className="mt-0">
             <PopularCategories categoryType="patents" />
             <div className="mt-12">
-              <AllItems 
-                cityData={cityData} 
-                KmRange={KmRange} 
-                itemType="patents"
-              />
+              {isPatentsLoading ? (
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+                  {/* Simple skeleton loading state */}
+                  {[...Array(8)].map((_, index) => (
+                    <div key={index} className="h-64 bg-gray-100 rounded-2xl animate-pulse"></div>
+                  ))}
+                </div>
+              ) : patentsData.length > 0 ? (
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+                  {patentsData.map((item) => (
+                    <PatentCard key={item.id} item={item} />
+                  ))}
+                </div>
+              ) : (
+                <NoData name="patents" />
+              )}
             </div>
           </TabsContent>
         </Tabs>

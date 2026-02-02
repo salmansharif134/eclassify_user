@@ -1,4 +1,5 @@
 import ProductCard from "@/components/Common/ProductCard";
+import PatentCard from "@/components/Common/PatentCard";
 import NoData from "@/components/EmptyStates/NoData";
 import AllItemsSkeleton from "@/components/PagesComponent/Home/AllItemsSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { resetBreadcrumb } from "@/redux/reducer/breadCrumbSlice";
 import { CurrentLanguageData } from "@/redux/reducer/languageSlice";
 import { t } from "@/utils";
-import { allItemApi } from "@/utils/api";
+import { allItemApi, patentsApi } from "@/utils/api";
 import { Info, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -35,7 +36,7 @@ const AllItems = ({ cityData, KmRange, itemType = "products" }) => {
         // 'patents' includes: only patents (items from sellers without product_id)
         item_type: itemType === "patents" ? "patents" : "products",
       };
-      
+
       if (Number(KmRange) > 0 && (cityData?.areaId || cityData?.city)) {
         // Add location-based parameters for non-demo mode
         params.radius = KmRange;
@@ -54,7 +55,12 @@ const AllItems = ({ cityData, KmRange, itemType = "products" }) => {
         }
       }
 
-      const response = await allItemApi.getItems(params);
+      let response;
+      if (itemType === "patents") {
+        response = await patentsApi.getPatents({ page });
+      } else {
+        response = await allItemApi.getItems(params);
+      }
       if (response.data?.error === true) {
         throw new Error(response.data?.message);
       }
@@ -75,7 +81,7 @@ const AllItems = ({ cityData, KmRange, itemType = "products" }) => {
       if (response?.data?.data?.data?.length > 0) {
         // Backend already filters by item_type, so no client-side filtering needed
         const data = response?.data?.data?.data;
-        
+
         if (page === 1) {
           setAllItem(data);
         } else {
@@ -142,11 +148,15 @@ const AllItems = ({ cityData, KmRange, itemType = "products" }) => {
           <AllItemsSkeleton />
         ) : AllItem && AllItem.length > 0 ? (
           AllItem?.map((item) => (
-            <ProductCard
-              key={item?.id}
-              item={item}
-              handleLike={handleLikeAllData}
-            />
+            itemType === "patents" ? (
+              <PatentCard key={item?.id} item={item} />
+            ) : (
+              <ProductCard
+                key={item?.id}
+                item={item}
+                handleLike={handleLikeAllData}
+              />
+            )
           ))
         ) : (
           <div className="col-span-full">
