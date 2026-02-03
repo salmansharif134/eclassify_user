@@ -22,16 +22,18 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { isValidPhoneNumber } from "libphonenumber-js/max";
 
+import ChangePasswordModal from "./ChangePasswordModal";
+
 const Profile = () => {
   const UserData = useSelector(userSignUpData);
   const IsLoggedIn = UserData !== undefined && UserData !== null;
   const settings = useSelector(settingsData);
   const placeholder_image = settings?.placeholder_image;
   const [profileImage, setProfileImage] = useState("");
-  const [profileFile, setProfileFile] = useState(null);
   const fetchFCM = useSelector(Fcmtoken);
   const [formData, setFormData] = useState({
-    name: "",
+    first_name: "",
+    last_name: "",
     email: "",
     phone: "",
     address: "",
@@ -44,6 +46,7 @@ const Profile = () => {
   const [isPending, setIsPending] = useState(false);
   const [VerificationStatus, setVerificationStatus] = useState("");
   const [RejectionReason, setRejectionReason] = useState("");
+
   const getVerificationProgress = async () => {
     try {
       const res = await getVerificationStatusApi.getVerificationStatus();
@@ -74,7 +77,8 @@ const Profile = () => {
           res?.data?.data?.country_code?.replace("+", "") || "91";
 
         setFormData({
-          name: res?.data?.data?.name || "",
+          first_name: res?.data?.data?.first_name || "",
+          last_name: res?.data?.data?.last_name || "",
           email: res?.data?.data?.email || "",
           phone: res?.data?.data?.mobile || "",
           address: res?.data?.data?.address || "",
@@ -147,22 +151,51 @@ const Profile = () => {
     }));
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
+    console.log("Image selected:", file);
     if (file) {
-      setProfileFile(file);
       const reader = new FileReader();
       reader.onload = () => {
+        console.log("FileReader loaded image preview");
         setProfileImage(reader.result);
       };
       reader.readAsDataURL(file);
+
+      try {
+        console.log("Starting image upload API call...");
+        setIsLoading(true);
+        const response = await updateProfileApi.updateProfileImage({
+          profile: file,
+        });
+        console.log("Image upload response:", response);
+        const data = response.data;
+        if (data.error !== true) {
+          const currentFcmId = UserData?.fcm_id;
+          if (!data?.data?.fcm_id && currentFcmId) {
+            const updatedData = { ...data?.data, fcm_id: currentFcmId };
+            loadUpdateUserData(updatedData);
+          } else {
+            loadUpdateUserData(data?.data);
+          }
+          toast.success(data.message);
+        } else {
+          console.error("API returned error:", data.message);
+          toast.error(data.message);
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        toast.error(t("imageUploadFailed"));
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (!formData?.name.trim() || !formData?.address.trim()) {
+      if (!formData?.first_name.trim() || !formData?.address.trim()) {
         toast.error(t("emptyFieldNotAllowed"));
         return;
       }
@@ -178,11 +211,11 @@ const Profile = () => {
       }
       setIsLoading(true);
       const response = await updateProfileApi.updateProfile({
-        name: formData.name,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
         email: formData.email,
         mobile: mobileNumber,
         address: formData.address,
-        profile: profileFile,
         fcm_id: fetchFCM ? fetchFCM : "",
         notification: formData.notification,
         country_code: formData.country_code,
@@ -254,67 +287,14 @@ const Profile = () => {
           <div className="flex flex-col gap-2 flex-1">
             <h1
               className="text-xl text-center ltr:md:text-left rtl:md:text-right font-medium break-words line-clamp-2"
-              title={UserData?.name}
+              title={`${UserData?.first_name} ${UserData?.last_name}`}
             >
-              {UserData?.name}
+              {UserData?.first_name} {UserData?.last_name}
             </h1>
             <p className="break-all text-center ltr:md:text-left rtl:md:text-right">
               {UserData?.email}
             </p>
           </div>
-        </div>
-        <div className="md:max-w-[50%] flex justify-center md:justify-end">
-          {(() => {
-            switch (VerificationStatus) {
-              case "approved":
-                return (
-                  <div className="flex items-center gap-1 rounded text-white bg-[#fa6e53] py-1 px-2 text-sm">
-                    <MdVerifiedUser size={14} />
-                    <span>{t("verified")}</span>
-                  </div>
-                );
-
-              case "not applied":
-                return (
-                  <div className="flex justify-end">
-                    <CustomLink
-                      href="/user-verification"
-                      className={buttonVariants()}
-                    >
-                      {t("verfiyNow")}
-                    </CustomLink>
-                  </div>
-                );
-
-              case "rejected":
-                return (
-                  <div className="flex flex-col gap-4 items-center md:items-end">
-                    {RejectionReason && (
-                      <p className="text-sm text-center md:text-right capitalize">
-                        {RejectionReason}
-                      </p>
-                    )}
-
-                    <CustomLink
-                      href="/user-verification"
-                      className={buttonVariants() + " w-fit"}
-                    >
-                      {t("applyAgain")}
-                    </CustomLink>
-                  </div>
-                );
-
-              case "pending":
-              case "resubmitted":
-                return (
-                  <Button type="button" className="cursor-auto">
-                    {t("inReview")}
-                  </Button>
-                );
-              default:
-                return null;
-            }
-          })()}
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:border md:py-6 md:px-4 md:rounded">
@@ -323,19 +303,67 @@ const Profile = () => {
         </h1>
 
         <div className="labelInputCont">
-          <Label htmlFor="name" className="requiredInputLabel">
-            {t("name")}
+          <Label htmlFor="first_name" className="requiredInputLabel">
+            {t("firstName")}
           </Label>
           <Input
             type="text"
-            id="name"
-            placeholder={t("enterName")}
-            value={formData.name}
+            id="first_name"
+            placeholder={t("enterFirstName")}
+            value={formData.first_name}
             onChange={handleChange}
           />
         </div>
 
-        <div className="flex flex-colgap-1">
+        <div className="labelInputCont">
+          <Label htmlFor="last_name" className="requiredInputLabel">
+            {t("lastName")}
+          </Label>
+          <Input
+            type="text"
+            id="last_name"
+            placeholder={t("enterLastName")}
+            value={formData.last_name}
+            onChange={handleChange}
+          />
+        </div>
+
+
+        <div className="labelInputCont">
+          <Label htmlFor="email" className="requiredInputLabel">
+            {t("email")}
+          </Label>
+          <Input
+            type="email"
+            id="email"
+            placeholder={t("enterEmail")}
+            value={formData.email}
+            onChange={handleChange}
+            readOnly={
+              UserData?.type === "email" || UserData?.type === "google"
+                ? true
+                : false
+            }
+          />
+        </div>
+
+        <div className="labelInputCont">
+          <Label htmlFor="phone" className="font-semibold">
+            {t("phoneNumber")}
+          </Label>
+          <PhoneInput
+            country={"us"}
+            value={`${formData.country_code}${formData.phone}`}
+            onChange={(phone, data) => handlePhoneChange(phone, data)}
+            inputProps={{
+              name: "phone",
+            }}
+            enableLongNumbers
+            disabled={UserData?.type === "phone"}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
           <div className="w-1/2 flex flex-col justify-between gap-3">
             <Label className="font-semibold" htmlFor="notification-mode">
               {t("notification")}
@@ -360,40 +388,8 @@ const Profile = () => {
             />
           </div>
         </div>
-
-        <div className="labelInputCont">
-          <Label htmlFor="email" className="requiredInputLabel">
-            {t("email")}
-          </Label>
-          <Input
-            type="email"
-            id="email"
-            placeholder={t("enterEmail")}
-            value={formData.email}
-            onChange={handleChange}
-            readOnly={
-              UserData?.type === "email" || UserData?.type === "google"
-                ? true
-                : false
-            }
-          />
-        </div>
-        <div className="labelInputCont">
-          <Label htmlFor="phone" className="font-semibold">
-            {t("phoneNumber")}
-          </Label>
-          <PhoneInput
-            country={process.env.NEXT_PUBLIC_DEFAULT_COUNTRY}
-            value={`${formData.country_code}${formData.phone}`}
-            onChange={(phone, data) => handlePhoneChange(phone, data)}
-            inputProps={{
-              name: "phone",
-            }}
-            enableLongNumbers
-            disabled={UserData?.type === "phone"}
-          />
-        </div>
       </div>
+
       <div className="md:border md:py-6 md:px-4 md:rounded">
         <h1 className="col-span-full mb-6 text-xl font-medium">
           {t("address")}
@@ -411,9 +407,16 @@ const Profile = () => {
         </div>
       </div>
 
-      <Button disabled={isLoading} className="ltr:ml-auto rtl:mr-auto w-fit">
-        {isLoading ? t("saving") : t("saveChanges")}
-      </Button>
+      <div className="flex items-center justify-between mt-4">
+        <ChangePasswordModal>
+          <Button variant="outline" type="button">
+            {t("changePassword")}
+          </Button>
+        </ChangePasswordModal>
+        <Button disabled={isLoading} className="w-fit">
+          {isLoading ? t("saving") : t("saveChanges")}
+        </Button>
+      </div>
     </form>
   );
 };
