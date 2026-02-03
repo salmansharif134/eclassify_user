@@ -21,6 +21,7 @@ export const GET_CUSTOM_FIELDS = "get-customfields";
 export const MANAGE_FAVOURITE = "manage-favourite";
 export const GET_FAVOURITE_ITEMS = "get-favourite-item";
 export const GET_MY_ITEMS = "my-items";
+export const GET_MY_PATENTS = "my-patents";
 export const GET_LIMITS = "get-limits";
 export const DELETE_ITEM = "delete-item";
 export const UPDATE_ITEM_STATUS = "update-item-status";
@@ -1341,6 +1342,13 @@ export const buyerApi = {
 export const patentsApi = {
   getPatents: ({ page } = {}) => {
     return Api.get(GET_PATENTS, {
+      params: {
+        page,
+      },
+    });
+  },
+  getMyPatents: ({ page } = {}) => {
+    return Api.get(GET_MY_PATENTS, {
       params: {
         page,
       },
