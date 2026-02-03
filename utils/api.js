@@ -21,6 +21,7 @@ export const GET_CUSTOM_FIELDS = "get-customfields";
 export const MANAGE_FAVOURITE = "manage-favourite";
 export const GET_FAVOURITE_ITEMS = "get-favourite-item";
 export const GET_MY_ITEMS = "my-items";
+export const GET_MY_PATENTS = "my-patents";
 export const GET_LIMITS = "get-limits";
 export const DELETE_ITEM = "delete-item";
 export const UPDATE_ITEM_STATUS = "update-item-status";
@@ -29,6 +30,8 @@ export const CONTACT_US = "contact-us";
 export const UPDATE_LISTING = "update-item";
 export const USER_SIGNUP = "user-signup";
 export const UPDATE_PROFILE = "update-profile";
+export const UPDATE_PROFILE_IMAGE = "update-profile-image";
+export const CHANGE_PASSWORD = "change-password";
 export const DELETE_USER = "delete-user";
 export const GET_REPORT_REASONS = "get-report-reasons";
 export const ADD_REPORT = "add-reports";
@@ -488,7 +491,8 @@ export const sendVerificationReqApi = {
 };
 export const updateProfileApi = {
   updateProfile: ({
-    name,
+    first_name,
+    last_name,
     email,
     mobile,
     fcm_id,
@@ -502,7 +506,8 @@ export const updateProfileApi = {
     const formData = new FormData();
 
     // Append only if the value is defined and not an empty string
-    if (name) formData.append("name", name);
+    if (first_name) formData.append("first_name", first_name);
+    if (last_name) formData.append("last_name", last_name);
     if (email) formData.append("email", email);
     formData.append("mobile", mobile);
     if (fcm_id) formData.append("fcm_id", fcm_id);
@@ -518,6 +523,31 @@ export const updateProfileApi = {
     formData.append("region_code", region_code);
 
     return Api.post(UPDATE_PROFILE, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+  updateProfileImage: ({ profile } = {}) => {
+    const formData = new FormData();
+    if (profile) {
+      formData.append("profile", profile);
+    }
+    return Api.post(UPDATE_PROFILE_IMAGE, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+};
+
+export const changePasswordApi = {
+  changePassword: ({ password, currentPassword, newPasswordConfirmation } = {}) => {
+    const formData = new FormData();
+    if (password) formData.append("new_password", password);
+    if (currentPassword) formData.append("current_password", currentPassword);
+    if (newPasswordConfirmation) formData.append("new_password_confirmation", newPasswordConfirmation);
+    return Api.post(CHANGE_PASSWORD, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -1312,6 +1342,13 @@ export const buyerApi = {
 export const patentsApi = {
   getPatents: ({ page } = {}) => {
     return Api.get(GET_PATENTS, {
+      params: {
+        page,
+      },
+    });
+  },
+  getMyPatents: ({ page } = {}) => {
+    return Api.get(GET_MY_PATENTS, {
       params: {
         page,
       },

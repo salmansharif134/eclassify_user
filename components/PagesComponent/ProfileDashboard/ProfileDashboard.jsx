@@ -17,13 +17,14 @@ import { t } from "@/utils";
 import { useMediaQuery } from "usehooks-ts";
 import BlockedUsersMenu from "../Chat/BlockedUsersMenu";
 import { cn } from "@/lib/utils";
+import MyPatents from "../MyPatents/MyPatents";
 
 const ProfileDashboard = () => {
   const pathname = usePathname();
   const isNotifications = pathname === "/notifications";
   const isSubscriptions = pathname === "/user-subscription";
   const isProfile = pathname === "/profile";
-  const isAds = pathname === "/my-ads";
+  const isListing = pathname === "/my-listing";
   const isFavorite = pathname === "/favorites";
   const isTransaction = pathname === "/transactions";
   const isReviews = pathname === "/reviews";
@@ -40,8 +41,8 @@ const ProfileDashboard = () => {
       return t("notifications");
     } else if (isSubscriptions) {
       return t("subscription");
-    } else if (isAds) {
-      return t("myAds");
+    } else if (isListing) {
+      return t("myListing");
     } else if (isFavorite) {
       return t("myFavorites");
     } else if (isTransaction) {
@@ -62,8 +63,8 @@ const ProfileDashboard = () => {
       return <Notifications />;
     } else if (isSubscriptions) {
       return <ProfileSubscription />;
-    } else if (isAds) {
-      return <MyAds />;
+    } else if (isListing) {
+      return <MyPatents />;
     } else if (isFavorite) {
       return <Favorites />;
     } else if (isTransaction) {

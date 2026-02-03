@@ -21,7 +21,7 @@ const Checkauth = (WrappedComponent) => {
         "/notifications",
         "/chat",
         "/user-subscription",
-        "/my-ads",
+        "/my-listing",
         "/favorites",
         "/transactions",
         "/reviews",

@@ -1215,9 +1215,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                   <div className="col-span-4 space-y-4">
                     <Card
-                      className={`cursor-pointer flex items-stretch gap-2 relative shadow-xl transition-all ${selectedServices.drawing2D3D
-                        ? "border-primary border-2"
-                        : "border-0"
+                      className={`cursor-pointer bg-white flex items-stretch gap-2 relative transition-all ${selectedServices.drawing2D3D
+                        ? "border-primary border-2 bg-gray-50"
+                        : "border-0 shadow-xl"
                         }`}
                       onClick={() =>
                         setSelectedServices({
@@ -1262,9 +1262,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                       <CardContent className="space-y-3">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                           <div
-                            className={`p-3 shadow-lg rounded-lg cursor-pointer relative ${selectedServices.evaluation === "good"
-                              ? "border border-primary"
-                              : ""
+                            className={`p-3  rounded-lg cursor-pointer relative ${selectedServices.evaluation === "good"
+                              ? "border border-primary bg-gray-50"
+                              : "shadow-xl border-0"
                               }`}
                             onClick={() =>
                               setSelectedServices({
@@ -1297,9 +1297,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                             </div>
                           </div>
                           <div
-                            className={`p-3 shadow-lg rounded-lg cursor-pointer relative ${selectedServices.evaluation === "better"
-                              ? "border border-primary"
-                              : ""
+                            className={`p-3 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "better"
+                              ? "border border-primary bg-gray-50"
+                              : "shadow-xl border-0"
                               }`}
                             onClick={() =>
                               setSelectedServices({
@@ -1332,9 +1332,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                             </div>
                           </div>
                           <div
-                            className={`p-3 shadow-lg rounded-lg cursor-pointer relative ${selectedServices.evaluation === "best"
-                              ? "border border-primary"
-                              : ""
+                            className={`p-3  cursor-pointer relative ${selectedServices.evaluation === "best"
+                              ? "border border-primary bg-gray-50"
+                              : "shadow-xl border-0"
                               }`}
                             onClick={() =>
                               setSelectedServices({
@@ -1374,9 +1374,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                     </Card>
 
                     <Card
-                      className={`cursor-pointer flex items-stretch gap-2 relative shadow-xl transition-all ${selectedServices.pitchDeck
-                        ? "border-primary border-2"
-                        : "border-0"
+                      className={`cursor-pointer flex items-stretch gap-2 relative transition-all ${selectedServices.pitchDeck
+                        ? "border-primary border-2 bg-gray-50"
+                        : "shadow-xl border-0"
                         }`}
                       onClick={() =>
                         setSelectedServices({
@@ -1413,9 +1413,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                     </Card>
 
                     <Card
-                      className={`cursor-pointer flex items-stretch gap-2 transition-all relative shadow-xl ${selectedServices.attorneySupport
-                        ? "border-primary border-2"
-                        : "border-0"
+                      className={`cursor-pointer flex items-stretch gap-2 transition-all relative ${selectedServices.attorneySupport
+                        ? "border-primary border-2 bg-gray-50"
+                        : "shadow-xl border-0"
                         }`}
                       onClick={() =>
                         setSelectedServices({

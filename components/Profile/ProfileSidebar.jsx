@@ -85,81 +85,72 @@ const ProfileSidebar = () => {
       <div className="flex flex-col gap-4 py-6 px-4 h-full">
         <CustomLink
           href="/profile"
-          className={`flex items-center gap-1 py-2 px-4 ${
-            pathname === "/profile" ? "profileActiveTab" : ""
-          }`}
+          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/profile" ? "profileActiveTab" : ""
+            }`}
         >
           <FiUser size={24} />
           <span>{t("profile")}</span>
         </CustomLink>
         <CustomLink
           href="/notifications"
-          className={`flex items-center gap-1 py-2 px-4 ${
-            pathname === "/notifications" ? "profileActiveTab" : ""
-          }`}
+          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/notifications" ? "profileActiveTab" : ""
+            }`}
         >
           <IoMdNotificationsOutline size={24} />
           <span>{t("notifications")}</span>
         </CustomLink>
         <CustomLink
           href="/chat"
-          className={`flex items-center gap-1 py-2 px-4 ${
-            pathname === "/chat" ? "profileActiveTab" : ""
-          }`}
+          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/chat" ? "profileActiveTab" : ""
+            }`}
         >
           <BiChat size={24} />
           <span>{t("chat")}</span>
         </CustomLink>
         <CustomLink
           href="/user-subscription"
-          className={`flex items-center gap-1 py-2 px-4 ${
-            pathname === "/user-subscription" ? "profileActiveTab" : ""
-          }`}
+          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/user-subscription" ? "profileActiveTab" : ""
+            }`}
         >
           <BiDollarCircle size={24} />
           <span>{t("subscription")}</span>
         </CustomLink>
         <CustomLink
-          href="/my-ads"
-          className={`flex items-center gap-1 py-2 px-4 ${
-            pathname === "/my-ads" ? "profileActiveTab" : ""
-          }`}
+          href="/my-listing"
+          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/my-listing" ? "profileActiveTab" : ""
+            }`}
         >
           <LiaAdSolid size={24} />
-          <span>{t("myAds")}</span>
+          <span>{t("myListing")}</span>
         </CustomLink>
         <CustomLink
           href="/favorites"
-          className={`flex items-center gap-1 py-2 px-4 ${
-            pathname === "/favorites" ? "profileActiveTab" : ""
-          }`}
+          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/favorites" ? "profileActiveTab" : ""
+            }`}
         >
           <LuHeart size={24} />
           <span>{t("favorites")}</span>
         </CustomLink>
         <CustomLink
           href="/transactions"
-          className={`flex items-center gap-1 py-2 px-4 ${
-            pathname === "/transactions" ? "profileActiveTab" : ""
-          }`}
+          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/transactions" ? "profileActiveTab" : ""
+            }`}
         >
           <BiReceipt size={24} />
           <span>{t("transaction")}</span>
         </CustomLink>
         <CustomLink
           href="/reviews"
-          className={`flex items-center gap-1 py-2 px-4 ${
-            pathname === "/reviews" ? "profileActiveTab" : ""
-          }`}
+          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/reviews" ? "profileActiveTab" : ""
+            }`}
         >
           <MdOutlineRateReview size={24} />
           <span>{t("myReviews")}</span>
         </CustomLink>
         <CustomLink
           href="/job-applications"
-          className={`flex items-center gap-1 py-2 px-4 ${
-            pathname === "/job-applications" ? "profileActiveTab" : ""
-          }`}
+          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/job-applications" ? "profileActiveTab" : ""
+            }`}
         >
           <MdWorkOutline size={24} />
           <span>{t("jobApplications")}</span>
