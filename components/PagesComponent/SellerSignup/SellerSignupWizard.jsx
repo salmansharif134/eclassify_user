@@ -49,6 +49,7 @@ import Paperwork from "@/public/assets/paperwork.png";
 import UserAvatar from "@/public/assets/user.jpg";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import ToniLexington from "@/public/assets/Toni Lexington.jpg";
 
 const SellerSignupWizard = ({ onComplete }) => {
   const { navigate } = useNavigate();
@@ -191,6 +192,7 @@ const SellerSignupWizard = ({ onComplete }) => {
         if (parsedState.contactInfo) setContactInfo(parsedState.contactInfo);
         if (parsedState.sellerId) setSellerId(parsedState.sellerId);
         if (parsedState.persistentUserId || parsedState.userId) setPersistentUserId(parsedState.persistentUserId || parsedState.userId);
+        if (parsedState.paymentTransactionId) setPaymentTransactionId(parsedState.paymentTransactionId);
         if (parsedState.personalInfoSubmitted) setPersonalInfoSubmitted(parsedState.personalInfoSubmitted);
 
         // Warn about images if step is past 3 (images step)
@@ -217,6 +219,7 @@ const SellerSignupWizard = ({ onComplete }) => {
       contactInfo,
       sellerId,
       persistentUserId,
+      paymentTransactionId,
       personalInfoSubmitted,
       accountState: {
         name: accountState.name,
@@ -238,6 +241,7 @@ const SellerSignupWizard = ({ onComplete }) => {
     contactInfo,
     sellerId,
     persistentUserId,
+    paymentTransactionId,
     personalInfoSubmitted,
     accountState.name,
     accountState.email
@@ -521,7 +525,10 @@ const SellerSignupWizard = ({ onComplete }) => {
       const response = await patentsApi.payLater(formData);
 
       if (response.data.error === false || response.data.error === "false") {
-        const data = response.data;
+
+        const data = response.data.data;
+        console.log({ data });
+
         // Aggressively search for any ID returned, mapping it to both fields as requested
         const id = data?.user_id || data?.seller_id || data?.id || response.data.user_id || response.data.seller_id || response.data.id;
 
@@ -562,88 +569,12 @@ const SellerSignupWizard = ({ onComplete }) => {
     paymentTransactionId: transactionId,
   } = {}) => {
     setLoading(true);
-    try {
-      const userId = userData?.id || userData?.data?.id;
-      const effectiveSellerId = sellerId || persistentUserId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id || userId;
+    localStorage.removeItem(STORAGE_KEY);
+    toast.success(
+      "Patent added successfully! Redirecting to dashboard...",
+    );
+    if (onComplete) onComplete();
 
-      if (!effectiveSellerId) {
-        toast.error("Seller ID not found. Please log in again.");
-        setLoading(false);
-        return;
-      }
-
-      const combinedInventors = manualPatentData.inventors
-        .map(i => `${i.first_name || ""} ${i.last_name || ""}`.trim())
-        .filter(Boolean)
-        .join(", ");
-
-      const payload = {
-        patent_number: patentNumber || manualPatentData.patent_number,
-        patent_data: {
-          patent_number: patentNumber || manualPatentData.patent_number,
-          title: manualPatentData.title,
-          inventor: combinedInventors,
-          assignee: manualPatentData.assignee,
-          filing_date: manualPatentData.filing_date,
-          issue_date: manualPatentData.issue_date,
-          abstract: manualPatentData.abstract,
-          claims: manualPatentData.claims,
-          description: manualPatentData.description,
-          patent_class: manualPatentData.patent_class,
-          patent_type: manualPatentData.patent_type
-        },
-        selected_services: buildSelectedServicesPayload(),
-        payment_intent_id: paymentIntentId,
-        payment_transaction_id: transactionId
-      };
-
-      // Since images are still important for a marketplace, we'll use FormData if images exist
-      // otherwise we'll send the payload as JSON if the backend supports it.
-      // But the user's sample is JSON, so let's check if we can append files to FormData
-      // alongside this structured payload.
-
-      const formData = new FormData();
-      formData.append("patent_number", payload.patent_number);
-      formData.append("patent_data", JSON.stringify(payload.patent_data));
-      formData.append("selected_services", JSON.stringify(payload.selected_services));
-      if (payload.payment_intent_id) formData.append("payment_intent_id", payload.payment_intent_id);
-      if (payload.payment_transaction_id) formData.append("payment_transaction_id", payload.payment_transaction_id);
-
-      // Append images
-      patentImages.forEach((img, idx) => {
-        formData.append(`patent_images[${idx}]`, img);
-      });
-      additionalImages.forEach((img, idx) => {
-        formData.append(`additional_images[${idx}]`, img);
-      });
-
-      // Use the new API method
-      const response = await sellerDashboardApi.addSellerPatent(effectiveSellerId, formData);
-
-      if (response.data.error === false || response.data.error === "false") {
-        localStorage.removeItem(STORAGE_KEY);
-        toast.success(
-          "Patent added successfully! Redirecting to dashboard...",
-        );
-        if (onComplete) onComplete();
-      } else {
-        toast.error(
-          response.data.message ||
-          (response.data ? JSON.stringify(response.data) : null) ||
-          "Failed to add patent. Please try again.",
-        );
-      }
-    } catch (error) {
-      const serverMessage =
-        formatValidationError(error?.response?.data) ||
-        (error?.response?.data ? JSON.stringify(error.response.data) : null);
-      console.error("Patent submission error:", error?.response || error);
-      toast.error(
-        serverMessage || "Failed to add patent. Please try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Map selected plan key ("monthly" | "yearly") to a membership plan from API.
@@ -796,12 +727,11 @@ const SellerSignupWizard = ({ onComplete }) => {
           ? "Stripe"
           : rawPaymentMethod
         : "Stripe";
-
       const res = await sellerOrderApi.createPaymentIntent({
         membership_plan: membershipPlan,
         selected_services: buildSelectedServicesPayload(),
         payment_method: paymentMethod,
-        seller_id: sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id,
+        seller_id: persistentUserId || sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id,
         user_id: persistentUserId || userData?.id || userData?.data?.id,
       });
       console.log("Create payment intent response:", res?.data);
@@ -815,11 +745,17 @@ const SellerSignupWizard = ({ onComplete }) => {
           gatewayResponse?.client_secret ||
           paymentIntentData?.client_secret ||
           res.data.data?.client_secret;
-        const transactionId =
+
+        const transactionId = paymentIntentData?.metadata?.payment_transaction_id ||
           paymentIntentData?.payment_transaction_id ||
           paymentIntentData?.transaction_id ||
+          gatewayResponse?.payment_transaction_id ||
+          gatewayResponse?.transaction_id ||
           res.data.data?.payment_transaction_id ||
-          res.data.data?.transaction_id;
+          res.data.data?.transaction_id ||
+          res.data?.payment_transaction_id ||
+          res.data?.transaction_id;
+
         if (res.data.data?.order_summary) {
           setOrderSummary(res.data.data.order_summary);
         }
@@ -856,6 +792,7 @@ const SellerSignupWizard = ({ onComplete }) => {
       paymentIntent?.metadata?.payment_transaction_id ||
       paymentIntent?.metadata?.transaction_id ||
       paymentTransactionId;
+
     if (!transactionId) {
       toast.error(
         "Missing payment transaction ID. Please retry payment creation.",
@@ -1038,8 +975,12 @@ const SellerSignupWizard = ({ onComplete }) => {
           <ChevronLeft />
         </Button>
       </Link>
+      <div className="flex items-center gap-2 justify-center flex-col">
+        <Image src={ToniLexington} alt="Toni Lexington" width={100} height={100} className="rounded-full" />
+        <h1 className="text-2xl font-bold">Hi I'm Toni Lexington</h1>
+      </div>
       {/* Progress Steps – hide on step 7 (What happens next) per feedback R */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 hidden">
         {[1, 2, 3, 4, 5, 6, 7, 8].map((step) => (
           <div key={step} className="flex items-center flex-1">
             <div
@@ -1060,7 +1001,7 @@ const SellerSignupWizard = ({ onComplete }) => {
         ))}
       </div>
 
-      <Card className="shadow-sm border-muted/60">
+      <Card className="shadow-xl border-0">
         <CardHeader>
           <CardTitle>
             {currentStep === 1 && "Do you already have a patent?"}
