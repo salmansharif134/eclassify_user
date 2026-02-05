@@ -99,12 +99,14 @@ export const SELLER_MESSAGES = "seller/messages";
 export const SELLER_RETURNS = "seller/returns";
 export const SELLER_ME = "seller/me";
 export const SELLER_SETTINGS = "seller/settings";
+export const ADD_SELLER_PATENT = "sellers"; // Base for sellers/{id}/patents
 export const BUYER_ORDERS = "buyer/orders";
 export const BUYER_CREATE_ORDER = "buyer/orders/create";
 export const BUYER_CART = "buyer/cart";
 export const BUYER_ADD_TO_CART = "buyer/cart/add";
 export const BUYER_REMOVE_FROM_CART = "buyer/cart/remove";
 export const BUYER_CHECKOUT = "buyer/checkout";
+export const PATENTS_PAY_LATER = "patents/pay-later";
 
 export const authApi = {
   login: ({ email, password, fcm_id } = {}) => {
@@ -689,18 +691,22 @@ export const createPaymentIntentApi = {
   },
 };
 export const sellerOrderApi = {
-  calculateOrderTotal: ({ membership_plan, selected_services } = {}) => {
+  calculateOrderTotal: ({ membership_plan, selected_services, seller_id, user_id } = {}) => {
 
     return Api.post(SELLER_CALCULATE_ORDER_TOTAL, {
       membership_plan,
       selected_services,
+      seller_id,
+      user_id,
     });
   },
-  createPaymentIntent: ({ membership_plan, selected_services, payment_method } = {}) => {
+  createPaymentIntent: ({ membership_plan, selected_services, payment_method, seller_id, user_id } = {}) => {
     return Api.post(SELLER_CREATE_PAYMENT_INTENT, {
       membership_plan,
       selected_services,
       payment_method,
+      seller_id,
+      user_id,
     });
   },
 };
@@ -1265,6 +1271,9 @@ export const sellerDashboardApi = {
       },
     });
   },
+  addSellerPatent: (seller_id, payload) => {
+    return Api.post(`${ADD_SELLER_PATENT}/${seller_id}/patents`, payload);
+  },
 };
 
 // SELLER HUB (DYNAMIC) API
@@ -1351,6 +1360,13 @@ export const patentsApi = {
     return Api.get(GET_MY_PATENTS, {
       params: {
         page,
+      },
+    });
+  },
+  payLater: (formData) => {
+    return Api.post(PATENTS_PAY_LATER, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
       },
     });
   },
