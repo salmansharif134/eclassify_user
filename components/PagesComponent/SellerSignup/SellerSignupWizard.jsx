@@ -56,6 +56,7 @@ const SellerSignupWizard = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const isLoggedIn = useSelector(getIsLoggedIn);
+  const signUpData = useSelector(userSignUpData);
   const userData = useSelector(userSignUpData);
   const hasSellerAccount = Boolean(
     userData?.seller_id ||
@@ -63,7 +64,7 @@ const SellerSignupWizard = ({ onComplete }) => {
     userData?.is_seller === 1 ||
     userData?.is_seller === true,
   );
-
+  console.log("signUpData", signUpData);
   useEffect(() => {
     // Only redirect if user already has a seller account
     // Don't redirect logged-in users without seller accounts - they can sign up as sellers
@@ -731,7 +732,7 @@ const SellerSignupWizard = ({ onComplete }) => {
         membership_plan: membershipPlan,
         selected_services: buildSelectedServicesPayload(),
         payment_method: paymentMethod,
-        seller_id: persistentUserId || sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id,
+        seller_id: persistentUserId || signUpData?.id || sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id,
         user_id: persistentUserId || userData?.id || userData?.data?.id,
       });
       console.log("Create payment intent response:", res?.data);
