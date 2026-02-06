@@ -10,6 +10,7 @@ import { getCityData } from "@/redux/reducer/locationSlice";
 import HomeMobileMenu from "./HomeMobileMenu.jsx";
 import MailSentSuccessModal from "@/components/Auth/MailSentSuccessModal.jsx";
 import { useState } from "react";
+import { FiLogIn,FiLogOut  } from "react-icons/fi";
 import {
   getIsLoggedIn,
   logoutSuccess,
@@ -219,16 +220,7 @@ const HomeHeader = () => {
                 FREE Evaluation
               </CustomLink>
               {IsLoggedin && (
-                <>
                   <ProfileDropdown />
-                  <button
-                    type="button"
-                    className="text-sm sm:text-base font-medium text-primary hover:underline"
-                    onClick={() => setIsLogout(true)}
-                  >
-                    Logout
-                  </button>
-                </>
               )}
               <button
                 className="bg-primary px-2 xl:px-4 py-2 items-center text-white rounded-md flex gap-1"
@@ -238,6 +230,20 @@ const HomeHeader = () => {
                 <IoIosAddCircleOutline size={18} />
                 <span className="hidden sm:inline">List Your Patent</span>
               </button>
+                  {IsLoggedin ? (
+                
+                  <button
+                    type="button"
+                    className="text-sm sm:text-base font-medium text-primary flex gap-2 items-center "
+                    onClick={() => setIsLogout(true)}
+                  >
+                    <FiLogOut />Logout
+                  </button>
+              ):
+              <button type='button' onClick={setIsLoginOpen} className="text-sm sm:text-base font-medium text-primary p-4 flex gap-2 items-center">
+                <FiLogIn /> Login
+              </button>
+            }
             </div>
           </div>
         </nav>
