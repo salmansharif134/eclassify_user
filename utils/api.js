@@ -1383,3 +1383,10 @@ export const patentsApi = {
     });
   },
 };
+
+// SELLER API
+export const sellerApi = {
+  getDashboard: (seller_id) => {
+    return Api.get(`sellers/${seller_id}/dashboard`);
+  },
+};

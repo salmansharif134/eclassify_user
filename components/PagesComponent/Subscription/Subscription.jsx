@@ -5,6 +5,7 @@ import {
   assigFreePackageApi,
   getPackageApi,
   getPaymentSettingsApi,
+  membershipPlansApi,
 } from "@/utils/api";
 import {
   Carousel,
@@ -14,6 +15,8 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { t } from "@/utils";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CheckCircle2, Circle } from "lucide-react";
 import PaymentModal from "./PaymentModal";
 import { CurrentLanguageData, getIsRtl } from "@/redux/reducer/languageSlice";
 import { useSelector } from "react-redux";
@@ -51,13 +54,19 @@ const Subscription = () => {
   const isLoggedIn = useSelector(getIsLoggedIn);
   const isFreeAdListing = useSelector(getIsFreAdListing);
 
+  const [membershipPlans, setMembershipPlans] = useState([]);
+  const [isMembershipPlansLoading, setIsMembershipPlansLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+
   useEffect(() => {
     if (!isFreeAdListing) {
       handleFetchListingPackages();
     }
     handleFetchFeaturedPackages();
   }, [CurrentLanguage?.id]);
-
+  useEffect(() => {
+    handleFetchMembershipPlans();
+  }, []);
   useEffect(() => {
     if (showPaymentModal) {
       handleFetchPaymentSetting();
@@ -99,6 +108,26 @@ const Subscription = () => {
     } finally {
       setIsAdPackagesLoading(false);
     }
+  };
+
+  const handleFetchMembershipPlans = async () => {
+    try {
+      console.log("handleFetchMembershipPlans");
+      setIsMembershipPlansLoading(true);
+      const res = await membershipPlansApi.getPlans();
+      if (res?.data?.error === false) {
+        setMembershipPlans(res.data?.data || []);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsMembershipPlansLoading(false);
+    }
+  };
+
+  const handleSelectPlan = (planKey) => {
+    setSelectedPlan(planKey);
+    // You can add purchase logic here if needed
   };
 
   const handlePurchasePackage = (pckg) => {
@@ -207,6 +236,104 @@ const Subscription = () => {
                   ))}
                 </CarouselContent>
               </Carousel>
+            </div>
+          </div>
+        )}
+
+        {/* Membership Plans Section */}
+        {isMembershipPlansLoading ? (
+          <AdListingPublicPlanCardSkeleton />
+        ) : (
+          <div className="flex flex-col gap-4 mt-8 mb-8">
+            <h1 className="text-2xl font-medium">Seller Membership Plans</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Card
+                className={`cursor-pointer transition-all relative box-border border-0 shadow-lg bg-blue-50 ${selectedPlan === "monthly" ? "border-primary border-2" : ""}`}
+                onClick={() => handleSelectPlan("monthly")}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Monthly Package
+                  </CardTitle>
+                  <CardDescription>
+                    <span className="text-blue-500 text-2xl">$29</span>
+                    /month
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li>✓ FREE 15 days</li>
+                    <li>✓ Billed monthly</li>
+                    <li>✓ 2 Patents posted</li>
+                    <li>✓ Full details of the Patent</li>
+                    <li>✓ Images on posting</li>
+                  </ul>
+                </CardContent>
+                {selectedPlan === "monthly" ? (
+                  <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                ) : (
+                  <Circle className="text-gray-500 absolute top-2 right-2 " />
+                )}
+              </Card>
+              <Card
+                className={`cursor-pointer transition-all relative bg-green-50 box-border border-0 shadow-lg ${selectedPlan === "yearly" ? "border-primary border-2" : ""}`}
+                onClick={() => handleSelectPlan("yearly")}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Annual Package
+                  </CardTitle>
+                  <CardDescription>
+                    <span className="text-blue-500 text-2xl">$199</span>
+                    /annual
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li>✓ FREE 15 days</li>
+                    <li>✓ Billed one time</li>
+                    <li>✓ 2 Patents posted</li>
+                    <li>✓ Full details of the Patent</li>
+                    <li>✓ Images on posting</li>
+                    <li>✓ PDF documents in the posting</li>
+                  </ul>
+                </CardContent>
+                {selectedPlan === "yearly" ? (
+                  <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                ) : (
+                  <Circle className="text-gray-500 absolute top-2 right-2 " />
+                )}
+              </Card>
+              <Card
+                className={`cursor-pointer transition-all relative bg-purple-50 box-border border-0 shadow-lg ${selectedPlan === "custom" ? "border-primary border-2" : ""}`}
+                onClick={() => handleSelectPlan("custom")}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Custom Package
+                  </CardTitle>
+                  <CardDescription>
+                    <span className="text-blue-500 text-2xl">$79</span>
+                    /month
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    <li>✓ FREE 15 days</li>
+                    <li>✓ Billed monthly</li>
+                    <li>✓ Up to 10 Patents posted</li>
+                    <li>✓ Full details of the Patent</li>
+                    <li>✓ Images on posting</li>
+                    <li>✓ PDF documents in the posting</li>
+                    <li>✓ FREE 2D/3D Rendering</li>
+                  </ul>
+                </CardContent>
+                {selectedPlan === "custom" ? (
+                  <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                ) : (
+                  <Circle className="text-gray-500 absolute top-2 right-2 " />
+                )}
+              </Card>
             </div>
           </div>
         )}

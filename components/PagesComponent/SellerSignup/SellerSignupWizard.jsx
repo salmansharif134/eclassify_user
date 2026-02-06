@@ -492,7 +492,7 @@ const SellerSignupWizard = ({ onComplete }) => {
       formData.append("first_name", contactInfo.firstName);
       formData.append("last_name", contactInfo.lastName);
       formData.append("email", contactInfo.email);
-      formData.append("phone", contactInfo.phone);
+      formData.append("mobile", contactInfo.phone);
       formData.append(
         "patent_number",
         patentNumber || manualPatentData.patent_number,
