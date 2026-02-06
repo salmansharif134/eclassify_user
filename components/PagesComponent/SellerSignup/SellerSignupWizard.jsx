@@ -25,6 +25,8 @@ import {
   patentLookupApi,
   sellerSignupApi,
   sellerOrderApi,
+  sellerDashboardApi,
+  patentsApi,
 } from "@/utils/api";
 import D2D3 from "@/public/assets/Gemini_Generated_Image_4fdka74fdka74fdk.png";
 import { useSelector } from "react-redux";
@@ -47,12 +49,14 @@ import Paperwork from "@/public/assets/paperwork.png";
 import UserAvatar from "@/public/assets/user.jpg";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import ToniLexington from "@/public/assets/Toni Lexington.jpg";
 
 const SellerSignupWizard = ({ onComplete }) => {
   const { navigate } = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const isLoggedIn = useSelector(getIsLoggedIn);
+  const signUpData = useSelector(userSignUpData);
   const userData = useSelector(userSignUpData);
   const hasSellerAccount = Boolean(
     userData?.seller_id ||
@@ -60,7 +64,7 @@ const SellerSignupWizard = ({ onComplete }) => {
     userData?.is_seller === 1 ||
     userData?.is_seller === true,
   );
-
+  console.log("signUpData", signUpData);
   useEffect(() => {
     // Only redirect if user already has a seller account
     // Don't redirect logged-in users without seller accounts - they can sign up as sellers
@@ -79,6 +83,16 @@ const SellerSignupWizard = ({ onComplete }) => {
     isCreating: false,
     isCreated: false,
   });
+
+  const [contactInfo, setContactInfo] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+  });
+  const [sellerId, setSellerId] = useState(null);
+  const [persistentUserId, setPersistentUserId] = useState(null);
+  const [personalInfoSubmitted, setPersonalInfoSubmitted] = useState(false);
 
   // Account creation errors
   const [accountErrors, setAccountErrors] = useState({
@@ -103,13 +117,16 @@ const SellerSignupWizard = ({ onComplete }) => {
     abstract: "",
     claims: "",
     description: "",
+    patent_class: "",
+    patent_type: "",
   });
 
   // Step 3: Images
   const [patentImages, setPatentImages] = useState([]);
   const [additionalImages, setAdditionalImages] = useState([]);
 
-  // Step 4: Membership Plan
+  // Step 4: Personal Info
+  // Step 6: Membership Plan
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [listingPackages, setListingPackages] = useState([]); // membership plans from API
@@ -126,7 +143,7 @@ const SellerSignupWizard = ({ onComplete }) => {
     attorneySupport: false,
   });
 
-  // Step 6: Cart Summary
+  // Step 8: Cart Summary
   const [cartTotal, setCartTotal] = useState(0);
   const [orderSummary, setOrderSummary] = useState(null);
   const [clientSecret, setClientSecret] = useState("");
@@ -173,6 +190,12 @@ const SellerSignupWizard = ({ onComplete }) => {
 
         if (parsedState.selectedServices) setSelectedServices(parsedState.selectedServices);
 
+        if (parsedState.contactInfo) setContactInfo(parsedState.contactInfo);
+        if (parsedState.sellerId) setSellerId(parsedState.sellerId);
+        if (parsedState.persistentUserId || parsedState.userId) setPersistentUserId(parsedState.persistentUserId || parsedState.userId);
+        if (parsedState.paymentTransactionId) setPaymentTransactionId(parsedState.paymentTransactionId);
+        if (parsedState.personalInfoSubmitted) setPersonalInfoSubmitted(parsedState.personalInfoSubmitted);
+
         // Warn about images if step is past 3 (images step)
         if (parsedState.currentStep > 3) {
           toast.info("Please re-upload your images if they are missing.", { duration: 5000 });
@@ -194,6 +217,11 @@ const SellerSignupWizard = ({ onComplete }) => {
       selectedPlan,
       // selectedPackage: selectedPackage, // derived mostly
       selectedServices,
+      contactInfo,
+      sellerId,
+      persistentUserId,
+      paymentTransactionId,
+      personalInfoSubmitted,
       accountState: {
         name: accountState.name,
         email: accountState.email
@@ -211,6 +239,11 @@ const SellerSignupWizard = ({ onComplete }) => {
     manualPatentData,
     selectedPlan,
     selectedServices,
+    contactInfo,
+    sellerId,
+    persistentUserId,
+    paymentTransactionId,
+    personalInfoSubmitted,
     accountState.name,
     accountState.email
   ]);
@@ -238,7 +271,7 @@ const SellerSignupWizard = ({ onComplete }) => {
         // Parse inventors if multiple names exist or single string
         const apiInventors = response.data.data.inventor || "";
         // Simple heuristic: split by comma if multiple, or space for first/last
-        // But usually patent data might come as "Last, First" or just a string. 
+        // But usually patent data might come as "Last, First" or similar. 
         // Let's assume the API returns a string "First Last" or similar.
         // We will create one inventor entry for now, splitting on the last space.
 
@@ -259,7 +292,9 @@ const SellerSignupWizard = ({ onComplete }) => {
           issue_date: issue_date || "",
           abstract: response.data.data.abstract || "",
           claims: response.data.data.claims || "",
-          description: response.data.data.description || ""
+          description: response.data.data.description || "",
+          patent_class: response.data.data.patent_class || "",
+          patent_type: response.data.data.patent_type || ""
         });
 
         setCurrentStep(2);
@@ -290,7 +325,11 @@ const SellerSignupWizard = ({ onComplete }) => {
     let total = 0;
     if (selectedPlan === "monthly") total += 29;
     if (selectedPlan === "yearly") total += 199;
-    if (selectedServices.drawing2D3D) total += 20;
+    if (selectedPlan === "custom") total += 79;
+
+    // FREE 2D/3D rendering for Custom plan
+    if (selectedServices.drawing2D3D && selectedPlan !== "custom") total += 20;
+
     if (selectedServices.evaluation === "good") total += 250;
     if (selectedServices.evaluation === "better") total += 500;
     if (selectedServices.evaluation === "best") total += 1999;
@@ -399,26 +438,44 @@ const SellerSignupWizard = ({ onComplete }) => {
         toast.error("Please upload at least one patent image");
         return;
       }
-      setCurrentStep(4);
-    } else if (currentStep === 4) {
-      // Step 4: Additional Services – sign-in required
-      if (!isLoggedIn && !accountState.isCreated) {
-        toast.error("Please sign in or sign up to continue");
-        return;
+      if (isLoggedIn || personalInfoSubmitted || sellerId || persistentUserId) {
+        setCurrentStep(5);
+      } else {
+        setCurrentStep(4);
       }
-      setCurrentStep(5);
+    } else if (currentStep === 4) {
+      // Step 4: Personal Info
+      if (!isLoggedIn) {
+        const { firstName, lastName, email, phone } = contactInfo;
+        if (
+          !firstName?.trim() ||
+          !lastName?.trim() ||
+          !email?.trim() ||
+          !phone?.trim()
+        ) {
+          toast.error("Please fill in all contact information fields");
+          return;
+        }
+        handlePayLater(); // This will advance to Step 5 on success
+      } else {
+        setCurrentStep(5);
+      }
     } else if (currentStep === 5) {
-      // Step 5: Membership plan required
+      // Step 5: More Services (Additional Services)
+      setCurrentStep(6);
+    } else if (currentStep === 6) {
+      // Step 6: Membership plan required
       if (!selectedPlan) {
         toast.error("Please select a membership plan");
         return;
       }
       setCartTotal(calculateTotal());
-      setCurrentStep(6);
-    } else if (currentStep === 6) {
-      // Step 6: What happens next – continue to payment
       setCurrentStep(7);
     } else if (currentStep === 7) {
+      // Step 7: What happens next – continue to payment
+      setCurrentStep(8);
+    } else if (currentStep === 8) {
+      // Step 8: Review Order & Payment
       if (showPaymentForm || clientSecret) return;
       if (!packageSettings) {
         toast.error("Payment settings are unavailable right now.");
@@ -428,9 +485,82 @@ const SellerSignupWizard = ({ onComplete }) => {
     }
   };
 
+  const handlePayLater = async () => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("first_name", contactInfo.firstName);
+      formData.append("last_name", contactInfo.lastName);
+      formData.append("email", contactInfo.email);
+      formData.append("mobile", contactInfo.phone);
+      formData.append(
+        "patent_number",
+        patentNumber || manualPatentData.patent_number,
+      );
+
+      const patent_data = {
+        title: manualPatentData.title,
+        inventor: manualPatentData.inventors.map((inv) => ({
+          firstName: inv.first_name,
+          lastName: inv.last_name,
+        })),
+        assignee: manualPatentData.assignee,
+        filing_date: manualPatentData.filing_date,
+        issue_date: manualPatentData.issue_date,
+        abstract: manualPatentData.abstract,
+        claims: manualPatentData.claims,
+        description: manualPatentData.description,
+        patent_class: manualPatentData.patent_class,
+        patent_type: manualPatentData.patent_type,
+      };
+      formData.append("patent_data", JSON.stringify(patent_data));
+
+      // Images per user requirement: patent_images for main, additional_images for optional
+      patentImages.forEach((img, idx) => {
+        formData.append(`patent_images[${idx}]`, img);
+      });
+      additionalImages.forEach((img, idx) => {
+        formData.append(`additional_images[${idx}]`, img);
+      });
+
+      const response = await patentsApi.payLater(formData);
+
+      if (response.data.error === false || response.data.error === "false") {
+
+        const data = response.data.data;
+        console.log({ data });
+
+        // Aggressively search for any ID returned, mapping it to both fields as requested
+        const id = data?.user_id || data?.seller_id || data?.id || response.data.user_id || response.data.seller_id || response.data.id;
+
+        if (id) {
+          setSellerId(id);
+          setPersistentUserId(id);
+        }
+
+        setPersonalInfoSubmitted(true);
+        toast.success("Information saved successfully!");
+        setCurrentStep(5);
+      } else {
+        toast.error(response.data.message || "Failed to save information");
+      }
+    } catch (error) {
+      console.error("Pay later error:", error);
+      toast.error("An error occurred while saving information");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSelectPlan = (planKey) => {
-    const planPackage =
-      planKey === "monthly" ? planPackages.monthly : planPackages.yearly;
+    let planPackage;
+    if (planKey === "monthly") {
+      planPackage = planPackages.monthly;
+    } else if (planKey === "yearly") {
+      planPackage = planPackages.yearly;
+    } else if (planKey === "custom") {
+      planPackage = planPackages.custom;
+    }
     setSelectedPlan(planKey);
     setSelectedPackage(planPackage || null);
   };
@@ -440,101 +570,19 @@ const SellerSignupWizard = ({ onComplete }) => {
     paymentTransactionId: transactionId,
   } = {}) => {
     setLoading(true);
-    try {
-      const formData = new FormData();
-      const userId = userData?.id || userData?.data?.id;
-      if (!userId) {
-        toast.error("User ID not found. Please log in again.");
-        setLoading(false);
-        return;
-      }
-      formData.append("user_id", userId);
+    localStorage.removeItem(STORAGE_KEY);
+    toast.success(
+      "Patent added successfully! Redirecting to dashboard...",
+    );
+    if (onComplete) onComplete();
 
-      // Append patent data
-      if (patentData) {
-        formData.append("has_patent", "true");
-        formData.append("patent_number", patentNumber);
-
-        // Construct the payload from manualPatentData (which contains edits)
-        // But keep original IDs or extra fields from patentData if needed? 
-        // For now, we trust manualPatentData has the editable fields.
-        // We might need to reconstruct the "inventor" string from the array for backward compatibility
-        const combinedInventors = manualPatentData.inventors
-          .map(i => `${i.first_name || ""} ${i.last_name || ""}`.trim())
-          .filter(Boolean)
-          .join(", ");
-
-        const payload = {
-          ...patentData, // Keep original IDs and extra fields
-          ...manualPatentData, // Overwrite with edited fields
-          inventor: combinedInventors // Backward compatibility
-        };
-        formData.append("patent_data", JSON.stringify(payload));
-      } else {
-        formData.append("has_patent", "false");
-        formData.append("patent_data", JSON.stringify(manualPatentData));
-      }
-
-      // Append images
-      patentImages.forEach((img, idx) => {
-        formData.append(`patent_images[${idx}]`, img);
-      });
-      additionalImages.forEach((img, idx) => {
-        formData.append(`additional_images[${idx}]`, img);
-      });
-
-      // Append membership plan
-      formData.append(
-        "membership_plan",
-        orderSummary?.membership_plan || selectedPlan,
-      );
-
-      // Append services
-      formData.append(
-        "selected_services",
-        JSON.stringify(buildSelectedServicesPayload()),
-      );
-
-      if (paymentIntentId) {
-        formData.append("payment_intent_id", paymentIntentId);
-      }
-      if (transactionId) {
-        formData.append("payment_transaction_id", String(transactionId));
-      }
-
-      const response = await sellerSignupApi.submit(formData);
-
-      if (response.data.error === false || response.data.error === "false") {
-        localStorage.removeItem(STORAGE_KEY);
-        toast.success(
-          "Account created successfully! Redirecting to dashboard...",
-        );
-        if (onComplete) onComplete();
-      } else {
-        toast.error(
-          response.data.message ||
-          (response.data ? JSON.stringify(response.data) : null) ||
-          "Failed to create account. Please try again.",
-        );
-      }
-    } catch (error) {
-      const serverMessage =
-        formatValidationError(error?.response?.data) ||
-        (error?.response?.data ? JSON.stringify(error.response.data) : null);
-      console.error("Signup error:", error?.response || error);
-      toast.error(
-        serverMessage || "Failed to create account. Please try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Map selected plan key ("monthly" | "yearly") to a membership plan from API.
   // We treat membership plans as "packages" by adding a synthetic final_price field.
   const mapPlanToPackage = (planKey, plans) => {
     if (!plans?.length) return null;
-    const targetType = planKey === "monthly" ? "monthly" : "yearly";
+    const targetType = planKey === "monthly" ? "monthly" : planKey === "yearly" ? "yearly" : "custom";
 
     // Prefer matching by type if backend uses 'monthly'/'yearly' types
     let plan =
@@ -545,7 +593,9 @@ const SellerSignupWizard = ({ onComplete }) => {
       const sorted = [...plans].sort(
         (a, b) => Number(a?.price || 0) - Number(b?.price || 0),
       );
-      plan = planKey === "monthly" ? sorted[0] : sorted[sorted.length - 1];
+      if (planKey === "monthly") plan = sorted[0];
+      else if (planKey === "yearly") plan = sorted[sorted.length - 1];
+      else plan = sorted.find(p => Number(p?.price) === 79) || sorted[1];
     }
 
     if (!plan) return null;
@@ -553,7 +603,7 @@ const SellerSignupWizard = ({ onComplete }) => {
     return {
       ...plan,
       // Keep compatibility with existing Stripe/payment UI that expects final_price
-      final_price: Number(plan.price ?? (planKey === "monthly" ? 29 : 199)),
+      final_price: Number(plan.price ?? (planKey === "monthly" ? 29 : planKey === "yearly" ? 199 : 79)),
     };
   };
 
@@ -561,19 +611,23 @@ const SellerSignupWizard = ({ onComplete }) => {
     return {
       monthly: mapPlanToPackage("monthly", listingPackages),
       yearly: mapPlanToPackage("yearly", listingPackages),
+      custom: mapPlanToPackage("custom", listingPackages),
     };
   }, [listingPackages]);
 
   useEffect(() => {
     if (!selectedPlan) return;
-    const nextPackage =
-      selectedPlan === "monthly" ? planPackages.monthly : planPackages.yearly;
+    let nextPackage;
+    if (selectedPlan === "monthly") nextPackage = planPackages.monthly;
+    else if (selectedPlan === "yearly") nextPackage = planPackages.yearly;
+    else if (selectedPlan === "custom") nextPackage = planPackages.custom;
+
     if (nextPackage && nextPackage !== selectedPackage) {
       setSelectedPackage(nextPackage);
     }
   }, [selectedPlan, planPackages, selectedPackage]);
 
-  // Load membership plans from MustangIP backend for Step 4
+  // Load membership plans from MustangIP backend for Step 6
   useEffect(() => {
     const fetchMembershipPlans = async () => {
       try {
@@ -613,7 +667,7 @@ const SellerSignupWizard = ({ onComplete }) => {
   }, []);
 
   useEffect(() => {
-    if (currentStep !== 7 || packageSettings) return;
+    if (currentStep !== 8 || packageSettings) return;
     const fetchPaymentSettings = async () => {
       try {
         setIsPaymentSettingsLoading(true);
@@ -629,13 +683,15 @@ const SellerSignupWizard = ({ onComplete }) => {
   }, [currentStep, packageSettings]);
 
   useEffect(() => {
-    if (currentStep !== 7 || !selectedPlan) return;
+    if (currentStep !== 8 || !selectedPlan) return;
     const fetchOrderSummary = async () => {
       try {
         setIsOrderSummaryLoading(true);
         const res = await sellerOrderApi.calculateOrderTotal({
           membership_plan: selectedPlan,
           selected_services: buildSelectedServicesPayload(),
+          seller_id: sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id,
+          user_id: persistentUserId || userData?.id || userData?.data?.id,
         });
         if (res?.data?.error === false) {
           setOrderSummary(res.data.data);
@@ -676,6 +732,8 @@ const SellerSignupWizard = ({ onComplete }) => {
         membership_plan: membershipPlan,
         selected_services: buildSelectedServicesPayload(),
         payment_method: paymentMethod,
+        seller_id: persistentUserId || signUpData?.id || sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id,
+        user_id: persistentUserId || userData?.id || userData?.data?.id,
       });
       console.log("Create payment intent response:", res?.data);
       if (res?.data?.error === false) {
@@ -688,11 +746,17 @@ const SellerSignupWizard = ({ onComplete }) => {
           gatewayResponse?.client_secret ||
           paymentIntentData?.client_secret ||
           res.data.data?.client_secret;
-        const transactionId =
+
+        const transactionId = paymentIntentData?.metadata?.payment_transaction_id ||
           paymentIntentData?.payment_transaction_id ||
           paymentIntentData?.transaction_id ||
+          gatewayResponse?.payment_transaction_id ||
+          gatewayResponse?.transaction_id ||
           res.data.data?.payment_transaction_id ||
-          res.data.data?.transaction_id;
+          res.data.data?.transaction_id ||
+          res.data?.payment_transaction_id ||
+          res.data?.transaction_id;
+
         if (res.data.data?.order_summary) {
           setOrderSummary(res.data.data.order_summary);
         }
@@ -729,6 +793,7 @@ const SellerSignupWizard = ({ onComplete }) => {
       paymentIntent?.metadata?.payment_transaction_id ||
       paymentIntent?.metadata?.transaction_id ||
       paymentTransactionId;
+
     if (!transactionId) {
       toast.error(
         "Missing payment transaction ID. Please retry payment creation.",
@@ -911,9 +976,13 @@ const SellerSignupWizard = ({ onComplete }) => {
           <ChevronLeft />
         </Button>
       </Link>
-      {/* Progress Steps – hide on step 6 (What happens next) per feedback R */}
-      <div className="flex items-center justify-between mb-8">
-        {[1, 2, 3, 4, 5, 6, 7].map((step) => (
+      <div className="flex items-center gap-2 justify-center flex-col">
+        <Image src={ToniLexington} alt="Toni Lexington" width={100} height={100} className="rounded-full" />
+        <h1 className="text-2xl font-bold">Hi I'm Toni Lexington</h1>
+      </div>
+      {/* Progress Steps – hide on step 7 (What happens next) per feedback R */}
+      <div className="flex items-center justify-between mb-8 hidden">
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((step) => (
           <div key={step} className="flex items-center flex-1">
             <div
               className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm ${currentStep >= step
@@ -923,7 +992,7 @@ const SellerSignupWizard = ({ onComplete }) => {
             >
               {currentStep > step ? <CheckCircle2 size={18} /> : step}
             </div>
-            {step < 7 && (
+            {step < 8 && (
               <div
                 className={`flex-1 h-1 mx-1 sm:mx-2 ${currentStep > step ? "bg-primary" : "bg-muted"
                   }`}
@@ -933,16 +1002,17 @@ const SellerSignupWizard = ({ onComplete }) => {
         ))}
       </div>
 
-      <Card className="shadow-sm border-muted/60">
+      <Card className="shadow-xl border-0">
         <CardHeader>
           <CardTitle>
             {currentStep === 1 && "Do you already have a patent?"}
             {currentStep === 2 && "Patent Information"}
             {currentStep === 3 && "Upload Images"}
-            {currentStep === 4 && "Additional Services"}
-            {currentStep === 5 && "Listing Advertising Packages"}
-            {currentStep === 6 && "What happens next"}
-            {currentStep === 7 && "Review Order"}
+            {currentStep === 4 && "Personal Information"}
+            {currentStep === 5 && "Additional Services"}
+            {currentStep === 6 && "Listing Advertising Packages"}
+            {currentStep === 7 && "What happens next"}
+            {currentStep === 8 && "Review Order"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -1114,6 +1184,34 @@ const SellerSignupWizard = ({ onComplete }) => {
                 />
               </div>
 
+              <div>
+                <Label>Patent Class</Label>
+                <Input
+                  placeholder="e.g., G06F17/30"
+                  value={manualPatentData.patent_class}
+                  onChange={(e) => {
+                    setManualPatentData({
+                      ...manualPatentData,
+                      patent_class: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+
+              <div>
+                <Label>Patent Type</Label>
+                <Input
+                  placeholder="e.g., Utility"
+                  value={manualPatentData.patent_type}
+                  onChange={(e) => {
+                    setManualPatentData({
+                      ...manualPatentData,
+                      patent_type: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+
               {/* Claims & Description hidden for now */}
             </div>
           )}
@@ -1189,277 +1287,333 @@ const SellerSignupWizard = ({ onComplete }) => {
           )}
 
           {/* Step 4: Additional Services first (N); sign-in required; image on side (N2, O) */}
+          {/* Step 4: Personal Info */}
           {currentStep === 4 && (
             <div className="space-y-4">
               <p className="text-sm font-semibold -mt-4 text-gray-500">
-                Please select the services you want to avail
+                Please enter your contact information
               </p>
-              {!isLoggedIn && !accountState.isCreated ? (
+              {!isLoggedIn ? (
                 <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
-                  <LoginWithEmailForm
-                    OnHide={() =>
-                      setAccountState((prev) => ({ ...prev, isCreated: true }))
-                    }
-                  />
-                  <div className="text-sm text-center">
-                    Don&apos;t have an account?{" "}
-                    <CustomLink
-                      href="/buyer-signup"
-                      className="text-primary underline"
-                    >
-                      Sign Up
-                    </CustomLink>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        placeholder="John"
+                        value={contactInfo.firstName}
+                        onChange={(e) =>
+                          setContactInfo({
+                            ...contactInfo,
+                            firstName: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        placeholder="Doe"
+                        value={contactInfo.lastName}
+                        onChange={(e) =>
+                          setContactInfo({
+                            ...contactInfo,
+                            lastName: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="john.doe@example.com"
+                      value={contactInfo.email}
+                      onChange={(e) =>
+                        setContactInfo({ ...contactInfo, email: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="+1 (555) 000-0000"
+                      value={contactInfo.phone}
+                      onChange={(e) =>
+                        setContactInfo({ ...contactInfo, phone: e.target.value })
+                      }
+                    />
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                  <div className="col-span-4 space-y-4">
-                    <Card
-                      className={`cursor-pointer bg-white flex items-stretch gap-2 relative transition-all ${selectedServices.drawing2D3D
-                        ? "border-primary border-2 bg-gray-50"
-                        : "border-0 shadow-xl"
-                        }`}
-                      onClick={() =>
-                        setSelectedServices({
-                          ...selectedServices,
-                          drawing2D3D: !selectedServices.drawing2D3D,
-                        })
-                      }
-                    >
-                      <CardHeader className="p-0 relative aspect-[1/] flex-shrink-0 ">
-                        <Image
-                          src={D2D3}
-                          alt="2D/3D Drawing of Your Idea"
-                          height={150}
-                          width={300}
-                          className="object-cover rounded-l-lg "
-                        />
-                      </CardHeader>
-                      <CardContent>
-                        <CardTitle className="flex items-center justify-between pt-3">
-                          2D/3D Drawing of Your Idea
-                        </CardTitle>
-                        <CardDescription>$20</CardDescription>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Professional visualization of your patent idea
-                        </p>
-                        <Button variant="link" size="sm">
-                          View Sample
-                        </Button>
-                      </CardContent>
-                      {selectedServices.drawing2D3D ? (
-                        <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                      ) : (
-                        <Circle className="text-gray-500 absolute top-2 right-2" />
-                      )}
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Patent Evaluation by Expert</CardTitle>
-                        <CardDescription>Starting at $250</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                          <div
-                            className={`p-3  rounded-lg cursor-pointer relative ${selectedServices.evaluation === "good"
-                              ? "border border-primary bg-gray-50"
-                              : "shadow-xl border-0"
-                              }`}
-                            onClick={() =>
-                              setSelectedServices({
-                                ...selectedServices,
-                                evaluation: "good",
-                              })
-                            }
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <Image
-                                  src={good}
-                                  alt="good"
-                                  className="w-full"
-                                  width={50}
-                                  height={50}
-                                />
-                                <p className="font-medium">
-                                  Good - Basic Evaluation
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  $250 • 2 pages
-                                </p>
-                              </div>
-                              {selectedServices.evaluation === "good" ? (
-                                <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                              ) : (
-                                <Circle className="text-gray-500 absolute top-2 right-2" />
-                              )}
-                            </div>
-                          </div>
-                          <div
-                            className={`p-3 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "better"
-                              ? "border border-primary bg-gray-50"
-                              : "shadow-xl border-0"
-                              }`}
-                            onClick={() =>
-                              setSelectedServices({
-                                ...selectedServices,
-                                evaluation: "better",
-                              })
-                            }
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <Image
-                                  src={better}
-                                  alt="better"
-                                  className="w-full"
-                                  width={50}
-                                  height={50}
-                                />
-                                <p className="font-medium">
-                                  Better - Comprehensive
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  $500 • 6-20 pages
-                                </p>
-                              </div>
-                              {selectedServices.evaluation === "better" ? (
-                                <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                              ) : (
-                                <Circle className="text-gray-500 absolute top-2 right-2" />
-                              )}
-                            </div>
-                          </div>
-                          <div
-                            className={`p-3  cursor-pointer relative ${selectedServices.evaluation === "best"
-                              ? "border border-primary bg-gray-50"
-                              : "shadow-xl border-0"
-                              }`}
-                            onClick={() =>
-                              setSelectedServices({
-                                ...selectedServices,
-                                evaluation: "best",
-                              })
-                            }
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <Image
-                                  src={best}
-                                  alt="best"
-                                  className="w-full"
-                                  width={50}
-                                  height={50}
-                                />
-                                <p className="font-medium">
-                                  Best - Detailed Report
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  $1,999 • 15-30 pages
-                                </p>
-                              </div>
-                              {selectedServices.evaluation === "best" ? (
-                                <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                              ) : (
-                                <Circle className="text-gray-500 absolute top-2 right-2" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <Button variant="link" size="sm">
-                          View Sample
-                        </Button>
-                      </CardContent>
-                    </Card>
-
-                    <Card
-                      className={`cursor-pointer flex items-stretch gap-2 relative transition-all ${selectedServices.pitchDeck
-                        ? "border-primary border-2 bg-gray-50"
-                        : "shadow-xl border-0"
-                        }`}
-                      onClick={() =>
-                        setSelectedServices({
-                          ...selectedServices,
-                          pitchDeck: !selectedServices.pitchDeck,
-                        })
-                      }
-                    >
-                      <CardHeader className="p-0 relative aspect-[2/1] flex-shrink-0 w-[300px] ">
-                        <Image
-                          src={PitchDeck}
-                          alt="Professional Pitch Deck"
-                          fill
-                          className="object-cover rounded-l-lg"
-                        />
-                      </CardHeader>
-                      <CardContent>
-                        <CardTitle className="flex items-center justify-between pt-3">
-                          Professional Pitch Deck
-                        </CardTitle>
-                        <CardDescription>$500</CardDescription>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Perfect for larger investors and partnerships
-                        </p>
-                        <Button variant="link" size="sm">
-                          View Sample
-                        </Button>
-                      </CardContent>
-                      {selectedServices.pitchDeck ? (
-                        <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                      ) : (
-                        <Circle className="text-gray-500 absolute top-2 right-2" />
-                      )}
-                    </Card>
-
-                    <Card
-                      className={`cursor-pointer flex items-stretch gap-2 transition-all relative ${selectedServices.attorneySupport
-                        ? "border-primary border-2 bg-gray-50"
-                        : "shadow-xl border-0"
-                        }`}
-                      onClick={() =>
-                        setSelectedServices({
-                          ...selectedServices,
-                          attorneySupport: !selectedServices.attorneySupport,
-                        })
-                      }
-                    >
-                      <CardHeader className="p-0 relative aspect-[2/1] flex-shrink-0 w-[300px]">
-                        <Image
-                          src={Paperwork}
-                          alt="Attorney Support"
-                          fill
-                          className="object-cover rounded-l-lg"
-                        />
-                      </CardHeader>
-                      <CardContent>
-                        <CardTitle className="flex items-center justify-between pt-3">
-                          Attorney Support
-                        </CardTitle>
-                        <CardDescription>$750</CardDescription>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Help with paperwork for the sale or investment of your
-                          patent
-                        </p>
-                        <Button variant="link" size="sm">
-                          View Sample
-                        </Button>
-                      </CardContent>
-                      {selectedServices.attorneySupport ? (
-                        <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                      ) : (
-                        <Circle className="text-gray-500 absolute top-2 right-2" />
-                      )}
-                    </Card>
-                  </div>
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800">
+                    Logged in as{" "}
+                    <strong>{userData?.name || userData?.email}</strong>
+                  </p>
                 </div>
               )}
             </div>
           )}
 
-          {/* Step 5: Listing Advertising Packages (monthly or annual) */}
+          {/* Step 5: More Services (Additional Services) */}
           {currentStep === 5 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <p className="text-sm font-semibold -mt-4 text-gray-500">
+                Please select the services you want to avail
+              </p>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="col-span-4 space-y-4">
+                  <Card
+                    className={`cursor-pointer bg-white flex items-stretch gap-2 relative transition-all ${selectedServices.drawing2D3D
+                      ? "border-primary border-2 bg-gray-50"
+                      : "border-0 shadow-xl"
+                      }`}
+                    onClick={() =>
+                      setSelectedServices({
+                        ...selectedServices,
+                        drawing2D3D: !selectedServices.drawing2D3D,
+                      })
+                    }
+                  >
+                    <CardHeader className="p-0 relative aspect-[1/] flex-shrink-0 ">
+                      <Image
+                        src={D2D3}
+                        alt="2D/3D Drawing of Your Idea"
+                        height={150}
+                        width={300}
+                        className="object-cover rounded-l-lg "
+                      />
+                    </CardHeader>
+                    <CardContent>
+                      <CardTitle className="flex items-center justify-between pt-3">
+                        2D/3D Drawing of Your Idea
+                      </CardTitle>
+                      <CardDescription>$20</CardDescription>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Professional visualization of your patent idea
+                      </p>
+                      <Button variant="link" size="sm">
+                        View Sample
+                      </Button>
+                    </CardContent>
+                    {selectedServices.drawing2D3D ? (
+                      <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                    ) : (
+                      <Circle className="text-gray-500 absolute top-2 right-2" />
+                    )}
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Patent Evaluation by Expert</CardTitle>
+                      <CardDescription>Starting at $250</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <div
+                          className={`p-3  rounded-lg cursor-pointer relative ${selectedServices.evaluation === "good"
+                            ? "border border-primary bg-gray-50"
+                            : "shadow-xl border-0"
+                            }`}
+                          onClick={() =>
+                            setSelectedServices({
+                              ...selectedServices,
+                              evaluation: "good",
+                            })
+                          }
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <Image
+                                src={good}
+                                alt="good"
+                                className="w-full"
+                                width={50}
+                                height={50}
+                              />
+                              <p className="font-medium">
+                                Good - Basic Evaluation
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                $250 • 2 pages
+                              </p>
+                            </div>
+                            {selectedServices.evaluation === "good" ? (
+                              <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                            ) : (
+                              <Circle className="text-gray-500 absolute top-2 right-2" />
+                            )}
+                          </div>
+                        </div>
+                        <div
+                          className={`p-3 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "better"
+                            ? "border border-primary bg-gray-50"
+                            : "shadow-xl border-0"
+                            }`}
+                          onClick={() =>
+                            setSelectedServices({
+                              ...selectedServices,
+                              evaluation: "better",
+                            })
+                          }
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <Image
+                                src={better}
+                                alt="better"
+                                className="w-full"
+                                width={50}
+                                height={50}
+                              />
+                              <p className="font-medium">
+                                Better - Comprehensive
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                $500 • 6-20 pages
+                              </p>
+                            </div>
+                            {selectedServices.evaluation === "better" ? (
+                              <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                            ) : (
+                              <Circle className="text-gray-500 absolute top-2 right-2" />
+                            )}
+                          </div>
+                        </div>
+                        <div
+                          className={`p-3  cursor-pointer relative ${selectedServices.evaluation === "best"
+                            ? "border border-primary bg-gray-50"
+                            : "shadow-xl border-0"
+                            }`}
+                          onClick={() =>
+                            setSelectedServices({
+                              ...selectedServices,
+                              evaluation: "best",
+                            })
+                          }
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <Image
+                                src={best}
+                                alt="best"
+                                className="w-full"
+                                width={50}
+                                height={50}
+                              />
+                              <p className="font-medium">
+                                Best - Detailed Report
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                $1,999 • 15-30 pages
+                              </p>
+                            </div>
+                            {selectedServices.evaluation === "best" ? (
+                              <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                            ) : (
+                              <Circle className="text-gray-500 absolute top-2 right-2" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <Button variant="link" size="sm">
+                        View Sample
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card
+                    className={`cursor-pointer flex items-stretch gap-2 relative transition-all ${selectedServices.pitchDeck
+                      ? "border-primary border-2 bg-gray-50"
+                      : "shadow-xl border-0"
+                      }`}
+                    onClick={() =>
+                      setSelectedServices({
+                        ...selectedServices,
+                        pitchDeck: !selectedServices.pitchDeck,
+                      })
+                    }
+                  >
+                    <CardHeader className="p-0 relative aspect-[2/1] flex-shrink-0 w-[300px] ">
+                      <Image
+                        src={PitchDeck}
+                        alt="Professional Pitch Deck"
+                        fill
+                        className="object-cover rounded-l-lg"
+                      />
+                    </CardHeader>
+                    <CardContent>
+                      <CardTitle className="flex items-center justify-between pt-3">
+                        Professional Pitch Deck
+                      </CardTitle>
+                      <CardDescription>$500</CardDescription>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Perfect for larger investors and partnerships
+                      </p>
+                      <Button variant="link" size="sm">
+                        View Sample
+                      </Button>
+                    </CardContent>
+                    {selectedServices.pitchDeck ? (
+                      <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                    ) : (
+                      <Circle className="text-gray-500 absolute top-2 right-2" />
+                    )}
+                  </Card>
+
+                  <Card
+                    className={`cursor-pointer flex items-stretch gap-2 transition-all relative ${selectedServices.attorneySupport
+                      ? "border-primary border-2 bg-gray-50"
+                      : "shadow-xl border-0"
+                      }`}
+                    onClick={() =>
+                      setSelectedServices({
+                        ...selectedServices,
+                        attorneySupport: !selectedServices.attorneySupport,
+                      })
+                    }
+                  >
+                    <CardHeader className="p-0 relative aspect-[2/1] flex-shrink-0 w-[300px]">
+                      <Image
+                        src={Paperwork}
+                        alt="Attorney Support"
+                        fill
+                        className="object-cover rounded-l-lg"
+                      />
+                    </CardHeader>
+                    <CardContent>
+                      <CardTitle className="flex items-center justify-between pt-3">
+                        Attorney Support
+                      </CardTitle>
+                      <CardDescription>$750</CardDescription>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Help with paperwork for the sale or investment of your
+                        patent
+                      </p>
+                      <Button variant="link" size="sm">
+                        View Sample
+                      </Button>
+                    </CardContent>
+                    {selectedServices.attorneySupport ? (
+                      <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                    ) : (
+                      <Circle className="text-gray-500 absolute top-2 right-2" />
+                    )}
+                  </Card>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 6: Listing Advertising Packages (monthly or annual) */}
+          {currentStep === 6 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {isPackagesLoading ? (
                 <p className="text-sm text-muted-foreground">
                   Loading membership options...
@@ -1472,7 +1626,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                   >
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
-                        Monthly Plan
+                        Monthly Package
                       </CardTitle>
                       <CardDescription>
                         <span className="text-blue-500 text-2xl">$29</span>
@@ -1481,10 +1635,11 @@ const SellerSignupWizard = ({ onComplete }) => {
                     </CardHeader>
                     <CardContent>
                       <ul className="space-y-2 text-sm">
-                        <li>✓ 15-day free trial</li>
-                        <li>✓ Cancel anytime</li>
-                        <li>✓ List your patent</li>
-                        <li>✓ Access to marketplace</li>
+                        <li>✓ FREE 15 days</li>
+                        <li>✓ Billed monthly</li>
+                        <li>✓ 2 Patents posted</li>
+                        <li>✓ Full details of the Patent</li>
+                        <li>✓ Images on posting</li>
                       </ul>
                     </CardContent>
                     {selectedPlan === "monthly" ? (
@@ -1499,25 +1654,54 @@ const SellerSignupWizard = ({ onComplete }) => {
                   >
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
-                        Yearly Plan{" "}
-                        <span className="text-3xl text-green-600">15% OFF</span>
+                        Annual Package
                       </CardTitle>
                       <CardDescription>
-                        <span className="text-blue-500 text-2xl">$119</span>
-                        /year (Save{" "}
-                        <span className="text-red-500 text-xl">$149</span>)
+                        <span className="text-blue-500 text-2xl">$199</span>
+                        /annual
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <ul className="space-y-2 text-sm">
-                        <li>✓ 15-day free trial</li>
-                        <li>✓ Best value - 15% discount</li>
-                        <li>✓ Recommended for serious sellers</li>
-                        <li>✓ Meaningful partnerships or sales take time</li>
-                        <li>✓ Full marketplace access</li>
+                        <li>✓ FREE 15 days</li>
+                        <li>✓ Billed one time</li>
+                        <li>✓ 2 Patents posted</li>
+                        <li>✓ Full details of the Patent</li>
+                        <li>✓ Images on posting</li>
+                        <li>✓ PDF documents in the posting</li>
                       </ul>
                     </CardContent>
                     {selectedPlan === "yearly" ? (
+                      <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                    ) : (
+                      <Circle className="text-gray-500 absolute top-2 right-2 " />
+                    )}
+                  </Card>
+                  <Card
+                    className={`cursor-pointer transition-all relative bg-purple-50 box-border border-0 shadow-lg ${selectedPlan === "custom" ? "border-primary border-2" : ""}`}
+                    onClick={() => handleSelectPlan("custom")}
+                  >
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        Custom Package
+                      </CardTitle>
+                      <CardDescription>
+                        <span className="text-blue-500 text-2xl">$79</span>
+                        /month
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2 text-sm">
+                        <li>✓ FREE 15 days</li>
+                        <li>✓ Billed monthly</li>
+                        <li>✓ Up to 10 Patents posted</li>
+                        <li>✓ Full details of the Patent</li>
+                        <li>✓ Images on posting</li>
+                        <li>✓ PDF documents in the posting</li>
+                        <li className="font-semibold text-primary">✓ FREE 2D/ 3D rendering</li>
+                      </ul>
+                    </CardContent>
+                    {selectedPlan === "custom" ? (
                       <CheckCircle2 className="text-primary absolute top-2 right-2" />
                     ) : (
                       <Circle className="text-gray-500 absolute top-2 right-2 " />
@@ -1528,8 +1712,8 @@ const SellerSignupWizard = ({ onComplete }) => {
             </div>
           )}
 
-          {/* Step 6: What happens next (R) – no status bar; circle image, 1) 2) 3), phone/email on right */}
-          {currentStep === 6 && (
+          {/* Step 7: What happens next (R) – no status bar; circle image, 1) 2) 3), phone/email on right */}
+          {currentStep === 7 && (
             <div className="flex flex-col md:flex-row gap-8 items-start">
               <div className="flex-1 space-y-4">
                 <p className="font-medium">What happens next?</p>
@@ -1570,21 +1754,21 @@ const SellerSignupWizard = ({ onComplete }) => {
               </div>
             </div>
           )}
-          {/* Step 7: Review Order (S) – order summary, edit links, payment at bottom */}
-          {currentStep === 7 && (
+          {/* Step 8: Review Order (S) – order summary, edit links, payment at bottom */}
+          {currentStep === 8 && (
             <div className="space-y-4">
               <div className="flex flex-wrap gap-2 text-sm">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentStep(4)}
+                  onClick={() => setCurrentStep(5)}
                 >
                   Edit Additional Services
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentStep(5)}
+                  onClick={() => setCurrentStep(6)}
                 >
                   Edit Plan
                 </Button>
@@ -1727,7 +1911,7 @@ const SellerSignupWizard = ({ onComplete }) => {
             <Button
               onClick={handleNext}
               disabled={
-                currentStep === 7 &&
+                currentStep === 8 &&
                 (isCreatingPaymentIntent || !packageSettings)
               }
             >
@@ -1736,21 +1920,21 @@ const SellerSignupWizard = ({ onComplete }) => {
                   <Loader2 className="mr-2 animate-spin" size={16} />
                   Processing...
                 </>
-              ) : currentStep === 7 ? (
+              ) : currentStep === 8 ? (
                 <>
                   {isCreatingPaymentIntent
                     ? "Preparing Payment..."
                     : "Complete Signup"}
                   <ArrowRight className="ml-2" size={16} />
                 </>
-              ) : currentStep === 6 ? (
+              ) : currentStep === 7 ? (
                 <>
                   Continue to Payment
                   <ArrowRight className="ml-2" size={16} />
                 </>
               ) : (
                 <>
-                  Next
+                  {currentStep === 5 ? "Submit & Continue" : "Next"}
                   <ArrowRight className="ml-2" size={16} />
                 </>
               )}

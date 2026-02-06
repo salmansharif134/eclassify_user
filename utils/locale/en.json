@@ -10,6 +10,7 @@
   "loginWithEmail": "Login with Email",
   "enterEmailPhone": "Enter your email or phone number",
   "continue": "Continue",
+  "myPatents": "My Listings",
   "orSignInWith": "or sign in with",
   "google": "Google",
   "continueWithEmail": "Continue with Email",
@@ -753,5 +754,9 @@
   "receiptUploaded": "Receipt uploaded! Admin will review it and activate your package if approved.",
   "confirmingPayment": "Confirming Payment",
   "uploadReceipt": " Upload Receipt",
-  "featuredSection": "Featured Section"
+  "featuredSection": "Featured Section",
+  "previous": "Previous",
+  "page": "Page",
+  "of": "of"
 }
+```

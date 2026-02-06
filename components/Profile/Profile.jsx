@@ -88,7 +88,7 @@ const Profile = () => {
         ).toLowerCase();
 
         const countryCode =
-          res?.data?.data?.country_code?.replace("+", "") || "91";
+          res?.data?.data?.country_code?.replace("+", "") || "1";
 
         setFormData({
           first_name: res?.data?.data?.first_name || "",
