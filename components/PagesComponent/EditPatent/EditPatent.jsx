@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Upload, Plus, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const EditPatent = ({ id }) => {
     const router = useRouter();
@@ -67,7 +68,7 @@ const EditPatent = ({ id }) => {
                     });
 
                     // Handle images if they exist in the response
-                    if (patent.patent_images) setExistingImages(patent.patent_images);
+                    if (patent.images) setExistingImages(patent.images);
                     if (patent.additional_images) setExistingAdditionalImages(patent.additional_images);
 
                 } else {
@@ -122,7 +123,7 @@ const EditPatent = ({ id }) => {
             const sellerId = userData?.seller_id || userData?.id || userData?.data?.id;
 
             const formData = new FormData();
-            formData.append("_method", "PUT"); // Laravel/Standard convention for PUT with FormData
+            // formData.append("_method", "PUT"); // Laravel/Standard convention for PUT with FormData
             formData.append("title", patentData.title);
             formData.append("abstract", patentData.abstract);
             formData.append("issue_date", patentData.issue_date);
@@ -282,10 +283,19 @@ const EditPatent = ({ id }) => {
                                 </div>
                                 <div>
                                     <Label>Patent Type</Label>
-                                    <Input
+                                    <Select
                                         value={patentData.patent_type}
-                                        onChange={(e) => setPatentData({ ...patentData, patent_type: e.target.value })}
-                                    />
+                                        onValueChange={(value) => setPatentData({ ...patentData, patent_type: value })}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select Patent Type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="utility">Utility</SelectItem>
+                                            <SelectItem value="design">Design</SelectItem>
+                                            <SelectItem value="plant">Plant</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
 
@@ -331,6 +341,24 @@ const EditPatent = ({ id }) => {
                                                 </button>
                                             </div>
                                         ))}
+                                    </div>
+                                )}
+
+
+                                {existingImages?.length > 0 && (
+                                    <div className="mt-6 space-y-3">
+                                        <Label>Existing Images</Label>
+                                        <div className="grid grid-cols-4 gap-4">
+                                            {existingImages.map((img, idx) => (
+                                                <div key={idx} className="relative aspect-square group">
+                                                    <img
+                                                        src={img.image_url}
+                                                        alt={`Existing ${idx + 1}`}
+                                                        className="w-full h-full object-cover rounded-lg border"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>

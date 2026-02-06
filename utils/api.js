@@ -1376,7 +1376,7 @@ export const patentsApi = {
   updatePatent: (seller_id, patent_id, formData) => {
     // Note: Some APIs require POST with _method=PUT when sending FormData
     // but the user explicitly requested PUT.
-    return Api.put(`sellers/${seller_id}/patents/${patent_id}`, formData, {
+    return Api.post(`sellers/${seller_id}/patents/${patent_id}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

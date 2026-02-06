@@ -11,6 +11,16 @@ import { CheckCircle2, Circle } from "lucide-react";
 import AddListingPlanCardSkeleton from "@/components/Skeletons/AddListingPlanCardSkeleton";
 import { useSelector } from "react-redux";
 import { userSignUpData } from "@/redux/reducer/authSlice";
+import { toast } from "sonner";
+import { sellerOrderApi } from "@/utils/api";
+import StripePayment from "./StripePayment";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const ProfileSubscription = () => {
   const userData = useSelector(userSignUpData);
@@ -25,6 +35,10 @@ const ProfileSubscription = () => {
   const [membershipPlans, setMembershipPlans] = useState([]);
   const [isMembershipPlansLoading, setIsMembershipPlansLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [clientSecret, setClientSecret] = useState("");
+  const [paymentTransactionId, setPaymentTransactionId] = useState(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [selectedPlanDetails, setSelectedPlanDetails] = useState(null);
 
   useEffect(() => {
     handleFetchMembershipPlans();
@@ -36,6 +50,12 @@ const ProfileSubscription = () => {
       handleFetchPaymentSetting();
     }
   }, [showPaymentModal]);
+
+  useEffect(() => {
+    if (showPaymentModal && packageSettings && selectedPlan && !clientSecret && !isProcessingPayment) {
+      handleInitialPaymentIntent();
+    }
+  }, [showPaymentModal, packageSettings, selectedPlan, clientSecret, isProcessingPayment]);
 
   const handleFetchPaymentSetting = async () => {
     setIsLoading(true);
@@ -84,9 +104,113 @@ const ProfileSubscription = () => {
     }
   };
 
+  const mapPlanToPackage = (planKey, plans) => {
+    if (!plans?.length) return null;
+    const targetType =
+      planKey === "monthly"
+        ? "monthly"
+        : planKey === "yearly"
+          ? "yearly"
+          : "custom";
+
+    let plan =
+      plans.find((p) => (p?.type || "").toLowerCase() === targetType) || null;
+
+    if (!plan) {
+      const sorted = [...plans].sort(
+        (a, b) => Number(a?.price || 0) - Number(b?.price || 0),
+      );
+      if (planKey === "monthly") plan = sorted[0];
+      else if (planKey === "yearly") plan = sorted[sorted.length - 1];
+      else plan = sorted.find((p) => Number(p?.price) === 79) || sorted[1];
+    }
+
+    if (!plan) return null;
+
+    return {
+      ...plan,
+      final_price: Number(
+        plan.price ??
+        (planKey === "monthly" ? 29 : planKey === "yearly" ? 199 : 79),
+      ),
+    };
+  };
+
+  const handleInitialPaymentIntent = async () => {
+    try {
+      setIsProcessingPayment(true);
+      const rawPaymentMethod = packageSettings?.Stripe?.payment_method;
+      const paymentMethod = rawPaymentMethod
+        ? rawPaymentMethod.toLowerCase() === "stripe"
+          ? "Stripe"
+          : rawPaymentMethod
+        : "Stripe";
+
+      const res = await sellerOrderApi.createPaymentIntent({
+        membership_plan: selectedPlan,
+        selected_services: {},
+        payment_method: paymentMethod,
+        seller_id: userData?.seller_id || userData?.id || userData?.data?.id,
+        user_id: userData?.id || userData?.data?.id,
+      });
+
+      if (res?.data?.error === false) {
+        const paymentIntentData = res.data.data?.payment_intent;
+        const gatewayResponse =
+          paymentIntentData?.payment_gateway_response ||
+          paymentIntentData?.paymentGatewayResponse ||
+          res.data.data?.payment_gateway_response;
+        const secret =
+          gatewayResponse?.client_secret ||
+          paymentIntentData?.client_secret ||
+          res.data.data?.client_secret;
+
+        const transactionId =
+          paymentIntentData?.metadata?.payment_transaction_id ||
+          paymentIntentData?.payment_transaction_id ||
+          paymentIntentData?.transaction_id ||
+          gatewayResponse?.payment_transaction_id ||
+          gatewayResponse?.transaction_id ||
+          res.data.data?.payment_transaction_id ||
+          res.data.data?.transaction_id ||
+          res.data?.payment_transaction_id ||
+          res.data?.transaction_id;
+
+        if (secret) {
+          setClientSecret(secret);
+          setPaymentTransactionId(transactionId);
+        } else {
+          toast.error("Failed to initialize payment: No client secret");
+        }
+      } else {
+        toast.error(res?.data?.message || "Failed to initialize payment");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Payment initialization failed");
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const handlePaymentSuccess = (paymentIntent) => {
+    toast.success("Payment successful! Subscription updated.");
+    setShowPaymentModal(false);
+    setClientSecret("");
+    // Optionally refresh dashboard/plans
+    handleFetchDashboard();
+  };
+
   const handleSelectPlan = (planKey) => {
     setSelectedPlan(planKey);
-    // You can add purchase logic here if needed
+    const planDetails = mapPlanToPackage(planKey, membershipPlans);
+    if (planDetails) {
+      setSelectedPlanDetails(planDetails);
+      setClientSecret(""); // Reset previous secret
+      setShowPaymentModal(true);
+    } else {
+      toast.error("Plan details not found. Please try again later.");
+    }
   };
 
   return (
@@ -96,7 +220,7 @@ const ProfileSubscription = () => {
         <AddListingPlanCardSkeleton />
       ) : (
         <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
             <Card
               className={`cursor-pointer transition-all relative box-border border-0 shadow-lg bg-blue-50 ${selectedPlan === "monthly" ? "border-primary border-2" : ""}`}
               onClick={() => handleSelectPlan("monthly")}
@@ -119,11 +243,11 @@ const ProfileSubscription = () => {
                   <li>✓ Images on posting</li>
                 </ul>
               </CardContent>
-              {selectedPlan === "monthly" ? (
-                <CheckCircle2 className="text-primary absolute top-2 right-2" />
-              ) : (
-                <Circle className="text-gray-500 absolute top-2 right-2 " />
-              )}
+              <div className="px-3 py-4">
+                <Button className="w-full " >
+                  Select Plan
+                </Button>
+              </div>
             </Card>
             <Card
               className={`cursor-pointer transition-all relative bg-green-50 box-border border-0 shadow-lg ${selectedPlan === "yearly" ? "border-primary border-2" : ""}`}
@@ -148,11 +272,11 @@ const ProfileSubscription = () => {
                   <li>✓ PDF documents in the posting</li>
                 </ul>
               </CardContent>
-              {selectedPlan === "yearly" ? (
-                <CheckCircle2 className="text-primary absolute top-2 right-2" />
-              ) : (
-                <Circle className="text-gray-500 absolute top-2 right-2 " />
-              )}
+              <div className="px-3 py-4">
+                <Button className="w-full " >
+                  Select Plan
+                </Button>
+              </div>
             </Card>
             <Card
               className={`cursor-pointer transition-all relative bg-purple-50 box-border border-0 shadow-lg ${selectedPlan === "custom" ? "border-primary border-2" : ""}`}
@@ -178,15 +302,45 @@ const ProfileSubscription = () => {
                   <li>✓ FREE 2D/3D Rendering</li>
                 </ul>
               </CardContent>
-              {selectedPlan === "custom" ? (
-                <CheckCircle2 className="text-primary absolute top-2 right-2" />
-              ) : (
-                <Circle className="text-gray-500 absolute top-2 right-2 " />
-              )}
+              <div className="px-3 py-4 ">
+                <Button className="w-full " >
+                  Select Plan
+                </Button>
+              </div>
             </Card>
           </div>
         </div>
       )}
+
+      <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Complete Subscription Payment</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {isProcessingPayment ? (
+              <div className="flex justify-center p-4">Initializing Payment...</div>
+            ) : clientSecret && packageSettings ? (
+              <StripePayment
+                selectedPackage={selectedPlanDetails}
+                packageSettings={packageSettings}
+                PaymentModalClose={() => setShowPaymentModal(false)}
+                setShowStripePayment={() => { }}
+                updateActivePackage={() => { }}
+                clientSecretOverride={clientSecret}
+                onPaymentSuccess={handlePaymentSuccess}
+                amountDue={selectedPlanDetails?.final_price}
+                billingDetails={{
+                  name: userData?.name || userData?.email,
+                  email: userData?.email
+                }}
+              />
+            ) : (
+              <div className="text-center p-4">Loading payment details...</div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
