@@ -1370,4 +1370,16 @@ export const patentsApi = {
       },
     });
   },
+  getPatentDetailsForEdit: (seller_id, patent_id) => {
+    return Api.get(`sellers/${seller_id}/patents/${patent_id}/complete-after-login`);
+  },
+  updatePatent: (seller_id, patent_id, formData) => {
+    // Note: Some APIs require POST with _method=PUT when sending FormData
+    // but the user explicitly requested PUT.
+    return Api.put(`sellers/${seller_id}/patents/${patent_id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
 };
