@@ -6,7 +6,7 @@ import {
   CardElement,
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { createPaymentIntentApi } from "@/utils/api";
+import { createPaymentIntentApi, paymentSuccessApi } from "@/utils/api";
 import { toast } from "sonner";
 import { t } from "@/utils";
 
@@ -141,7 +141,13 @@ const StripePayment = ({
           console.log("Payment already succeeded:", currentIntent);
           console.log("Payment Intent Metadata:", currentIntent.metadata);
           if (typeof onPaymentSuccess === "function") {
+            if (currentIntent && currentIntent.status === 'succeeded') {
+              await paymentSuccessApi.paymentSuccess({
+                payment_intent_id: currentIntent.id
+              });
+            }
             onPaymentSuccess(currentIntent);
+
           } else {
             updateActivePackage();
           }
@@ -187,15 +193,12 @@ const StripePayment = ({
             setPaymentError(confirmError?.message || t("errorOccurred"));
           } else {
             if (paymentIntent.status === "succeeded") {
-              console.log("Payment succeeded:", paymentIntent);
-              console.log("Payment Intent ID:", paymentIntent.id);
-              console.log("Payment Intent Metadata:", paymentIntent.metadata);
-              console.log(
-                "Transaction ID from metadata:",
-                paymentIntent.metadata?.payment_transaction_id ||
-                  paymentIntent.metadata?.transaction_id,
-              );
               if (typeof onPaymentSuccess === "function") {
+                if (paymentIntent && paymentIntent.status === 'succeeded') {
+                  await paymentSuccessApi.paymentSuccess({
+                    payment_intent_id: paymentIntent.id
+                  });
+                }
                 onPaymentSuccess(paymentIntent);
               } else {
                 updateActivePackage();
