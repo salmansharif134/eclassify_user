@@ -45,6 +45,7 @@ export const BLOCKED_USERS = "blocked-users";
 export const ASSIGN_FREE_PACKAGE = "assign-free-package";
 export const GET_PAYMENT_SETTINGS = "get-payment-settings";
 export const PAYMENT_INTENT = "payment-intent";
+export const PAYMENT_SUCCESS = "sellers/payment-success";
 export const SELLER_CALCULATE_ORDER_TOTAL = "sellers/calculate-order-total";
 export const SELLER_CREATE_PAYMENT_INTENT = "sellers/create-payment-intent";
 export const PAYMENT_TRANSACTIONS = "payment-transactions";
@@ -687,6 +688,14 @@ export const createPaymentIntentApi = {
       headers: {
         "Content-Type": "multipart/form-data",
       },
+    });
+  },
+};
+
+export const paymentSuccessApi = {
+  paymentSuccess: ({ payment_intent_id } = {}) => {
+    return Api.post(PAYMENT_SUCCESS, {
+      payment_intent_id,
     });
   },
 };

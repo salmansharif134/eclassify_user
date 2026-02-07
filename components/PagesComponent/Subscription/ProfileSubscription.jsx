@@ -193,7 +193,7 @@ const ProfileSubscription = () => {
     }
   };
 
-  const handlePaymentSuccess = (paymentIntent) => {
+  const handlePaymentSuccess = async (paymentIntent) => {
     toast.success("Payment successful! Subscription updated.");
     setShowPaymentModal(false);
     setClientSecret("");
