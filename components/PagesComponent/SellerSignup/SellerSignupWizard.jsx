@@ -978,7 +978,11 @@ const SellerSignupWizard = ({ onComplete }) => {
       </Link>
       <div className="flex items-center gap-2 justify-center flex-col">
         <Image src={ToniLexington} alt="Toni Lexington" width={100} height={100} className="rounded-full" />
-        <h1 className="text-2xl font-bold">Hi I'm Toni Lexington</h1>
+        <h1 className="text-2xl font-bold">Hi I'm Toni.</h1>
+        {currentStep === 1 && <p className="text-gray-400">I&apos;ll help you list your idea and/or patent</p>}
+        {currentStep === 2 && <p className="text-gray-400">Ok, now provide some basic information below.</p>}
+        {currentStep === 3 && <p className="text-gray-400">Thanks. Now upload pictures to make your idea stand out.</p>}
+
       </div>
       {/* Progress Steps – hide on step 7 (What happens next) per feedback R */}
       <div className="flex items-center justify-between mb-8 hidden">
@@ -1145,7 +1149,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                   }}
                 />
               </div>
-              <div>
+              {/* <div>
                 <Label>Issue Date</Label>
                 <Input
                   type="date"
@@ -1157,9 +1161,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                     });
                   }}
                 />
-              </div>
+              </div> */}
               <div>
-                <Label>Assignee</Label>
+                <Label>Patent or Application Number</Label>
                 <Input
                   value={manualPatentData.assignee}
                   onChange={(e) => {
@@ -1170,7 +1174,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                   }}
                 />
               </div>
-              <div>
+              {/* <div>
                 <Label>Filing Date</Label>
                 <Input
                   type="date"
@@ -1182,9 +1186,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                     });
                   }}
                 />
-              </div>
+              </div> */}
 
-              <div>
+              {/* <div>
                 <Label>Patent Class</Label>
                 <Input
                   placeholder="e.g., G06F17/30"
@@ -1196,9 +1200,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                     });
                   }}
                 />
-              </div>
+              </div> */}
 
-              <div>
+              {/* <div>
                 <Label>Patent Type</Label>
                 <Input
                   placeholder="e.g., Utility"
@@ -1210,7 +1214,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                     });
                   }}
                 />
-              </div>
+              </div> */}
 
               {/* Claims & Description hidden for now */}
             </div>
