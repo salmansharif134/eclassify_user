@@ -1382,9 +1382,9 @@ const SellerSignupWizard = ({ onComplete }) => {
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="col-span-4 space-y-4">
                   <Card
-                    className={`cursor-pointer bg-white flex items-stretch gap-2 relative transition-all ${selectedServices.drawing2D3D
-                      ? "border-primary border-2 bg-gray-50"
-                      : "border-0 shadow-xl"
+                    className={`cursor-pointer border-2  flex items-stretch gap-2 relative transition-all ${selectedServices.drawing2D3D
+                      ? "border-primary bg-blue-100 shadow-xl "
+                      : " bg-gray-50 "
                       }`}
                     onClick={() =>
                       setSelectedServices({
@@ -1431,9 +1431,10 @@ const SellerSignupWizard = ({ onComplete }) => {
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         <div
-                          className={`p-3  rounded-lg cursor-pointer relative ${selectedServices.evaluation === "good"
-                            ? "border border-primary bg-gray-50"
-                            : "shadow-xl border-0"
+                          className={` p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "good"
+                            ? " border-primary shadow-xl bg-blue-100"
+                            : " bg-gray-50 "
+
                             }`}
                           onClick={() =>
                             setSelectedServices({
@@ -1466,9 +1467,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                           </div>
                         </div>
                         <div
-                          className={`p-3 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "better"
-                            ? "border border-primary bg-gray-50"
-                            : "shadow-xl border-0"
+                          className={`p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "better"
+                            ? "border-primary shadow-xl bg-blue-100"
+                            : "bg-gray-50"
                             }`}
                           onClick={() =>
                             setSelectedServices({
@@ -1501,9 +1502,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                           </div>
                         </div>
                         <div
-                          className={`p-3  cursor-pointer relative ${selectedServices.evaluation === "best"
-                            ? "border border-primary bg-gray-50"
-                            : "shadow-xl border-0"
+                          className={`p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "best"
+                            ? "border-primary shadow-xl bg-blue-100"
+                            : "bg-gray-50"
                             }`}
                           onClick={() =>
                             setSelectedServices({
@@ -1543,9 +1544,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                   </Card>
 
                   <Card
-                    className={`cursor-pointer flex items-stretch gap-2 relative transition-all ${selectedServices.pitchDeck
-                      ? "border-primary border-2 bg-gray-50"
-                      : "shadow-xl border-0"
+                    className={`cursor-pointer border-2 flex items-stretch gap-2 relative transition-all ${selectedServices.pitchDeck
+                      ? "border-primary bg-blue-100 shadow-xl"
+                      : "bg-gray-50"
                       }`}
                     onClick={() =>
                       setSelectedServices({
@@ -1582,9 +1583,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                   </Card>
 
                   <Card
-                    className={`cursor-pointer flex items-stretch gap-2 transition-all relative ${selectedServices.attorneySupport
-                      ? "border-primary border-2 bg-gray-50"
-                      : "shadow-xl border-0"
+                    className={`cursor-pointer border-2 flex items-stretch gap-2 transition-all relative ${selectedServices.attorneySupport
+                      ? "border-primary bg-blue-100 shadow-xl"
+                      : "bg-gray-50"
                       }`}
                     onClick={() =>
                       setSelectedServices({
@@ -1620,297 +1621,303 @@ const SellerSignupWizard = ({ onComplete }) => {
                       <Circle className="text-gray-500 absolute top-2 right-2" />
                     )}
                   </Card>
-                </div>
-              </div>
-            </div>
+                </div >
+              </div >
+            </div >
           )}
 
           {/* Step 6: Listing Advertising Packages (monthly or annual) */}
-          {currentStep === 6 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {isPackagesLoading ? (
-                <p className="text-sm text-muted-foreground">
-                  Loading membership options...
-                </p>
-              ) : (
-                <>
-                  <Card
-                    className={`cursor-pointer transition-all relative box-border border-0 shadow-lg bg-blue-50 ${selectedPlan === "monthly" ? "border-primary border-2" : ""}`}
-                    onClick={() => handleSelectPlan("monthly")}
-                  >
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        Monthly Package
-                      </CardTitle>
-                      <CardDescription>
-                        <span className="text-blue-500 text-2xl">$29</span>
-                        /month
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2 text-sm">
-                        <li>✓ FREE 15 days</li>
-                        <li>✓ Billed monthly</li>
-                        <li>✓ 2 Patents posted</li>
-                        <li>✓ Full details of the Patent</li>
-                        <li>✓ Images on posting</li>
-                      </ul>
-                    </CardContent>
-                    {selectedPlan === "monthly" ? (
-                      <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                    ) : (
-                      <Circle className="text-gray-500 absolute top-2 right-2 " />
-                    )}
-                  </Card>
-                  <Card
-                    className={`cursor-pointer transition-all relative bg-green-50 box-border border-0 shadow-lg ${selectedPlan === "yearly" ? "border-primary border-2" : ""}`}
-                    onClick={() => handleSelectPlan("yearly")}
-                  >
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        Annual Package
-                      </CardTitle>
-                      <CardDescription>
-                        <span className="text-blue-500 text-2xl">$199</span>
-                        /annual
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2 text-sm">
-                        <li>✓ FREE 15 days</li>
-                        <li>✓ Billed one time</li>
-                        <li>✓ 2 Patents posted</li>
-                        <li>✓ Full details of the Patent</li>
-                        <li>✓ Images on posting</li>
-                        <li>✓ PDF documents in the posting</li>
-                      </ul>
-                    </CardContent>
-                    {selectedPlan === "yearly" ? (
-                      <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                    ) : (
-                      <Circle className="text-gray-500 absolute top-2 right-2 " />
-                    )}
-                  </Card>
-                  <Card
-                    className={`cursor-pointer transition-all relative bg-purple-50 box-border border-0 shadow-lg ${selectedPlan === "custom" ? "border-primary border-2" : ""}`}
-                    onClick={() => handleSelectPlan("custom")}
-                  >
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        Custom Package
-                      </CardTitle>
-                      <CardDescription>
-                        <span className="text-blue-500 text-2xl">$79</span>
-                        /month
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2 text-sm">
-                        <li>✓ FREE 15 days</li>
-                        <li>✓ Billed monthly</li>
-                        <li>✓ Up to 10 Patents posted</li>
-                        <li>✓ Full details of the Patent</li>
-                        <li>✓ Images on posting</li>
-                        <li>✓ PDF documents in the posting</li>
-                        <li className="font-semibold text-primary">✓ FREE 2D/ 3D rendering</li>
-                      </ul>
-                    </CardContent>
-                    {selectedPlan === "custom" ? (
-                      <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                    ) : (
-                      <Circle className="text-gray-500 absolute top-2 right-2 " />
-                    )}
-                  </Card>
-                </>
-              )}
-            </div>
-          )}
+          {
+            currentStep === 6 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {isPackagesLoading ? (
+                  <p className="text-sm text-muted-foreground">
+                    Loading membership options...
+                  </p>
+                ) : (
+                  <>
+                    <Card
+                      className={`cursor-pointer transition-all relative box-border border-0 shadow-lg bg-blue-50 ${selectedPlan === "monthly" ? "border-primary border-2" : ""}`}
+                      onClick={() => handleSelectPlan("monthly")}
+                    >
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          Monthly Package
+                        </CardTitle>
+                        <CardDescription>
+                          <span className="text-blue-500 text-2xl">$29</span>
+                          /month
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2 text-sm">
+                          <li>✓ FREE 15 days</li>
+                          <li>✓ Billed monthly</li>
+                          <li>✓ 2 Patents posted</li>
+                          <li>✓ Full details of the Patent</li>
+                          <li>✓ Images on posting</li>
+                        </ul>
+                      </CardContent>
+                      {selectedPlan === "monthly" ? (
+                        <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                      ) : (
+                        <Circle className="text-gray-500 absolute top-2 right-2 " />
+                      )}
+                    </Card>
+                    <Card
+                      className={`cursor-pointer transition-all relative bg-green-50 box-border border-0 shadow-lg ${selectedPlan === "yearly" ? "border-primary border-2" : ""}`}
+                      onClick={() => handleSelectPlan("yearly")}
+                    >
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          Annual Package
+                        </CardTitle>
+                        <CardDescription>
+                          <span className="text-blue-500 text-2xl">$199</span>
+                          /annual
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2 text-sm">
+                          <li>✓ FREE 15 days</li>
+                          <li>✓ Billed one time</li>
+                          <li>✓ 2 Patents posted</li>
+                          <li>✓ Full details of the Patent</li>
+                          <li>✓ Images on posting</li>
+                          <li>✓ PDF documents in the posting</li>
+                        </ul>
+                      </CardContent>
+                      {selectedPlan === "yearly" ? (
+                        <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                      ) : (
+                        <Circle className="text-gray-500 absolute top-2 right-2 " />
+                      )}
+                    </Card>
+                    <Card
+                      className={`cursor-pointer transition-all relative bg-purple-50 box-border border-0 shadow-lg ${selectedPlan === "custom" ? "border-primary border-2" : ""}`}
+                      onClick={() => handleSelectPlan("custom")}
+                    >
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          Custom Package
+                        </CardTitle>
+                        <CardDescription>
+                          <span className="text-blue-500 text-2xl">$79</span>
+                          /month
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2 text-sm">
+                          <li>✓ FREE 15 days</li>
+                          <li>✓ Billed monthly</li>
+                          <li>✓ Up to 10 Patents posted</li>
+                          <li>✓ Full details of the Patent</li>
+                          <li>✓ Images on posting</li>
+                          <li>✓ PDF documents in the posting</li>
+                          <li className="font-semibold text-primary">✓ FREE 2D/ 3D rendering</li>
+                        </ul>
+                      </CardContent>
+                      {selectedPlan === "custom" ? (
+                        <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                      ) : (
+                        <Circle className="text-gray-500 absolute top-2 right-2 " />
+                      )}
+                    </Card>
+                  </>
+                )}
+              </div>
+            )
+          }
 
           {/* Step 7: What happens next (R) – no status bar; circle image, 1) 2) 3), phone/email on right */}
-          {currentStep === 7 && (
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              <div className="flex-1 space-y-4">
-                <p className="font-medium">What happens next?</p>
-                <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-                  <li>
-                    An account manager will be assigned to help you stay
-                    engaged.
-                  </li>
-                  <li>A sales person will call to confirm everything.</li>
-                  <li>You&apos;ll receive a welcome email with next steps.</li>
-                </ol>
-              </div>
-              <div className="w-full md:w-auto flex flex-col items-center gap-2 shrink-0">
-                <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-primary/20">
-                  <Image
-                    src={UserAvatar}
-                    alt={
-                      userData?.name ||
-                      accountState?.name ||
-                      "Your account manager"
-                    }
-                    height={50}
-                    width={50}
-                    className="object-cover w-full"
-                  />
+          {
+            currentStep === 7 && (
+              <div className="flex flex-col md:flex-row gap-8 items-start">
+                <div className="flex-1 space-y-4">
+                  <p className="font-medium">What happens next?</p>
+                  <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+                    <li>
+                      An account manager will be assigned to help you stay
+                      engaged.
+                    </li>
+                    <li>A sales person will call to confirm everything.</li>
+                    <li>You&apos;ll receive a welcome email with next steps.</li>
+                  </ol>
                 </div>
-                <div className="text-center text-sm">
-                  <p className="font-medium">
-                    Toni Lexington
-                  </p>
-                  <p>
-                    toni@mustangip.com
-                  </p>
-                  <p>
-                    312-222-1234
-                  </p>
+                <div className="w-full md:w-auto flex flex-col items-center gap-2 shrink-0">
+                  <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-primary/20">
+                    <Image
+                      src={UserAvatar}
+                      alt={
+                        userData?.name ||
+                        accountState?.name ||
+                        "Your account manager"
+                      }
+                      height={50}
+                      width={50}
+                      className="object-cover w-full"
+                    />
+                  </div>
+                  <div className="text-center text-sm">
+                    <p className="font-medium">
+                      Toni Lexington
+                    </p>
+                    <p>
+                      toni@mustangip.com
+                    </p>
+                    <p>
+                      312-222-1234
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )
+          }
           {/* Step 8: Review Order (S) – order summary, edit links, payment at bottom */}
-          {currentStep === 8 && (
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2 text-sm">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentStep(5)}
-                >
-                  Edit Additional Services
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentStep(6)}
-                >
-                  Edit Plan
-                </Button>
-              </div>
-              <div className="bg-muted p-4 rounded-lg">
-                <h3 className="font-semibold mb-4">Order Summary</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Membership Plan:</span>
-                    <span>
-                      {orderSummary?.membership_price !== undefined
-                        ? `$${orderSummary.membership_price}/${orderSummary?.membership_plan === "yearly"
-                          ? "year"
-                          : "month"
-                        }`
-                        : selectedPlan === "monthly"
-                          ? "$29/month"
-                          : "$199/year"}
-                    </span>
-                  </div>
-                  {isOrderSummaryLoading && (
-                    <div className="text-sm text-muted-foreground">
-                      Calculating order total...
+          {
+            currentStep === 8 && (
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2 text-sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentStep(5)}
+                  >
+                    Edit Additional Services
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentStep(6)}
+                  >
+                    Edit Plan
+                  </Button>
+                </div>
+                <div className="bg-muted p-4 rounded-lg">
+                  <h3 className="font-semibold mb-4">Order Summary</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Membership Plan:</span>
+                      <span>
+                        {orderSummary?.membership_price !== undefined
+                          ? `$${orderSummary.membership_price}/${orderSummary?.membership_plan === "yearly"
+                            ? "year"
+                            : "month"
+                          }`
+                          : selectedPlan === "monthly"
+                            ? "$29/month"
+                            : "$199/year"}
+                      </span>
                     </div>
-                  )}
-                  {orderSummary?.services?.length > 0 ? (
-                    orderSummary.services.map((service, index) => (
-                      <div className="flex justify-between" key={index}>
-                        <span>{service.name}:</span>
-                        <span>${service.price}</span>
+                    {isOrderSummaryLoading && (
+                      <div className="text-sm text-muted-foreground">
+                        Calculating order total...
                       </div>
-                    ))
-                  ) : (
-                    <>
-                      {selectedServices.drawing2D3D && (
-                        <div className="flex justify-between">
-                          <span>2D/3D Drawing:</span>
-                          <span>$20</span>
+                    )}
+                    {orderSummary?.services?.length > 0 ? (
+                      orderSummary.services.map((service, index) => (
+                        <div className="flex justify-between" key={index}>
+                          <span>{service.name}:</span>
+                          <span>${service.price}</span>
                         </div>
-                      )}
-                      {selectedServices.evaluation && (
-                        <div className="flex justify-between">
-                          <span>
-                            Evaluation ({selectedServices.evaluation}):
-                          </span>
-                          <span>
-                            $
-                            {selectedServices.evaluation === "good"
-                              ? "250"
-                              : selectedServices.evaluation === "better"
-                                ? "500"
-                                : "1,999"}
-                          </span>
-                        </div>
-                      )}
-                      {selectedServices.pitchDeck && (
-                        <div className="flex justify-between">
-                          <span>Pitch Deck:</span>
-                          <span>$500</span>
-                        </div>
-                      )}
-                      {selectedServices.attorneySupport && (
-                        <div className="flex justify-between">
-                          <span>Attorney Support:</span>
-                          <span>$750</span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  {orderSummary?.discount?.eligible && orderSummary.discount.amount > 0 && (
-                    <div className="flex justify-between text-green-600">
-                      <span>Discount ({orderSummary.discount.percent}%):</span>
-                      <span>-${orderSummary.discount.amount}</span>
+                      ))
+                    ) : (
+                      <>
+                        {selectedServices.drawing2D3D && (
+                          <div className="flex justify-between">
+                            <span>2D/3D Drawing:</span>
+                            <span>$20</span>
+                          </div>
+                        )}
+                        {selectedServices.evaluation && (
+                          <div className="flex justify-between">
+                            <span>
+                              Evaluation ({selectedServices.evaluation}):
+                            </span>
+                            <span>
+                              $
+                              {selectedServices.evaluation === "good"
+                                ? "250"
+                                : selectedServices.evaluation === "better"
+                                  ? "500"
+                                  : "1,999"}
+                            </span>
+                          </div>
+                        )}
+                        {selectedServices.pitchDeck && (
+                          <div className="flex justify-between">
+                            <span>Pitch Deck:</span>
+                            <span>$500</span>
+                          </div>
+                        )}
+                        {selectedServices.attorneySupport && (
+                          <div className="flex justify-between">
+                            <span>Attorney Support:</span>
+                            <span>$750</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    {orderSummary?.discount?.eligible && orderSummary.discount.amount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount ({orderSummary.discount.percent}%):</span>
+                        <span>-${orderSummary.discount.amount}</span>
+                      </div>
+                    )}
+                    <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
+                      <span>Total:</span>
+                      <span>
+                        {orderSummary?.total_amount !== undefined
+                          ? `$${orderSummary.total_amount}`
+                          : `$${cartTotal}`}
+                      </span>
                     </div>
-                  )}
-                  <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
-                    <span>Total:</span>
-                    <span>
-                      {orderSummary?.total_amount !== undefined
-                        ? `$${orderSummary.total_amount}`
-                        : `$${cartTotal}`}
-                    </span>
                   </div>
                 </div>
+                {paymentInitError && (
+                  <div className="rounded-md bg-red-50 text-red-700 text-sm px-3 py-2">
+                    {paymentInitError}
+                  </div>
+                )}
+                {isCreatingPaymentIntent && (
+                  <div className="rounded-md bg-muted text-sm px-3 py-2">
+                    Initializing payment...
+                  </div>
+                )}
+                {paymentInitError && (
+                  <Button variant="outline" onClick={handleCreatePaymentIntent}>
+                    Retry Payment
+                  </Button>
+                )}
+                {showPaymentForm && clientSecret && (
+                  <div className="rounded-lg border border-muted/60 p-4 space-y-3">
+                    <div className="rounded-md bg-yellow-50 text-yellow-900 text-sm px-3 py-2">
+                      Payment pending. Please complete Stripe payment to finish
+                      signup.
+                    </div>
+                    <StripePayment
+                      selectedPackage={selectedPackage}
+                      packageSettings={packageSettings}
+                      PaymentModalClose={() => setShowPaymentForm(false)}
+                      setShowStripePayment={() => { }}
+                      updateActivePackage={() => { }}
+                      clientSecretOverride={clientSecret}
+                      onPaymentSuccess={handlePaymentSuccess}
+                      amountDue={
+                        orderSummary?.total_amount !== undefined
+                          ? orderSummary.total_amount
+                          : cartTotal
+                      }
+                      billingDetails={{
+                        name: userData?.name || accountState?.name,
+                        email: userData?.email || accountState?.email,
+                      }}
+                    />
+                  </div>
+                )}
               </div>
-              {paymentInitError && (
-                <div className="rounded-md bg-red-50 text-red-700 text-sm px-3 py-2">
-                  {paymentInitError}
-                </div>
-              )}
-              {isCreatingPaymentIntent && (
-                <div className="rounded-md bg-muted text-sm px-3 py-2">
-                  Initializing payment...
-                </div>
-              )}
-              {paymentInitError && (
-                <Button variant="outline" onClick={handleCreatePaymentIntent}>
-                  Retry Payment
-                </Button>
-              )}
-              {showPaymentForm && clientSecret && (
-                <div className="rounded-lg border border-muted/60 p-4 space-y-3">
-                  <div className="rounded-md bg-yellow-50 text-yellow-900 text-sm px-3 py-2">
-                    Payment pending. Please complete Stripe payment to finish
-                    signup.
-                  </div>
-                  <StripePayment
-                    selectedPackage={selectedPackage}
-                    packageSettings={packageSettings}
-                    PaymentModalClose={() => setShowPaymentForm(false)}
-                    setShowStripePayment={() => { }}
-                    updateActivePackage={() => { }}
-                    clientSecretOverride={clientSecret}
-                    onPaymentSuccess={handlePaymentSuccess}
-                    amountDue={
-                      orderSummary?.total_amount !== undefined
-                        ? orderSummary.total_amount
-                        : cartTotal
-                    }
-                    billingDetails={{
-                      name: userData?.name || accountState?.name,
-                      email: userData?.email || accountState?.email,
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          )}
+            )
+          }
 
           {/* Navigation Buttons */}
           <div className="flex justify-between pt-4">
@@ -1954,9 +1961,9 @@ const SellerSignupWizard = ({ onComplete }) => {
               )}
             </Button>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </CardContent >
+      </Card >
+    </div >
   );
 };
 
