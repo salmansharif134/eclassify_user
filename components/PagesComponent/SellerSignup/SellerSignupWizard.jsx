@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -145,6 +146,15 @@ const SellerSignupWizard = ({ onComplete }) => {
     attorneySupport: false,
   });
 
+  // Step 7: Pricing
+  const [pricing, setPricing] = useState({
+    isAuction: false,
+    auctionPrice: "",
+    isListedPrice: false,
+    listedPrice: "",
+    allowNegotiation: false,
+  });
+
   // Step 8: Cart Summary
   const [cartTotal, setCartTotal] = useState(0);
   const [orderSummary, setOrderSummary] = useState(null);
@@ -192,6 +202,8 @@ const SellerSignupWizard = ({ onComplete }) => {
 
         if (parsedState.selectedServices) setSelectedServices(parsedState.selectedServices);
 
+        if (parsedState.pricing) setPricing(parsedState.pricing);
+
         if (parsedState.contactInfo) setContactInfo(parsedState.contactInfo);
         if (parsedState.sellerId) setSellerId(parsedState.sellerId);
         if (parsedState.persistentUserId || parsedState.userId) setPersistentUserId(parsedState.persistentUserId || parsedState.userId);
@@ -219,6 +231,7 @@ const SellerSignupWizard = ({ onComplete }) => {
       selectedPlan,
       // selectedPackage: selectedPackage, // derived mostly
       selectedServices,
+      pricing,
       contactInfo,
       sellerId,
       persistentUserId,
@@ -469,18 +482,29 @@ const SellerSignupWizard = ({ onComplete }) => {
       // Step 6: Other Services
       setCurrentStep(7);
     } else if (currentStep === 7) {
-      // Step 7: Membership plan required
+      // Step 7: Pricing
+      if (pricing.isAuction && !pricing.auctionPrice) {
+        toast.error("Please enter an auction starting price");
+        return;
+      }
+      if (pricing.isListedPrice && !pricing.listedPrice) {
+        toast.error("Please enter a listed price");
+        return;
+      }
+      setCurrentStep(8);
+    } else if (currentStep === 8) {
+      // Step 8: Membership plan required
       if (!selectedPlan) {
         toast.error("Please select a membership plan");
         return;
       }
       setCartTotal(calculateTotal());
-      setCurrentStep(8);
-    } else if (currentStep === 8) {
-      // Step 8: What happens next – continue to payment
       setCurrentStep(9);
     } else if (currentStep === 9) {
-      // Step 9: Review Order & Payment
+      // Step 9: What happens next – continue to payment
+      setCurrentStep(10);
+    } else if (currentStep === 10) {
+      // Step 10: Review Order & Payment
       if (showPaymentForm || clientSecret) return;
       if (!packageSettings) {
         toast.error("Payment settings are unavailable right now.");
@@ -989,11 +1013,13 @@ const SellerSignupWizard = ({ onComplete }) => {
         {currentStep === 3 && <p className="text-gray-400">Thanks. Now upload pictures to make your idea stand out.</p>}
         {currentStep === 4 && <p className="text-gray-400">Who will be the main contact for this listing? </p>}
         {currentStep === 5 && <p className="text-gray-400">Would you like to know what your idea is worth?</p>}
+        {currentStep === 6 && <p className="text-gray-400">Would you like to add some other services?</p>}
+        {currentStep === 7 && <p className="text-gray-400">Tell us your financial expectations for this listing.</p>}
 
       </div>
-      {/* Progress Steps – hide on step 7 (What happens next) per feedback R */}
+      {/* Progress Steps – hide on step 9 (What happens next) per feedback R */}
       <div className="flex items-center justify-between mb-8 hidden">
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((step) => (
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((step) => (
           <div key={step} className="flex items-center flex-1">
             <div
               className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm ${currentStep >= step
@@ -1003,7 +1029,7 @@ const SellerSignupWizard = ({ onComplete }) => {
             >
               {currentStep > step ? <CheckCircle2 size={18} /> : step}
             </div>
-            {step < 8 && (
+            {step < 10 && (
               <div
                 className={`flex-1 h-1 mx-1 sm:mx-2 ${currentStep > step ? "bg-primary" : "bg-muted"
                   }`}
@@ -1021,9 +1047,11 @@ const SellerSignupWizard = ({ onComplete }) => {
             {currentStep === 3 && "Upload Images"}
             {currentStep === 4 && "Personal Information"}
             {currentStep === 5 && "Patent Evaluation by Expert"}
-            {currentStep === 6 && "Listing Advertising Packages"}
-            {currentStep === 7 && "What happens next"}
-            {currentStep === 8 && "Review Order"}
+            {currentStep === 6 && "Other Additional Services"}
+            {currentStep === 7 && "Pricing"}
+            {currentStep === 8 && "Listing Advertising Packages"}
+            {currentStep === 9 && "What happens next"}
+            {currentStep === 10 && "Review Order"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -1631,9 +1659,83 @@ const SellerSignupWizard = ({ onComplete }) => {
             </div>
           )}
 
-          {/* Step 7: Listing Advertising Packages (monthly or annual) */}
+          {/* Step 7: Pricing */}
+          {currentStep === 7 && (
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">Auction / Offer</h3>
+                    <p className="text-sm text-gray-500">Set a starting amount and let buyers compete for your item.</p>
+                  </div>
+                  <Switch
+                    checked={pricing.isAuction}
+                    onCheckedChange={(val) => setPricing({ ...pricing, isAuction: val })}
+                  />
+                </div>
+                {pricing.isAuction && (
+                  <div className="relative max-w-[200px]">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <Input
+                      type="number"
+                      className="pl-7"
+                      placeholder="0.00"
+                      value={pricing.auctionPrice}
+                      onChange={(e) => setPricing({ ...pricing, auctionPrice: e.target.value })}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">Listed Price</h3>
+                    <p className="text-sm text-gray-500">Buyers can purchase immediately at this price.</p>
+                  </div>
+                  <Switch
+                    checked={pricing.isListedPrice}
+                    onCheckedChange={(val) => setPricing({ ...pricing, isListedPrice: val })}
+                  />
+                </div>
+                {pricing.isListedPrice && (
+                  <div className="bg-gray-50 p-4 rounded-lg flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Price</p>
+                      <p className="text-xs text-gray-500">Beat the online trending price to maximize your chance of selling.</p>
+                      <p className="text-sm mt-2">Recommended price: <span className="font-semibold">$500 - $1,000</span></p>
+                      <Button variant="link" size="sm" className="p-0 h-auto text-xs">See how other sellers priced it</Button>
+                    </div>
+                    <div className="relative max-w-[150px]">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <Input
+                        type="number"
+                        className="pl-7"
+                        placeholder="0.00"
+                        value={pricing.listedPrice}
+                        onChange={(e) => setPricing({ ...pricing, listedPrice: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div>
+                  <h3 className="text-lg font-semibold">Allow direct messages to me to negotiate</h3>
+                  <p className="text-sm text-gray-500">Choose when you want your listing to appear on MustangIP.</p>
+                </div>
+                <Switch
+                  checked={pricing.allowNegotiation}
+                  onCheckedChange={(val) => setPricing({ ...pricing, allowNegotiation: val })}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Step 8: Listing Advertising Packages (monthly or annual) */}
           {
-            currentStep === 7 && (
+            currentStep === 8 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {isPackagesLoading ? (
                   <p className="text-sm text-muted-foreground">
@@ -1734,9 +1836,9 @@ const SellerSignupWizard = ({ onComplete }) => {
             )
           }
 
-          {/* Step 8: What happens next (R) – no status bar; circle image, 1) 2) 3), phone/email on right */}
+          {/* Step 9: What happens next (R) – no status bar; circle image, 1) 2) 3), phone/email on right */}
           {
-            currentStep === 8 && (
+            currentStep === 9 && (
               <div className="flex flex-col md:flex-row gap-8 items-start">
                 <div className="flex-1 space-y-4">
                   <p className="font-medium">What happens next?</p>
@@ -1778,9 +1880,9 @@ const SellerSignupWizard = ({ onComplete }) => {
               </div>
             )
           }
-          {/* Step 9: Review Order (S) – order summary, edit links, payment at bottom */}
+          {/* Step 10: Review Order (S) – order summary, edit links, payment at bottom */}
           {
-            currentStep === 9 && (
+            currentStep === 10 && (
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-2 text-sm">
                   <Button
@@ -1801,6 +1903,13 @@ const SellerSignupWizard = ({ onComplete }) => {
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentStep(7)}
+                  >
+                    Edit Pricing
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentStep(8)}
                   >
                     Edit Plan
                   </Button>
@@ -1868,6 +1977,23 @@ const SellerSignupWizard = ({ onComplete }) => {
                             <span>$750</span>
                           </div>
                         )}
+                        <div className="border-t my-2" />
+                        {pricing.isAuction && (
+                          <div className="flex justify-between">
+                            <span>Auction Starting Price:</span>
+                            <span>${pricing.auctionPrice}</span>
+                          </div>
+                        )}
+                        {pricing.isListedPrice && (
+                          <div className="flex justify-between">
+                            <span>Listed Price:</span>
+                            <span>${pricing.listedPrice}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span>Allow Negotiation:</span>
+                          <span>{pricing.allowNegotiation ? "Yes" : "No"}</span>
+                        </div>
                       </>
                     )}
                     {orderSummary?.discount?.eligible && orderSummary.discount.amount > 0 && (
@@ -1944,7 +2070,7 @@ const SellerSignupWizard = ({ onComplete }) => {
             <Button
               onClick={handleNext}
               disabled={
-                currentStep === 9 &&
+                currentStep === 10 &&
                 (isCreatingPaymentIntent || !packageSettings)
               }
             >
@@ -1953,21 +2079,21 @@ const SellerSignupWizard = ({ onComplete }) => {
                   <Loader2 className="mr-2 animate-spin" size={16} />
                   Processing...
                 </>
-              ) : currentStep === 9 ? (
+              ) : currentStep === 10 ? (
                 <>
                   {isCreatingPaymentIntent
                     ? "Preparing Payment..."
                     : "Complete Signup"}
                   <ArrowRight className="ml-2" size={16} />
                 </>
-              ) : currentStep === 8 ? (
+              ) : currentStep === 9 ? (
                 <>
                   Continue to Payment
                   <ArrowRight className="ml-2" size={16} />
                 </>
               ) : (
                 <>
-                  {currentStep === 5 || currentStep === 6 ? "Submit & Continue" : "Next"}
+                  {currentStep === 5 || currentStep === 6 || currentStep === 7 ? "Submit & Continue" : "Next"}
                   <ArrowRight className="ml-2" size={16} />
                 </>
               )}
