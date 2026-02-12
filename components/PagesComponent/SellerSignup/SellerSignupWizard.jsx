@@ -985,6 +985,7 @@ const SellerSignupWizard = ({ onComplete }) => {
         {currentStep === 2 && <p className="text-gray-400">Ok, now provide some basic information below.</p>}
         {currentStep === 3 && <p className="text-gray-400">Thanks. Now upload pictures to make your idea stand out.</p>}
         {currentStep === 4 && <p className="text-gray-400">Who will be the main contact for this listing? </p>}
+        {currentStep === 5 && <p className="text-gray-400">Would you like to know what your idea is worth?</p>}
 
       </div>
       {/* Progress Steps – hide on step 7 (What happens next) per feedback R */}
@@ -1423,7 +1424,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                   <Card>
                     <CardHeader>
                       <CardTitle>Patent Evaluation by Expert</CardTitle>
-                      <CardDescription>Starting at $250</CardDescription>
+                      <CardDescription>Having a professional evaluation would you negotiate with
+                        buyers and partners.
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -1487,7 +1490,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                                 Better - Comprehensive
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                $500 • 6-20 pages
+                                $1,750 • 6-20 pages
                               </p>
                             </div>
                             {selectedServices.evaluation === "better" ? (
@@ -1522,7 +1525,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                                 Best - Detailed Report
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                $1,999 • 15-30 pages
+                                $5,000 • 15-30 pages
                               </p>
                             </div>
                             {selectedServices.evaluation === "best" ? (
