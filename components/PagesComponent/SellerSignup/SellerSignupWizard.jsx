@@ -463,21 +463,24 @@ const SellerSignupWizard = ({ onComplete }) => {
         setCurrentStep(5);
       }
     } else if (currentStep === 5) {
-      // Step 5: More Services (Additional Services)
+      // Step 5: Patent Evaluation
       setCurrentStep(6);
     } else if (currentStep === 6) {
-      // Step 6: Membership plan required
+      // Step 6: Other Services
+      setCurrentStep(7);
+    } else if (currentStep === 7) {
+      // Step 7: Membership plan required
       if (!selectedPlan) {
         toast.error("Please select a membership plan");
         return;
       }
       setCartTotal(calculateTotal());
-      setCurrentStep(7);
-    } else if (currentStep === 7) {
-      // Step 7: What happens next – continue to payment
       setCurrentStep(8);
     } else if (currentStep === 8) {
-      // Step 8: Review Order & Payment
+      // Step 8: What happens next – continue to payment
+      setCurrentStep(9);
+    } else if (currentStep === 9) {
+      // Step 9: Review Order & Payment
       if (showPaymentForm || clientSecret) return;
       if (!packageSettings) {
         toast.error("Payment settings are unavailable right now.");
@@ -1017,7 +1020,7 @@ const SellerSignupWizard = ({ onComplete }) => {
             {currentStep === 2 && "Patent Information"}
             {currentStep === 3 && "Upload Images"}
             {currentStep === 4 && "Personal Information"}
-            {currentStep === 5 && "Additional Services"}
+            {currentStep === 5 && "Patent Evaluation by Expert"}
             {currentStep === 6 && "Listing Advertising Packages"}
             {currentStep === 7 && "What happens next"}
             {currentStep === 8 && "Review Order"}
@@ -1373,11 +1376,135 @@ const SellerSignupWizard = ({ onComplete }) => {
             </div>
           )}
 
-          {/* Step 5: More Services (Additional Services) */}
+          {/* Step 5: Patent Evaluation by Expert */}
           {currentStep === 5 && (
             <div className="space-y-4">
               <p className="text-sm font-semibold -mt-4 text-gray-500">
-                Please select the services you want to avail
+                Having a professional evaluation would you negotiate with buyers and partners.
+              </p>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="col-span-4 space-y-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div
+                      className={` p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "good"
+                        ? " border-primary shadow-xl bg-blue-100"
+                        : " bg-gray-50 "
+
+                        }`}
+                      onClick={() =>
+                        setSelectedServices({
+                          ...selectedServices,
+                          evaluation: "good",
+                        })
+                      }
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Image
+                            src={good}
+                            alt="good"
+                            className="w-full"
+                            width={50}
+                            height={50}
+                          />
+                          <p className="font-medium">
+                            Good - Basic Evaluation
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            $250 • 2 pages
+                          </p>
+                        </div>
+                        {selectedServices.evaluation === "good" ? (
+                          <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                        ) : (
+                          <Circle className="text-gray-500 absolute top-2 right-2" />
+                        )}
+                      </div>
+                    </div>
+                    <div
+                      className={`p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "better"
+                        ? "border-primary shadow-xl bg-blue-100"
+                        : "bg-gray-50"
+                        }`}
+                      onClick={() =>
+                        setSelectedServices({
+                          ...selectedServices,
+                          evaluation: "better",
+                        })
+                      }
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Image
+                            src={better}
+                            alt="better"
+                            className="w-full"
+                            width={50}
+                            height={50}
+                          />
+                          <p className="font-medium">
+                            Better - Comprehensive
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            $1,750 • 6-20 pages
+                          </p>
+                        </div>
+                        {selectedServices.evaluation === "better" ? (
+                          <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                        ) : (
+                          <Circle className="text-gray-500 absolute top-2 right-2" />
+                        )}
+                      </div>
+                    </div>
+                    <div
+                      className={`p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "best"
+                        ? "border-primary shadow-xl bg-blue-100"
+                        : "bg-gray-50"
+                        }`}
+                      onClick={() =>
+                        setSelectedServices({
+                          ...selectedServices,
+                          evaluation: "best",
+                        })
+                      }
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Image
+                            src={best}
+                            alt="best"
+                            className="w-full"
+                            width={50}
+                            height={50}
+                          />
+                          <p className="font-medium">
+                            Best - Detailed Report
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            $5,000 • 15-30 pages
+                          </p>
+                        </div>
+                        {selectedServices.evaluation === "best" ? (
+                          <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                        ) : (
+                          <Circle className="text-gray-500 absolute top-2 right-2" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <Button variant="link" size="sm">
+                    View Sample
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 6: Other Additional Services */}
+          {currentStep === 6 && (
+            <div className="space-y-4">
+              <p className="text-sm font-semibold -mt-4 text-gray-500">
+                Please select other services you want to avail
               </p>
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="col-span-4 space-y-4">
@@ -1406,7 +1533,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                       <CardTitle className="flex items-center justify-between pt-3">
                         2D/3D Drawing of Your Idea
                       </CardTitle>
-                      <CardDescription>$20</CardDescription>
+                      <CardDescription>$300</CardDescription>
                       <p className="text-sm text-muted-foreground mb-2">
                         Professional visualization of your patent idea
                       </p>
@@ -1419,128 +1546,6 @@ const SellerSignupWizard = ({ onComplete }) => {
                     ) : (
                       <Circle className="text-gray-500 absolute top-2 right-2" />
                     )}
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Patent Evaluation by Expert</CardTitle>
-                      <CardDescription>Having a professional evaluation would you negotiate with
-                        buyers and partners.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                        <div
-                          className={` p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "good"
-                            ? " border-primary shadow-xl bg-blue-100"
-                            : " bg-gray-50 "
-
-                            }`}
-                          onClick={() =>
-                            setSelectedServices({
-                              ...selectedServices,
-                              evaluation: "good",
-                            })
-                          }
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Image
-                                src={good}
-                                alt="good"
-                                className="w-full"
-                                width={50}
-                                height={50}
-                              />
-                              <p className="font-medium">
-                                Good - Basic Evaluation
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                $250 • 2 pages
-                              </p>
-                            </div>
-                            {selectedServices.evaluation === "good" ? (
-                              <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                            ) : (
-                              <Circle className="text-gray-500 absolute top-2 right-2" />
-                            )}
-                          </div>
-                        </div>
-                        <div
-                          className={`p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "better"
-                            ? "border-primary shadow-xl bg-blue-100"
-                            : "bg-gray-50"
-                            }`}
-                          onClick={() =>
-                            setSelectedServices({
-                              ...selectedServices,
-                              evaluation: "better",
-                            })
-                          }
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Image
-                                src={better}
-                                alt="better"
-                                className="w-full"
-                                width={50}
-                                height={50}
-                              />
-                              <p className="font-medium">
-                                Better - Comprehensive
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                $1,750 • 6-20 pages
-                              </p>
-                            </div>
-                            {selectedServices.evaluation === "better" ? (
-                              <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                            ) : (
-                              <Circle className="text-gray-500 absolute top-2 right-2" />
-                            )}
-                          </div>
-                        </div>
-                        <div
-                          className={`p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "best"
-                            ? "border-primary shadow-xl bg-blue-100"
-                            : "bg-gray-50"
-                            }`}
-                          onClick={() =>
-                            setSelectedServices({
-                              ...selectedServices,
-                              evaluation: "best",
-                            })
-                          }
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Image
-                                src={best}
-                                alt="best"
-                                className="w-full"
-                                width={50}
-                                height={50}
-                              />
-                              <p className="font-medium">
-                                Best - Detailed Report
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                $5,000 • 15-30 pages
-                              </p>
-                            </div>
-                            {selectedServices.evaluation === "best" ? (
-                              <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                            ) : (
-                              <Circle className="text-gray-500 absolute top-2 right-2" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <Button variant="link" size="sm">
-                        View Sample
-                      </Button>
-                    </CardContent>
                   </Card>
 
                   <Card
@@ -1567,7 +1572,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                       <CardTitle className="flex items-center justify-between pt-3">
                         Professional Pitch Deck
                       </CardTitle>
-                      <CardDescription>$500</CardDescription>
+                      <CardDescription>$900</CardDescription>
                       <p className="text-sm text-muted-foreground mb-2">
                         Perfect for larger investors and partnerships
                       </p>
@@ -1606,7 +1611,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                       <CardTitle className="flex items-center justify-between pt-3">
                         Attorney Support
                       </CardTitle>
-                      <CardDescription>$750</CardDescription>
+                      <CardDescription>$450</CardDescription>
                       <p className="text-sm text-muted-foreground mb-2">
                         Help with paperwork for the sale or investment of your
                         patent
@@ -1621,14 +1626,14 @@ const SellerSignupWizard = ({ onComplete }) => {
                       <Circle className="text-gray-500 absolute top-2 right-2" />
                     )}
                   </Card>
-                </div >
-              </div >
-            </div >
+                </div>
+              </div>
+            </div>
           )}
 
-          {/* Step 6: Listing Advertising Packages (monthly or annual) */}
+          {/* Step 7: Listing Advertising Packages (monthly or annual) */}
           {
-            currentStep === 6 && (
+            currentStep === 7 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {isPackagesLoading ? (
                   <p className="text-sm text-muted-foreground">
@@ -1729,9 +1734,9 @@ const SellerSignupWizard = ({ onComplete }) => {
             )
           }
 
-          {/* Step 7: What happens next (R) – no status bar; circle image, 1) 2) 3), phone/email on right */}
+          {/* Step 8: What happens next (R) – no status bar; circle image, 1) 2) 3), phone/email on right */}
           {
-            currentStep === 7 && (
+            currentStep === 8 && (
               <div className="flex flex-col md:flex-row gap-8 items-start">
                 <div className="flex-1 space-y-4">
                   <p className="font-medium">What happens next?</p>
@@ -1773,9 +1778,9 @@ const SellerSignupWizard = ({ onComplete }) => {
               </div>
             )
           }
-          {/* Step 8: Review Order (S) – order summary, edit links, payment at bottom */}
+          {/* Step 9: Review Order (S) – order summary, edit links, payment at bottom */}
           {
-            currentStep === 8 && (
+            currentStep === 9 && (
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-2 text-sm">
                   <Button
@@ -1783,12 +1788,19 @@ const SellerSignupWizard = ({ onComplete }) => {
                     size="sm"
                     onClick={() => setCurrentStep(5)}
                   >
-                    Edit Additional Services
+                    Edit Evaluation
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentStep(6)}
+                  >
+                    Edit Additional Services
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentStep(7)}
                   >
                     Edit Plan
                   </Button>
@@ -1932,7 +1944,7 @@ const SellerSignupWizard = ({ onComplete }) => {
             <Button
               onClick={handleNext}
               disabled={
-                currentStep === 8 &&
+                currentStep === 9 &&
                 (isCreatingPaymentIntent || !packageSettings)
               }
             >
@@ -1941,21 +1953,21 @@ const SellerSignupWizard = ({ onComplete }) => {
                   <Loader2 className="mr-2 animate-spin" size={16} />
                   Processing...
                 </>
-              ) : currentStep === 8 ? (
+              ) : currentStep === 9 ? (
                 <>
                   {isCreatingPaymentIntent
                     ? "Preparing Payment..."
                     : "Complete Signup"}
                   <ArrowRight className="ml-2" size={16} />
                 </>
-              ) : currentStep === 7 ? (
+              ) : currentStep === 8 ? (
                 <>
                   Continue to Payment
                   <ArrowRight className="ml-2" size={16} />
                 </>
               ) : (
                 <>
-                  {currentStep === 5 ? "Submit & Continue" : "Next"}
+                  {currentStep === 5 || currentStep === 6 ? "Submit & Continue" : "Next"}
                   <ArrowRight className="ml-2" size={16} />
                 </>
               )}
