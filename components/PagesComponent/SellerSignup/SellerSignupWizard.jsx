@@ -50,6 +50,8 @@ import UserAvatar from "@/public/assets/user.jpg";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import ToniLexington from "@/public/assets/Toni Lexington.jpg";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 const SellerSignupWizard = ({ onComplete }) => {
   const { navigate } = useNavigate();
@@ -982,6 +984,7 @@ const SellerSignupWizard = ({ onComplete }) => {
         {currentStep === 1 && <p className="text-gray-400">I&apos;ll help you list your idea and/or patent</p>}
         {currentStep === 2 && <p className="text-gray-400">Ok, now provide some basic information below.</p>}
         {currentStep === 3 && <p className="text-gray-400">Thanks. Now upload pictures to make your idea stand out.</p>}
+        {currentStep === 4 && <p className="text-gray-400">Who will be the main contact for this listing? </p>}
 
       </div>
       {/* Progress Steps – hide on step 7 (What happens next) per feedback R */}
@@ -1343,15 +1346,19 @@ const SellerSignupWizard = ({ onComplete }) => {
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+1 (555) 000-0000"
+                    <PhoneInput
+                      country={process.env.NEXT_PUBLIC_DEFAULT_COUNTRY}
                       value={contactInfo.phone}
-                      onChange={(e) =>
-                        setContactInfo({ ...contactInfo, phone: e.target.value })
-                      }
+                      onChange={(phone) => {
+                        setContactInfo({ ...contactInfo, phone })
+                      }}
+                      inputProps={{
+                        name: "phone",
+                        required: true,
+                      }}
+                      enableLongNumbers
                     />
+
                   </div>
                 </div>
               ) : (
