@@ -3,7 +3,9 @@ import { t } from "@/utils";
 import React, { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { Input } from "../ui/input";
-import { Card } from "../ui/card"; // using Card for dropdown
+import { Card } from "../ui/card";
+import { useSelector } from "react-redux";
+import { getIsPaidApi } from "@/redux/reducer/settingSlice";
 
 const AddressAutocomplete = ({ onAddressSelect, defaultValue, placeholder, className }) => {
     const [search, setSearch] = useState(defaultValue || "");
@@ -12,8 +14,22 @@ const AddressAutocomplete = ({ onAddressSelect, defaultValue, placeholder, class
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [loading, setLoading] = useState(false);
     const wrapperRef = useRef(null);
-    // Ref to prevent refetching when user selects an item
     const preventFetch = useRef(false);
+
+    const IsPaidApi = useSelector(getIsPaidApi);
+    const sessionTokenRef = useRef(null);
+
+    // Generate a new session token (UUID v4) for Google Places API
+    const generateSessionToken = () => {
+        if (typeof crypto !== "undefined" && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+            const r = (Math.random() * 16) | 0;
+            const v = c === "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+        });
+    };
 
     useEffect(() => {
         // Sync external defaultValue only if search is empty to avoid overwriting user input
@@ -45,36 +61,44 @@ const AddressAutocomplete = ({ onAddressSelect, defaultValue, placeholder, class
             if (debouncedSearch && debouncedSearch.length > 2) {
                 setLoading(true);
                 try {
+                    // Generate new session token if needed and using Google API
+                    if (IsPaidApi && !sessionTokenRef.current) {
+                        sessionTokenRef.current = generateSessionToken();
+                    }
+
                     const response = await getLocationApi.getLocation({
                         search: debouncedSearch,
                         lang: "en",
+                        ...(IsPaidApi && { session_id: sessionTokenRef.current }),
                     });
 
-                    // Check response structure (free vs paid API)
                     let results = [];
 
-                    if (response?.data?.data?.predictions) {
-                        // Paid API (Google Places structure)
-                        results = response.data.data.predictions;
-                    } else if (Array.isArray(response?.data?.data)) {
-                        // Free API or different structure
-                        results = response.data.data.map(item => ({
-                            description: [
-                                item?.area_translation,
-                                item?.city_translation,
-                                item?.state_translation,
-                                item?.country_translation,
-                            ].filter(Boolean).join(", "),
-                            place_id: item?.id,
-                            original: item
-                        }));
-                    } else if (Array.isArray(response?.data?.data?.data)) {
-                        // Another potential structure seen in LocationSelector
-                        results = response.data.data.data.map(item => ({
-                            description: item.translated_name || item.name,
-                            place_id: item.id,
-                            original: item
-                        }));
+                    if (IsPaidApi) {
+                        // Google Places API structure
+                        // The backend might return 'predictions' directly or inside 'data'
+                        results = response?.data?.data?.predictions || [];
+                    } else {
+                        // Free/Internal API structure
+                        const rawResults = response?.data?.data || [];
+                        if (Array.isArray(rawResults)) {
+                            results = rawResults.map(item => ({
+                                description: [
+                                    item?.area_translation,
+                                    item?.city_translation,
+                                    item?.state_translation,
+                                    item?.country_translation,
+                                ].filter(Boolean).join(", "),
+                                place_id: item?.id, // internal ID
+                                original: item
+                            }));
+                        } else if (Array.isArray(response?.data?.data?.data)) {
+                            results = response.data.data.data.map(item => ({
+                                description: item.translated_name || item.name,
+                                place_id: item.id,
+                                original: item
+                            }));
+                        }
                     }
 
                     setSuggestions(results);
@@ -88,11 +112,14 @@ const AddressAutocomplete = ({ onAddressSelect, defaultValue, placeholder, class
             } else {
                 setSuggestions([]);
                 setShowSuggestions(false);
+                if (IsPaidApi) {
+                    sessionTokenRef.current = null;
+                }
             }
         };
 
         fetchSuggestions();
-    }, [debouncedSearch]);
+    }, [debouncedSearch, IsPaidApi]);
 
     const handleSelect = async (suggestion) => {
         preventFetch.current = true;
@@ -101,14 +128,18 @@ const AddressAutocomplete = ({ onAddressSelect, defaultValue, placeholder, class
         setLoading(true);
 
         try {
-            if (suggestion.place_id && !suggestion.original) {
-                // Paid API: Fetch details using place_id
+            if (IsPaidApi) {
+                // Paid API (Google): Fetch details using place_id and session_id
                 const response = await getLocationApi.getLocation({
                     place_id: suggestion.place_id,
                     lang: "en",
+                    ...(sessionTokenRef.current && { session_id: sessionTokenRef.current }),
                 });
 
-                const result = response?.data?.data?.result; // Google Place Details structure usually has 'result'
+                // Google Place Details structure
+                // Backend usually unwraps this, so check response structure carefully
+                // Based on SearchAutocomplete.jsx: response?.data?.data?.results?.[0] OR response?.data?.data?.result
+                const result = response?.data?.data?.result || response?.data?.data?.results?.[0];
 
                 if (result) {
                     const components = result.address_components || [];
@@ -128,13 +159,15 @@ const AddressAutocomplete = ({ onAddressSelect, defaultValue, placeholder, class
                         city,
                         state,
                         country,
-                        zip: zip,
+                        zip,
                         formatted_address: result.formatted_address,
                         lat: result.geometry?.location?.lat,
                         lng: result.geometry?.location?.lng
                     });
+                    // Reset session token after selection (session complete)
+                    sessionTokenRef.current = null;
                 }
-            } else if (suggestion.original) {
+            } else {
                 // Free API fallback
                 const item = suggestion.original;
                 onAddressSelect({
@@ -155,6 +188,9 @@ const AddressAutocomplete = ({ onAddressSelect, defaultValue, placeholder, class
 
     const handleInputChange = (e) => {
         setSearch(e.target.value);
+        if (IsPaidApi && !sessionTokenRef.current) {
+            sessionTokenRef.current = generateSessionToken();
+        }
     }
 
     return (

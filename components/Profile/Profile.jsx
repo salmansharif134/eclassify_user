@@ -214,7 +214,7 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (!formData?.first_name.trim() || !formData?.address.trim()) {
+      if (!formData?.first_name.trim() || !formData?.last_name.trim()) {
         toast.error(t("emptyFieldNotAllowed"));
         return;
       }
