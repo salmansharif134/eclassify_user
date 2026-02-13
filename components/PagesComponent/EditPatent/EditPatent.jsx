@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Upload, Plus, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 const EditPatent = ({ id }) => {
     const router = useRouter();
@@ -31,6 +32,7 @@ const EditPatent = ({ id }) => {
         patent_class: "",
         patent_type: "",
         patent_number: "",
+        status: "active",
     });
 
     const [patentImages, setPatentImages] = useState([]);
@@ -65,6 +67,7 @@ const EditPatent = ({ id }) => {
                         patent_class: patent.patent_class || "",
                         patent_type: patent.patent_type || "",
                         patent_number: patent.patent_number || "",
+                        status: patent.status || "active",
                     });
 
                     // Handle images if they exist in the response
@@ -132,6 +135,7 @@ const EditPatent = ({ id }) => {
             formData.append("patent_class", patentData.patent_class);
             formData.append("patent_type", patentData.patent_type);
             formData.append("patent_number", patentData.patent_number);
+            formData.append("status", patentData.status);
 
             // Format inventors for submission
             const inventorsPayload = patentData.inventors.map(inv => ({
@@ -190,6 +194,15 @@ const EditPatent = ({ id }) => {
                                 onChange={(e) => setPatentData({ ...patentData, title: e.target.value })}
                                 required
                             />
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                            <Switch
+                                id="patent-status"
+                                checked={patentData.status === "active"}
+                                onCheckedChange={(checked) => setPatentData({ ...patentData, status: checked ? "active" : "inactive" })}
+                            />
+                            <Label htmlFor="patent-status">{t("status") || "Status"}: {patentData.status === "active" ? (t("active") || "Active") : (t("inactive") || "Inactive")}</Label>
                         </div>
 
                         <div className="space-y-2">
