@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import ChangePasswordModal from "./ChangePasswordModal";
+import AddressAutocomplete from "../Location/AddressAutocomplete";
 
 const Profile = () => {
   const router = useRouter();
@@ -51,6 +52,10 @@ const Profile = () => {
     email: "",
     phone: "",
     address: "",
+    address2: "",
+    city: "",
+    state: "",
+    country: "",
     notification: 1,
     show_personal_details: 0,
     region_code: "",
@@ -224,12 +229,21 @@ const Profile = () => {
         return;
       }
       setIsLoading(true);
+      // Combine granular address fields into one string for the backend
+      const fullAddress = [
+        formData.address, // This might be the street address from autocomplete
+        formData.address2,
+        formData.city,
+        formData.state,
+        formData.country
+      ].filter(Boolean).join(", ");
+
       const response = await updateProfileApi.updateProfile({
         first_name: formData.first_name,
         last_name: formData.last_name,
         email: formData.email,
         mobile: mobileNumber,
-        address: formData.address,
+        address: fullAddress, // Send concatenated address
         fcm_id: fetchFCM ? fetchFCM : "",
         notification: formData.notification,
         country_code: formData.country_code,
@@ -435,16 +449,82 @@ const Profile = () => {
           <h1 className="col-span-full mb-6 text-xl font-medium">
             {t("address")}
           </h1>
-          <div className="labelInputCont">
-            <Label htmlFor="address" className="requiredInputLabel">
-              {t("address")}
-            </Label>
-            <Textarea
-              id="address"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-            />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="labelInputCont col-span-2">
+              <Label htmlFor="street" className="requiredInputLabel">
+                {t("streetAddress")}
+              </Label>
+              <AddressAutocomplete
+                defaultValue={formData.address} // Use current full address as initial value if parsing fails? Or just map it.
+                onAddressSelect={(data) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    // If street is returned, use it. Otherwise use formatted address as fallback for now
+                    street: data.street || data.formatted_address,
+                    city: data.city || "",
+                    state: data.state || "",
+                    country: data.country || "",
+                    // address needs to be updated too for consistency till submit?
+                    // We'll update formData.address only on Submit, but for now we keep granular state
+                  }));
+                }}
+                placeholder="Start typing your street address..."
+              />
+            </div>
+
+            <div className="labelInputCont col-span-2">
+              <Label htmlFor="address2">
+                {t("addressLine2")}
+              </Label>
+              <Input
+                type="text"
+                id="address2"
+                placeholder="Apartment, suite, unit, etc. (optional)"
+                value={formData.address2 || ""}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="labelInputCont">
+              <Label htmlFor="city" className="requiredInputLabel">
+                {t("city")}
+              </Label>
+              <Input
+                type="text"
+                id="city"
+                placeholder={t("city")}
+                value={formData.city || ""}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="labelInputCont">
+              <Label htmlFor="state" className="requiredInputLabel">
+                {t("state")}
+              </Label>
+              <Input
+                type="text"
+                id="state"
+                placeholder={t("state")}
+                value={formData.state || ""}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="labelInputCont">
+              <Label htmlFor="country" className="requiredInputLabel">
+                {t("country")}
+              </Label>
+              <Input
+                type="text"
+                id="country"
+                placeholder={t("country")}
+                value={formData.country || ""}
+                onChange={handleChange}
+              />
+            </div>
+            {/* Hidden field to maintain compatibility or we construct it on submit */}
           </div>
         </div>
 
