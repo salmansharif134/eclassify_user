@@ -389,7 +389,7 @@ const SellerSignupWizard = ({ onComplete }) => {
     return message;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === 1) {
       // Step 1 & 2: no sign-in required
       if (hasPatent === null) {
@@ -491,7 +491,29 @@ const SellerSignupWizard = ({ onComplete }) => {
         toast.error("Please enter a listed price");
         return;
       }
-      setCurrentStep(8);
+
+      setLoading(true);
+      try {
+        const payload = {
+          seller_id: persistentUserId || sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id,
+          is_auction: pricing.isAuction,
+          auction_price: pricing.auctionPrice,
+          is_listed_price: pricing.isListedPrice,
+          listed_price: pricing.listedPrice,
+          allow_negotiation: pricing.allowNegotiation,
+        };
+        const response = await sellerSignupApi.submitFinancialExpectations(payload);
+        if (response.data.error === false || response.data.error === "false") {
+          setCurrentStep(8);
+        } else {
+          toast.error(response.data.message || "Failed to save financial expectations");
+        }
+      } catch (error) {
+        console.error("Financial expectations submit error:", error);
+        toast.error("An error occurred while saving financial expectations");
+      } finally {
+        setLoading(false);
+      }
     } else if (currentStep === 8) {
       // Step 8: Membership plan required
       if (!selectedPlan) {
@@ -2070,8 +2092,9 @@ const SellerSignupWizard = ({ onComplete }) => {
             <Button
               onClick={handleNext}
               disabled={
-                currentStep === 10 &&
-                (isCreatingPaymentIntent || !packageSettings)
+                loading ||
+                (currentStep === 10 &&
+                  (isCreatingPaymentIntent || !packageSettings))
               }
             >
               {loading ? (

@@ -108,6 +108,8 @@ export const BUYER_ADD_TO_CART = "buyer/cart/add";
 export const BUYER_REMOVE_FROM_CART = "buyer/cart/remove";
 export const BUYER_CHECKOUT = "buyer/checkout";
 export const PATENTS_PAY_LATER = "patents/pay-later";
+export const FINANCIAL_EXPECTATIONS = "sellers/signup/financial-expectations";
+
 
 export const authApi = {
   login: ({ email, password, fcm_id } = {}) => {
@@ -1255,6 +1257,9 @@ export const sellerSignupApi = {
         "Content-Type": "multipart/form-data",
       },
     });
+  },
+  submitFinancialExpectations: (payload) => {
+    return Api.post(FINANCIAL_EXPECTATIONS, payload);
   },
 };
 
