@@ -397,7 +397,13 @@ const Profile = () => {
               disabled={UserData?.type === "phone"}
             />
           </div>
-
+          <div>
+            <ChangePasswordModal>
+              <Button variant="outline" type="button">
+                {t("changePassword")}
+              </Button>
+            </ChangePasswordModal>
+          </div>
           <div className="flex flex-col gap-1">
             <div className="w-1/2 flex flex-col justify-between gap-3">
               <Label className="font-semibold" htmlFor="notification-mode">
@@ -443,11 +449,7 @@ const Profile = () => {
         </div>
 
         <div className="flex items-center justify-between mt-4">
-          <ChangePasswordModal>
-            <Button variant="outline" type="button">
-              {t("changePassword")}
-            </Button>
-          </ChangePasswordModal>
+
           <Button disabled={isLoading} className="w-fit">
             {isLoading ? t("saving") : t("saveChanges")}
           </Button>
