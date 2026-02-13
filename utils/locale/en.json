@@ -757,5 +757,7 @@
   "featuredSection": "Featured Section",
   "previous": "Previous",
   "page": "Page",
-  "of": "of"
+  "of": "of",
+  "streetAddress": "Street Address",
+  "addressLine2": "Address Line 2"
 }

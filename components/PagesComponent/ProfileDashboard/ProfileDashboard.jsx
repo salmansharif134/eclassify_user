@@ -37,12 +37,12 @@ const ProfileDashboard = () => {
   const renderHeading = () => {
     if (isProfile) {
       return t("myProfile");
+    } else if (isListing) {
+      return t("myListing");
     } else if (isNotifications) {
       return t("notifications");
     } else if (isSubscriptions) {
       return t("subscription");
-    } else if (isListing) {
-      return t("myListing");
     } else if (isFavorite) {
       return t("myFavorites");
     } else if (isTransaction) {
@@ -59,12 +59,12 @@ const ProfileDashboard = () => {
   const renderContent = () => {
     if (isProfile) {
       return <Profile />;
+    } else if (isListing) {
+      return <MyPatents />;
     } else if (isNotifications) {
       return <Notifications />;
     } else if (isSubscriptions) {
       return <ProfileSubscription />;
-    } else if (isListing) {
-      return <MyPatents />;
     } else if (isFavorite) {
       return <Favorites />;
     } else if (isTransaction) {

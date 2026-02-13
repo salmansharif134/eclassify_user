@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -50,10 +51,12 @@ import UserAvatar from "@/public/assets/user.jpg";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import ToniLexington from "@/public/assets/Toni Lexington.jpg";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 const SellerSignupWizard = ({ onComplete }) => {
   const { navigate } = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(9);
   const [loading, setLoading] = useState(false);
   const isLoggedIn = useSelector(getIsLoggedIn);
   const signUpData = useSelector(userSignUpData);
@@ -128,6 +131,7 @@ const SellerSignupWizard = ({ onComplete }) => {
   // Step 4: Personal Info
   // Step 6: Membership Plan
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [billingPeriod, setBillingPeriod] = useState("monthly"); // "monthly" or "yearly"
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [listingPackages, setListingPackages] = useState([]); // membership plans from API
   const [packageSettings, setPackageSettings] = useState(null);
@@ -141,6 +145,15 @@ const SellerSignupWizard = ({ onComplete }) => {
     evaluation: null, // 'good', 'better', 'best'
     pitchDeck: false,
     attorneySupport: false,
+  });
+
+  // Step 7: Pricing
+  const [pricing, setPricing] = useState({
+    isAuction: false,
+    auctionPrice: "",
+    isListedPrice: false,
+    listedPrice: "",
+    allowNegotiation: false,
   });
 
   // Step 8: Cart Summary
@@ -185,10 +198,13 @@ const SellerSignupWizard = ({ onComplete }) => {
 
         // Restore selections
         if (parsedState.selectedPlan) setSelectedPlan(parsedState.selectedPlan);
+        if (parsedState.billingPeriod) setBillingPeriod(parsedState.billingPeriod);
         // selectedPackage is derived from selectedPlan in an effect, so we might skip it or rely on that effect.
         // Actually, selectedPackage is state, but we have logic to set it when selectedPlan changes.
 
         if (parsedState.selectedServices) setSelectedServices(parsedState.selectedServices);
+
+        if (parsedState.pricing) setPricing(parsedState.pricing);
 
         if (parsedState.contactInfo) setContactInfo(parsedState.contactInfo);
         if (parsedState.sellerId) setSellerId(parsedState.sellerId);
@@ -215,8 +231,10 @@ const SellerSignupWizard = ({ onComplete }) => {
       patentData,
       manualPatentData,
       selectedPlan,
+      billingPeriod,
       // selectedPackage: selectedPackage, // derived mostly
       selectedServices,
+      pricing,
       contactInfo,
       sellerId,
       persistentUserId,
@@ -238,6 +256,7 @@ const SellerSignupWizard = ({ onComplete }) => {
     patentData,
     manualPatentData,
     selectedPlan,
+    billingPeriod,
     selectedServices,
     contactInfo,
     sellerId,
@@ -326,9 +345,10 @@ const SellerSignupWizard = ({ onComplete }) => {
     if (selectedPlan === "monthly") total += 29;
     if (selectedPlan === "yearly") total += 199;
     if (selectedPlan === "custom") total += 79;
+    if (selectedPlan === "custom_yearly") total += 349;
 
-    // FREE 2D/3D rendering for Custom plan
-    if (selectedServices.drawing2D3D && selectedPlan !== "custom") total += 20;
+    // FREE 2D/3D rendering for Custom plans
+    if (selectedServices.drawing2D3D && !selectedPlan?.includes("custom")) total += 20;
 
     if (selectedServices.evaluation === "good") total += 250;
     if (selectedServices.evaluation === "better") total += 500;
@@ -374,7 +394,7 @@ const SellerSignupWizard = ({ onComplete }) => {
     return message;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === 1) {
       // Step 1 & 2: no sign-in required
       if (hasPatent === null) {
@@ -461,21 +481,57 @@ const SellerSignupWizard = ({ onComplete }) => {
         setCurrentStep(5);
       }
     } else if (currentStep === 5) {
-      // Step 5: More Services (Additional Services)
+      // Step 5: Patent Evaluation
       setCurrentStep(6);
     } else if (currentStep === 6) {
-      // Step 6: Membership plan required
+      // Step 6: Other Services
+      setCurrentStep(7);
+    } else if (currentStep === 7) {
+      // Step 7: Pricing
+      if (pricing.isAuction && !pricing.auctionPrice) {
+        toast.error("Please enter an auction starting price");
+        return;
+      }
+      if (pricing.isListedPrice && !pricing.listedPrice) {
+        toast.error("Please enter a listed price");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const payload = {
+          seller_id: persistentUserId || sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id,
+          is_auction: pricing.isAuction,
+          auction_price: pricing.auctionPrice,
+          is_listed_price: pricing.isListedPrice,
+          listed_price: pricing.listedPrice,
+          allow_negotiation: pricing.allowNegotiation,
+        };
+        const response = await sellerSignupApi.submitFinancialExpectations(payload);
+        if (response.data.error === false || response.data.error === "false") {
+          setCurrentStep(8);
+        } else {
+          toast.error(response.data.message || "Failed to save financial expectations");
+        }
+      } catch (error) {
+        console.error("Financial expectations submit error:", error);
+        toast.error("An error occurred while saving financial expectations");
+      } finally {
+        setLoading(false);
+      }
+    } else if (currentStep === 8) {
+      // Step 8: Membership plan required
       if (!selectedPlan) {
         toast.error("Please select a membership plan");
         return;
       }
       setCartTotal(calculateTotal());
-      setCurrentStep(7);
-    } else if (currentStep === 7) {
-      // Step 7: What happens next – continue to payment
-      setCurrentStep(8);
-    } else if (currentStep === 8) {
-      // Step 8: Review Order & Payment
+      setCurrentStep(9);
+    } else if (currentStep === 9) {
+      // Step 9: What happens next – continue to payment
+      setCurrentStep(10);
+    } else if (currentStep === 10) {
+      // Step 10: Review Order & Payment
       if (showPaymentForm || clientSecret) return;
       if (!packageSettings) {
         toast.error("Payment settings are unavailable right now.");
@@ -552,6 +608,42 @@ const SellerSignupWizard = ({ onComplete }) => {
     }
   };
 
+  const handleFinalPayLater = async () => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      const id = persistentUserId || sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id || userData?.id;
+
+      if (id) {
+        formData.append("seller_id", id);
+      }
+
+      if (selectedPlan) {
+        formData.append("membership_plan", selectedPlan);
+      }
+
+      // Add selected services
+      const services = buildSelectedServicesPayload();
+      formData.append("selected_services", JSON.stringify(services));
+
+      // Attempt to PUT to /api/patents/pay-later
+      const response = await patentsApi.updatePayLater(formData);
+
+      if (response.data.error === false || response.data.error === "false") {
+        toast.success("Subscription saved successfully!");
+        localStorage.removeItem(STORAGE_KEY);
+        navigate("/seller-dashboard");
+      } else {
+        toast.error(response.data.message || "Failed to save subscription");
+      }
+    } catch (error) {
+      console.error("Final pay later error:", error);
+      toast.error("An error occurred while saving subscription");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSelectPlan = (planKey) => {
     let planPackage;
     if (planKey === "monthly") {
@@ -582,7 +674,7 @@ const SellerSignupWizard = ({ onComplete }) => {
   // We treat membership plans as "packages" by adding a synthetic final_price field.
   const mapPlanToPackage = (planKey, plans) => {
     if (!plans?.length) return null;
-    const targetType = planKey === "monthly" ? "monthly" : planKey === "yearly" ? "yearly" : "custom";
+    const targetType = planKey;
 
     // Prefer matching by type if backend uses 'monthly'/'yearly' types
     let plan =
@@ -598,12 +690,25 @@ const SellerSignupWizard = ({ onComplete }) => {
       else plan = sorted.find(p => Number(p?.price) === 79) || sorted[1];
     }
 
+    if (!plan && planKey === "custom_yearly") {
+      plan = plans.find(p => (p?.type || "").toLowerCase() === "custom_yearly") || plans.find(p => p?.price == 349) || null;
+    }
+
     if (!plan) return null;
 
     return {
       ...plan,
       // Keep compatibility with existing Stripe/payment UI that expects final_price
-      final_price: Number(plan.price ?? (planKey === "monthly" ? 29 : planKey === "yearly" ? 199 : 79)),
+      final_price: Number(
+        plan.price ??
+        (planKey === "monthly"
+          ? 29
+          : planKey === "yearly"
+            ? 199
+            : planKey === "custom"
+              ? 79
+              : 349),
+      ),
     };
   };
 
@@ -612,6 +717,7 @@ const SellerSignupWizard = ({ onComplete }) => {
       monthly: mapPlanToPackage("monthly", listingPackages),
       yearly: mapPlanToPackage("yearly", listingPackages),
       custom: mapPlanToPackage("custom", listingPackages),
+      custom_yearly: mapPlanToPackage("custom_yearly", listingPackages),
     };
   }, [listingPackages]);
 
@@ -621,6 +727,7 @@ const SellerSignupWizard = ({ onComplete }) => {
     if (selectedPlan === "monthly") nextPackage = planPackages.monthly;
     else if (selectedPlan === "yearly") nextPackage = planPackages.yearly;
     else if (selectedPlan === "custom") nextPackage = planPackages.custom;
+    else if (selectedPlan === "custom_yearly") nextPackage = planPackages.custom_yearly;
 
     if (nextPackage && nextPackage !== selectedPackage) {
       setSelectedPackage(nextPackage);
@@ -978,11 +1085,19 @@ const SellerSignupWizard = ({ onComplete }) => {
       </Link>
       <div className="flex items-center gap-2 justify-center flex-col">
         <Image src={ToniLexington} alt="Toni Lexington" width={100} height={100} className="rounded-full" />
-        <h1 className="text-2xl font-bold">Hi I'm Toni Lexington</h1>
+        <h1 className="text-2xl font-bold">Hi I'm Toni.</h1>
+        {currentStep === 1 && <p className="text-gray-400">I&apos;ll help you list your idea and/or patent</p>}
+        {currentStep === 2 && <p className="text-gray-400">Ok, now provide some basic information below.</p>}
+        {currentStep === 3 && <p className="text-gray-400">Thanks. Now upload pictures to make your idea stand out.</p>}
+        {currentStep === 4 && <p className="text-gray-400">Who will be the main contact for this listing? </p>}
+        {currentStep === 5 && <p className="text-gray-400">Would you like to know what your idea is worth?</p>}
+        {currentStep === 6 && <p className="text-gray-400">Would you like to add some other services?</p>}
+        {currentStep === 7 && <p className="text-gray-400">Tell us your financial expectations for this listing.</p>}
+
       </div>
-      {/* Progress Steps – hide on step 7 (What happens next) per feedback R */}
+      {/* Progress Steps – hide on step 9 (What happens next) per feedback R */}
       <div className="flex items-center justify-between mb-8 hidden">
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((step) => (
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((step) => (
           <div key={step} className="flex items-center flex-1">
             <div
               className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm ${currentStep >= step
@@ -992,7 +1107,7 @@ const SellerSignupWizard = ({ onComplete }) => {
             >
               {currentStep > step ? <CheckCircle2 size={18} /> : step}
             </div>
-            {step < 8 && (
+            {step < 10 && (
               <div
                 className={`flex-1 h-1 mx-1 sm:mx-2 ${currentStep > step ? "bg-primary" : "bg-muted"
                   }`}
@@ -1009,10 +1124,12 @@ const SellerSignupWizard = ({ onComplete }) => {
             {currentStep === 2 && "Patent Information"}
             {currentStep === 3 && "Upload Images"}
             {currentStep === 4 && "Personal Information"}
-            {currentStep === 5 && "Additional Services"}
-            {currentStep === 6 && "Listing Advertising Packages"}
-            {currentStep === 7 && "What happens next"}
-            {currentStep === 8 && "Review Order"}
+            {currentStep === 5 && "Patent Evaluation by Expert"}
+            {currentStep === 6 && "Other Additional Services"}
+            {currentStep === 7 && "Pricing"}
+            {currentStep === 8 && "Listing Advertising Packages"}
+            {currentStep === 9 && "What happens next"}
+            {currentStep === 10 && "Review Order"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -1145,7 +1262,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                   }}
                 />
               </div>
-              <div>
+              {/* <div>
                 <Label>Issue Date</Label>
                 <Input
                   type="date"
@@ -1157,9 +1274,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                     });
                   }}
                 />
-              </div>
+              </div> */}
               <div>
-                <Label>Assignee</Label>
+                <Label>Patent or Application Number</Label>
                 <Input
                   value={manualPatentData.assignee}
                   onChange={(e) => {
@@ -1170,7 +1287,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                   }}
                 />
               </div>
-              <div>
+              {/* <div>
                 <Label>Filing Date</Label>
                 <Input
                   type="date"
@@ -1182,9 +1299,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                     });
                   }}
                 />
-              </div>
+              </div> */}
 
-              <div>
+              {/* <div>
                 <Label>Patent Class</Label>
                 <Input
                   placeholder="e.g., G06F17/30"
@@ -1196,9 +1313,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                     });
                   }}
                 />
-              </div>
+              </div> */}
 
-              <div>
+              {/* <div>
                 <Label>Patent Type</Label>
                 <Input
                   placeholder="e.g., Utility"
@@ -1210,7 +1327,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                     });
                   }}
                 />
-              </div>
+              </div> */}
 
               {/* Claims & Description hidden for now */}
             </div>
@@ -1339,15 +1456,19 @@ const SellerSignupWizard = ({ onComplete }) => {
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+1 (555) 000-0000"
+                    <PhoneInput
+                      country={process.env.NEXT_PUBLIC_DEFAULT_COUNTRY}
                       value={contactInfo.phone}
-                      onChange={(e) =>
-                        setContactInfo({ ...contactInfo, phone: e.target.value })
-                      }
+                      onChange={(phone) => {
+                        setContactInfo({ ...contactInfo, phone })
+                      }}
+                      inputProps={{
+                        name: "phone",
+                        required: true,
+                      }}
+                      enableLongNumbers
                     />
+
                   </div>
                 </div>
               ) : (
@@ -1361,18 +1482,142 @@ const SellerSignupWizard = ({ onComplete }) => {
             </div>
           )}
 
-          {/* Step 5: More Services (Additional Services) */}
+          {/* Step 5: Patent Evaluation by Expert */}
           {currentStep === 5 && (
             <div className="space-y-4">
               <p className="text-sm font-semibold -mt-4 text-gray-500">
-                Please select the services you want to avail
+                Having a professional evaluation would you negotiate with buyers and partners.
+              </p>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="col-span-4 space-y-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div
+                      className={` p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "good"
+                        ? " border-primary shadow-xl bg-blue-100"
+                        : " bg-gray-50 "
+
+                        }`}
+                      onClick={() =>
+                        setSelectedServices({
+                          ...selectedServices,
+                          evaluation: "good",
+                        })
+                      }
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Image
+                            src={good}
+                            alt="good"
+                            className="w-full"
+                            width={50}
+                            height={50}
+                          />
+                          <p className="font-medium">
+                            Good - Basic Evaluation
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            $250 • 2 pages
+                          </p>
+                        </div>
+                        {selectedServices.evaluation === "good" ? (
+                          <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                        ) : (
+                          <Circle className="text-gray-500 absolute top-2 right-2" />
+                        )}
+                      </div>
+                    </div>
+                    <div
+                      className={`p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "better"
+                        ? "border-primary shadow-xl bg-blue-100"
+                        : "bg-gray-50"
+                        }`}
+                      onClick={() =>
+                        setSelectedServices({
+                          ...selectedServices,
+                          evaluation: "better",
+                        })
+                      }
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Image
+                            src={better}
+                            alt="better"
+                            className="w-full"
+                            width={50}
+                            height={50}
+                          />
+                          <p className="font-medium">
+                            Better - Comprehensive
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            $1,750 • 6-20 pages
+                          </p>
+                        </div>
+                        {selectedServices.evaluation === "better" ? (
+                          <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                        ) : (
+                          <Circle className="text-gray-500 absolute top-2 right-2" />
+                        )}
+                      </div>
+                    </div>
+                    <div
+                      className={`p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "best"
+                        ? "border-primary shadow-xl bg-blue-100"
+                        : "bg-gray-50"
+                        }`}
+                      onClick={() =>
+                        setSelectedServices({
+                          ...selectedServices,
+                          evaluation: "best",
+                        })
+                      }
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Image
+                            src={best}
+                            alt="best"
+                            className="w-full"
+                            width={50}
+                            height={50}
+                          />
+                          <p className="font-medium">
+                            Best - Detailed Report
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            $5,000 • 15-30 pages
+                          </p>
+                        </div>
+                        {selectedServices.evaluation === "best" ? (
+                          <CheckCircle2 className="text-primary absolute top-2 right-2" />
+                        ) : (
+                          <Circle className="text-gray-500 absolute top-2 right-2" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <Button variant="link" size="sm">
+                    View Sample
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 6: Other Additional Services */}
+          {currentStep === 6 && (
+            <div className="space-y-4">
+              <p className="text-sm font-semibold -mt-4 text-gray-500">
+                Please select other services you want to avail
               </p>
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="col-span-4 space-y-4">
                   <Card
-                    className={`cursor-pointer bg-white flex items-stretch gap-2 relative transition-all ${selectedServices.drawing2D3D
-                      ? "border-primary border-2 bg-gray-50"
-                      : "border-0 shadow-xl"
+                    className={`cursor-pointer border-2  flex items-stretch gap-2 relative transition-all ${selectedServices.drawing2D3D
+                      ? "border-primary bg-blue-100 shadow-xl "
+                      : " bg-gray-50 "
                       }`}
                     onClick={() =>
                       setSelectedServices({
@@ -1394,7 +1639,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                       <CardTitle className="flex items-center justify-between pt-3">
                         2D/3D Drawing of Your Idea
                       </CardTitle>
-                      <CardDescription>$20</CardDescription>
+                      <CardDescription>$300</CardDescription>
                       <p className="text-sm text-muted-foreground mb-2">
                         Professional visualization of your patent idea
                       </p>
@@ -1409,129 +1654,10 @@ const SellerSignupWizard = ({ onComplete }) => {
                     )}
                   </Card>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Patent Evaluation by Expert</CardTitle>
-                      <CardDescription>Starting at $250</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                        <div
-                          className={`p-3  rounded-lg cursor-pointer relative ${selectedServices.evaluation === "good"
-                            ? "border border-primary bg-gray-50"
-                            : "shadow-xl border-0"
-                            }`}
-                          onClick={() =>
-                            setSelectedServices({
-                              ...selectedServices,
-                              evaluation: "good",
-                            })
-                          }
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Image
-                                src={good}
-                                alt="good"
-                                className="w-full"
-                                width={50}
-                                height={50}
-                              />
-                              <p className="font-medium">
-                                Good - Basic Evaluation
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                $250 • 2 pages
-                              </p>
-                            </div>
-                            {selectedServices.evaluation === "good" ? (
-                              <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                            ) : (
-                              <Circle className="text-gray-500 absolute top-2 right-2" />
-                            )}
-                          </div>
-                        </div>
-                        <div
-                          className={`p-3 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "better"
-                            ? "border border-primary bg-gray-50"
-                            : "shadow-xl border-0"
-                            }`}
-                          onClick={() =>
-                            setSelectedServices({
-                              ...selectedServices,
-                              evaluation: "better",
-                            })
-                          }
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Image
-                                src={better}
-                                alt="better"
-                                className="w-full"
-                                width={50}
-                                height={50}
-                              />
-                              <p className="font-medium">
-                                Better - Comprehensive
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                $500 • 6-20 pages
-                              </p>
-                            </div>
-                            {selectedServices.evaluation === "better" ? (
-                              <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                            ) : (
-                              <Circle className="text-gray-500 absolute top-2 right-2" />
-                            )}
-                          </div>
-                        </div>
-                        <div
-                          className={`p-3  cursor-pointer relative ${selectedServices.evaluation === "best"
-                            ? "border border-primary bg-gray-50"
-                            : "shadow-xl border-0"
-                            }`}
-                          onClick={() =>
-                            setSelectedServices({
-                              ...selectedServices,
-                              evaluation: "best",
-                            })
-                          }
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Image
-                                src={best}
-                                alt="best"
-                                className="w-full"
-                                width={50}
-                                height={50}
-                              />
-                              <p className="font-medium">
-                                Best - Detailed Report
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                $1,999 • 15-30 pages
-                              </p>
-                            </div>
-                            {selectedServices.evaluation === "best" ? (
-                              <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                            ) : (
-                              <Circle className="text-gray-500 absolute top-2 right-2" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <Button variant="link" size="sm">
-                        View Sample
-                      </Button>
-                    </CardContent>
-                  </Card>
-
                   <Card
-                    className={`cursor-pointer flex items-stretch gap-2 relative transition-all ${selectedServices.pitchDeck
-                      ? "border-primary border-2 bg-gray-50"
-                      : "shadow-xl border-0"
+                    className={`cursor-pointer border-2 flex items-stretch gap-2 relative transition-all ${selectedServices.pitchDeck
+                      ? "border-primary bg-blue-100 shadow-xl"
+                      : "bg-gray-50"
                       }`}
                     onClick={() =>
                       setSelectedServices({
@@ -1552,7 +1678,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                       <CardTitle className="flex items-center justify-between pt-3">
                         Professional Pitch Deck
                       </CardTitle>
-                      <CardDescription>$500</CardDescription>
+                      <CardDescription>$900</CardDescription>
                       <p className="text-sm text-muted-foreground mb-2">
                         Perfect for larger investors and partnerships
                       </p>
@@ -1568,9 +1694,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                   </Card>
 
                   <Card
-                    className={`cursor-pointer flex items-stretch gap-2 transition-all relative ${selectedServices.attorneySupport
-                      ? "border-primary border-2 bg-gray-50"
-                      : "shadow-xl border-0"
+                    className={`cursor-pointer border-2 flex items-stretch gap-2 transition-all relative ${selectedServices.attorneySupport
+                      ? "border-primary bg-blue-100 shadow-xl"
+                      : "bg-gray-50"
                       }`}
                     onClick={() =>
                       setSelectedServices({
@@ -1591,7 +1717,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                       <CardTitle className="flex items-center justify-between pt-3">
                         Attorney Support
                       </CardTitle>
-                      <CardDescription>$750</CardDescription>
+                      <CardDescription>$450</CardDescription>
                       <p className="text-sm text-muted-foreground mb-2">
                         Help with paperwork for the sale or investment of your
                         patent
@@ -1611,292 +1737,417 @@ const SellerSignupWizard = ({ onComplete }) => {
             </div>
           )}
 
-          {/* Step 6: Listing Advertising Packages (monthly or annual) */}
-          {currentStep === 6 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {isPackagesLoading ? (
-                <p className="text-sm text-muted-foreground">
-                  Loading membership options...
-                </p>
-              ) : (
-                <>
-                  <Card
-                    className={`cursor-pointer transition-all relative box-border border-0 shadow-lg bg-blue-50 ${selectedPlan === "monthly" ? "border-primary border-2" : ""}`}
-                    onClick={() => handleSelectPlan("monthly")}
-                  >
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        Monthly Package
-                      </CardTitle>
-                      <CardDescription>
-                        <span className="text-blue-500 text-2xl">$29</span>
-                        /month
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2 text-sm">
-                        <li>✓ FREE 15 days</li>
-                        <li>✓ Billed monthly</li>
-                        <li>✓ 2 Patents posted</li>
-                        <li>✓ Full details of the Patent</li>
-                        <li>✓ Images on posting</li>
-                      </ul>
-                    </CardContent>
-                    {selectedPlan === "monthly" ? (
-                      <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                    ) : (
-                      <Circle className="text-gray-500 absolute top-2 right-2 " />
-                    )}
-                  </Card>
-                  <Card
-                    className={`cursor-pointer transition-all relative bg-green-50 box-border border-0 shadow-lg ${selectedPlan === "yearly" ? "border-primary border-2" : ""}`}
-                    onClick={() => handleSelectPlan("yearly")}
-                  >
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        Annual Package
-                      </CardTitle>
-                      <CardDescription>
-                        <span className="text-blue-500 text-2xl">$199</span>
-                        /annual
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2 text-sm">
-                        <li>✓ FREE 15 days</li>
-                        <li>✓ Billed one time</li>
-                        <li>✓ 2 Patents posted</li>
-                        <li>✓ Full details of the Patent</li>
-                        <li>✓ Images on posting</li>
-                        <li>✓ PDF documents in the posting</li>
-                      </ul>
-                    </CardContent>
-                    {selectedPlan === "yearly" ? (
-                      <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                    ) : (
-                      <Circle className="text-gray-500 absolute top-2 right-2 " />
-                    )}
-                  </Card>
-                  <Card
-                    className={`cursor-pointer transition-all relative bg-purple-50 box-border border-0 shadow-lg ${selectedPlan === "custom" ? "border-primary border-2" : ""}`}
-                    onClick={() => handleSelectPlan("custom")}
-                  >
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        Custom Package
-                      </CardTitle>
-                      <CardDescription>
-                        <span className="text-blue-500 text-2xl">$79</span>
-                        /month
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2 text-sm">
-                        <li>✓ FREE 15 days</li>
-                        <li>✓ Billed monthly</li>
-                        <li>✓ Up to 10 Patents posted</li>
-                        <li>✓ Full details of the Patent</li>
-                        <li>✓ Images on posting</li>
-                        <li>✓ PDF documents in the posting</li>
-                        <li className="font-semibold text-primary">✓ FREE 2D/ 3D rendering</li>
-                      </ul>
-                    </CardContent>
-                    {selectedPlan === "custom" ? (
-                      <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                    ) : (
-                      <Circle className="text-gray-500 absolute top-2 right-2 " />
-                    )}
-                  </Card>
-                </>
-              )}
+          {/* Step 7: Pricing */}
+          {currentStep === 7 && (
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">Auction / Offer</h3>
+                    <p className="text-sm text-gray-500">Set a starting amount and let buyers compete for your item.</p>
+                  </div>
+                  <Switch
+                    checked={pricing.isAuction}
+                    onCheckedChange={(val) => setPricing({ ...pricing, isAuction: val })}
+                  />
+                </div>
+                {pricing.isAuction && (
+                  <div className="relative max-w-[200px]">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <Input
+                      type="number"
+                      className="pl-7"
+                      placeholder="0.00"
+                      value={pricing.auctionPrice}
+                      onChange={(e) => setPricing({ ...pricing, auctionPrice: e.target.value })}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">Listed Price</h3>
+                    <p className="text-sm text-gray-500">Buyers can purchase immediately at this price.</p>
+                  </div>
+                  <Switch
+                    checked={pricing.isListedPrice}
+                    onCheckedChange={(val) => setPricing({ ...pricing, isListedPrice: val })}
+                  />
+                </div>
+                {pricing.isListedPrice && (
+                  <div className="bg-gray-50 p-4 rounded-lg flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Price</p>
+                      <p className="text-xs text-gray-500">Beat the online trending price to maximize your chance of selling.</p>
+                      <p className="text-sm mt-2">Recommended price: <span className="font-semibold">$500 - $1,000</span></p>
+                      <Button variant="link" size="sm" className="p-0 h-auto text-xs">See how other sellers priced it</Button>
+                    </div>
+                    <div className="relative max-w-[150px]">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <Input
+                        type="number"
+                        className="pl-7"
+                        placeholder="0.00"
+                        value={pricing.listedPrice}
+                        onChange={(e) => setPricing({ ...pricing, listedPrice: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div>
+                  <h3 className="text-lg font-semibold">Allow direct messages to me to negotiate</h3>
+                  <p className="text-sm text-gray-500">Choose when you want your listing to appear on MustangIP.</p>
+                </div>
+                <Switch
+                  checked={pricing.allowNegotiation}
+                  onCheckedChange={(val) => setPricing({ ...pricing, allowNegotiation: val })}
+                />
+              </div>
             </div>
           )}
 
-          {/* Step 7: What happens next (R) – no status bar; circle image, 1) 2) 3), phone/email on right */}
-          {currentStep === 7 && (
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              <div className="flex-1 space-y-4">
-                <p className="font-medium">What happens next?</p>
-                <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-                  <li>
-                    An account manager will be assigned to help you stay
-                    engaged.
-                  </li>
-                  <li>A sales person will call to confirm everything.</li>
-                  <li>You&apos;ll receive a welcome email with next steps.</li>
-                </ol>
-              </div>
-              <div className="w-full md:w-auto flex flex-col items-center gap-2 shrink-0">
-                <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-primary/20">
-                  <Image
-                    src={UserAvatar}
-                    alt={
-                      userData?.name ||
-                      accountState?.name ||
-                      "Your account manager"
-                    }
-                    height={50}
-                    width={50}
-                    className="object-cover w-full"
-                  />
-                </div>
-                <div className="text-center text-sm">
-                  <p className="font-medium">
-                    Toni Lexington
-                  </p>
-                  <p>
-                    toni@mustangip.com
-                  </p>
-                  <p>
-                    312-222-1234
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          {/* Step 8: Review Order (S) – order summary, edit links, payment at bottom */}
           {currentStep === 8 && (
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2 text-sm">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentStep(5)}
-                >
-                  Edit Additional Services
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentStep(6)}
-                >
-                  Edit Plan
-                </Button>
+            <div className="space-y-6">
+              <div className="flex flex-col items-center gap-4 py-4">
+                <div className="flex items-center gap-4 bg-muted p-1 rounded-full">
+                  <button
+                    className={`px-6 py-1.5 rounded-full text-sm font-medium transition-all ${billingPeriod === "monthly" ? "bg-background shadow-sm" : "hover:bg-muted-foreground/10"}`}
+                    onClick={() => setBillingPeriod("monthly")}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    className={`px-6 py-1.5 rounded-full text-sm font-medium transition-all ${billingPeriod === "yearly" ? "bg-background shadow-sm" : "hover:bg-muted-foreground/10"}`}
+                    onClick={() => setBillingPeriod("yearly")}
+                  >
+                    Annual
+                  </button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {billingPeriod === "yearly" ? "Save up to 40% with annual billing" : "Flexible monthly billing"}
+                </p>
               </div>
-              <div className="bg-muted p-4 rounded-lg">
-                <h3 className="font-semibold mb-4">Order Summary</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Membership Plan:</span>
-                    <span>
-                      {orderSummary?.membership_price !== undefined
-                        ? `$${orderSummary.membership_price}/${orderSummary?.membership_plan === "yearly"
-                          ? "year"
-                          : "month"
-                        }`
-                        : selectedPlan === "monthly"
-                          ? "$29/month"
-                          : "$199/year"}
-                    </span>
-                  </div>
-                  {isOrderSummaryLoading && (
-                    <div className="text-sm text-muted-foreground">
-                      Calculating order total...
-                    </div>
-                  )}
-                  {orderSummary?.services?.length > 0 ? (
-                    orderSummary.services.map((service, index) => (
-                      <div className="flex justify-between" key={index}>
-                        <span>{service.name}:</span>
-                        <span>${service.price}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <>
-                      {selectedServices.drawing2D3D && (
-                        <div className="flex justify-between">
-                          <span>2D/3D Drawing:</span>
-                          <span>$20</span>
-                        </div>
-                      )}
-                      {selectedServices.evaluation && (
-                        <div className="flex justify-between">
-                          <span>
-                            Evaluation ({selectedServices.evaluation}):
-                          </span>
-                          <span>
-                            $
-                            {selectedServices.evaluation === "good"
-                              ? "250"
-                              : selectedServices.evaluation === "better"
-                                ? "500"
-                                : "1,999"}
-                          </span>
-                        </div>
-                      )}
-                      {selectedServices.pitchDeck && (
-                        <div className="flex justify-between">
-                          <span>Pitch Deck:</span>
-                          <span>$500</span>
-                        </div>
-                      )}
-                      {selectedServices.attorneySupport && (
-                        <div className="flex justify-between">
-                          <span>Attorney Support:</span>
-                          <span>$750</span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  {orderSummary?.discount?.eligible && orderSummary.discount.amount > 0 && (
-                    <div className="flex justify-between text-green-600">
-                      <span>Discount ({orderSummary.discount.percent}%):</span>
-                      <span>-${orderSummary.discount.amount}</span>
-                    </div>
-                  )}
-                  <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
-                    <span>Total:</span>
-                    <span>
-                      {orderSummary?.total_amount !== undefined
-                        ? `$${orderSummary.total_amount}`
-                        : `$${cartTotal}`}
-                    </span>
-                  </div>
-                </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                {isPackagesLoading ? (
+                  <p className="text-sm text-muted-foreground col-span-full text-center py-10">
+                    Loading membership options...
+                  </p>
+                ) : (
+                  <>
+                    {/* Standard Tier */}
+                    {(() => {
+                      const pkg = billingPeriod === "monthly" ? planPackages.monthly : planPackages.yearly;
+                      if (!pkg) return null;
+                      const isSelected = selectedPlan === pkg.type;
+                      return (
+                        <Card
+                          key={pkg.id}
+                          className={`cursor-pointer transition-all relative box-border border-0 shadow-lg bg-blue-50/50 ${isSelected ? "ring-2 ring-primary ring-offset-2" : "hover:shadow-xl"}`}
+                          onClick={() => {
+                            setSelectedPlan(pkg.type);
+                            handleSelectPlan(pkg.type);
+                          }}
+                        >
+                          <CardHeader>
+                            <CardTitle className="flex items-center justify-between text-xl">
+                              {billingPeriod === "monthly" ? "Monthly Package" : "Annual Package"}
+                            </CardTitle>
+                            <CardDescription>
+                              <span className="text-blue-600 text-3xl font-bold">${pkg.price}</span>
+                              <span className="text-muted-foreground">/{billingPeriod === "monthly" ? "mo" : "yr"}</span>
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <ul className="space-y-3 text-sm">
+                              {pkg.features?.map((f, i) => (
+                                <li key={i} className="flex gap-2">
+                                  <span className="text-primary font-bold">✓</span>
+                                  {f}
+                                </li>
+                              ))}
+                            </ul>
+                          </CardContent>
+                          {isSelected && (
+                            <CheckCircle2 className="text-primary absolute top-4 right-4 h-6 w-6" />
+                          )}
+                        </Card>
+                      );
+                    })()}
+
+                    {/* Custom Tier */}
+                    {(() => {
+                      const pkg = billingPeriod === "monthly" ? planPackages.custom : planPackages.custom_yearly;
+                      if (!pkg) return null;
+                      const isSelected = selectedPlan === pkg.type;
+                      return (
+                        <Card
+                          key={pkg.id}
+                          className={`cursor-pointer transition-all relative box-border border-0 shadow-lg bg-purple-50/50 ${isSelected ? "ring-2 ring-primary ring-offset-2" : "hover:shadow-xl"}`}
+                          onClick={() => {
+                            setSelectedPlan(pkg.type);
+                            handleSelectPlan(pkg.type);
+                          }}
+                        >
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                            Recommended
+                          </div>
+                          <CardHeader>
+                            <CardTitle className="flex items-center justify-between text-xl">
+                              {billingPeriod === "monthly" ? "Custom Package" : "Custom Annual Package"}
+                            </CardTitle>
+                            <CardDescription>
+                              <span className="text-purple-600 text-3xl font-bold">${pkg.price}</span>
+                              <span className="text-muted-foreground">/{billingPeriod === "monthly" ? "mo" : "yr"}</span>
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <ul className="space-y-3 text-sm">
+                              {pkg.features?.map((f, i) => (
+                                <li key={i} className="flex gap-2">
+                                  <span className="text-primary font-bold">✓</span>
+                                  {f}
+                                </li>
+                              ))}
+                            </ul>
+                          </CardContent>
+                          {isSelected && (
+                            <CheckCircle2 className="text-primary absolute top-4 right-4 h-6 w-6" />
+                          )}
+                        </Card>
+                      );
+                    })()}
+                  </>
+                )}
               </div>
-              {paymentInitError && (
-                <div className="rounded-md bg-red-50 text-red-700 text-sm px-3 py-2">
-                  {paymentInitError}
-                </div>
-              )}
-              {isCreatingPaymentIntent && (
-                <div className="rounded-md bg-muted text-sm px-3 py-2">
-                  Initializing payment...
-                </div>
-              )}
-              {paymentInitError && (
-                <Button variant="outline" onClick={handleCreatePaymentIntent}>
-                  Retry Payment
-                </Button>
-              )}
-              {showPaymentForm && clientSecret && (
-                <div className="rounded-lg border border-muted/60 p-4 space-y-3">
-                  <div className="rounded-md bg-yellow-50 text-yellow-900 text-sm px-3 py-2">
-                    Payment pending. Please complete Stripe payment to finish
-                    signup.
-                  </div>
-                  <StripePayment
-                    selectedPackage={selectedPackage}
-                    packageSettings={packageSettings}
-                    PaymentModalClose={() => setShowPaymentForm(false)}
-                    setShowStripePayment={() => { }}
-                    updateActivePackage={() => { }}
-                    clientSecretOverride={clientSecret}
-                    onPaymentSuccess={handlePaymentSuccess}
-                    amountDue={
-                      orderSummary?.total_amount !== undefined
-                        ? orderSummary.total_amount
-                        : cartTotal
-                    }
-                    billingDetails={{
-                      name: userData?.name || accountState?.name,
-                      email: userData?.email || accountState?.email,
-                    }}
-                  />
-                </div>
-              )}
             </div>
           )}
+
+          {/* Step 9: What happens next (R) – no status bar; circle image, 1) 2) 3), phone/email on right */}
+          {
+            currentStep === 9 && (
+              <div className="flex flex-col md:flex-row gap-8 items-start">
+                <div className="flex-1 space-y-4">
+                  <p className="font-medium">What happens next?</p>
+                  <ol className="space-y-2 text-lg text-muted-foreground list-decimal list-inside">
+                    <li>
+                      An account manager will be assigned to help you stay
+                      engaged.
+                    </li>
+                    <li>A sales person will call to confirm everything.</li>
+                    <li>You&apos;ll receive a welcome email with next steps.</li>
+                  </ol>
+                </div>
+                <div className="w-full md:w-auto flex flex-col items-center gap-2 shrink-0">
+                  <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-primary/20">
+                    <Image
+                      src={UserAvatar}
+                      alt={
+                        userData?.name ||
+                        accountState?.name ||
+                        "Your account manager"
+                      }
+                      height={50}
+                      width={50}
+                      className="object-cover w-full"
+                    />
+                  </div>
+                  <div className="text-center text-sm">
+                    <p className="font-medium">
+                      Toni Lexington
+                    </p>
+                    <p>
+                      toni@mustangip.com
+                    </p>
+                    <p>
+                      312-222-1234
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )
+          }
+          {/* Step 10: Review Order (S) – order summary, edit links, payment at bottom */}
+          {
+            currentStep === 10 && (
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2 text-sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentStep(5)}
+                  >
+                    Edit Evaluation
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentStep(6)}
+                  >
+                    Edit Additional Services
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentStep(7)}
+                  >
+                    Edit Pricing
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentStep(8)}
+                  >
+                    Edit Plan
+                  </Button>
+                </div>
+                <div className="bg-muted p-4 rounded-lg">
+                  <h3 className="font-semibold mb-4">Order Summary</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Membership Plan:</span>
+                      <span>
+                        {orderSummary?.membership_price !== undefined
+                          ? `$${orderSummary.membership_price}/${orderSummary?.membership_plan === "yearly"
+                            ? "year"
+                            : "month"
+                          }`
+                          : selectedPlan === "monthly"
+                            ? "$29/month"
+                            : "$199/year"}
+                      </span>
+                    </div>
+                    {isOrderSummaryLoading && (
+                      <div className="text-sm text-muted-foreground">
+                        Calculating order total...
+                      </div>
+                    )}
+                    {orderSummary?.services?.length > 0 ? (
+                      orderSummary.services.map((service, index) => (
+                        <div className="flex justify-between" key={index}>
+                          <span>{service.name}:</span>
+                          <span>${service.price}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <>
+                        {selectedServices.drawing2D3D && (
+                          <div className="flex justify-between">
+                            <span>2D/3D Drawing:</span>
+                            <span>$20</span>
+                          </div>
+                        )}
+                        {selectedServices.evaluation && (
+                          <div className="flex justify-between">
+                            <span>
+                              Evaluation ({selectedServices.evaluation}):
+                            </span>
+                            <span>
+                              $
+                              {selectedServices.evaluation === "good"
+                                ? "250"
+                                : selectedServices.evaluation === "better"
+                                  ? "500"
+                                  : "1,999"}
+                            </span>
+                          </div>
+                        )}
+                        {selectedServices.pitchDeck && (
+                          <div className="flex justify-between">
+                            <span>Pitch Deck:</span>
+                            <span>$500</span>
+                          </div>
+                        )}
+                        {selectedServices.attorneySupport && (
+                          <div className="flex justify-between">
+                            <span>Attorney Support:</span>
+                            <span>$750</span>
+                          </div>
+                        )}
+                        <div className="border-t my-2" />
+                        {pricing.isAuction && (
+                          <div className="flex justify-between">
+                            <span>Auction Starting Price:</span>
+                            <span>${pricing.auctionPrice}</span>
+                          </div>
+                        )}
+                        {pricing.isListedPrice && (
+                          <div className="flex justify-between">
+                            <span>Listed Price:</span>
+                            <span>${pricing.listedPrice}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span>Allow Negotiation:</span>
+                          <span>{pricing.allowNegotiation ? "Yes" : "No"}</span>
+                        </div>
+                      </>
+                    )}
+                    {orderSummary?.discount?.eligible && orderSummary.discount.amount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount ({orderSummary.discount.percent}%):</span>
+                        <span>-${orderSummary.discount.amount}</span>
+                      </div>
+                    )}
+                    <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
+                      <span>Total:</span>
+                      <span>
+                        {orderSummary?.total_amount !== undefined
+                          ? `$${orderSummary.total_amount}`
+                          : `$${cartTotal}`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                {paymentInitError && (
+                  <div className="rounded-md bg-red-50 text-red-700 text-sm px-3 py-2">
+                    {paymentInitError}
+                  </div>
+                )}
+                {isCreatingPaymentIntent && (
+                  <div className="rounded-md bg-muted text-sm px-3 py-2">
+                    Initializing payment...
+                  </div>
+                )}
+                {paymentInitError && (
+                  <Button variant="outline" onClick={handleCreatePaymentIntent}>
+                    Retry Payment
+                  </Button>
+                )}
+                {showPaymentForm && clientSecret && (
+                  <div className="rounded-lg border border-muted/60 p-4 space-y-3">
+                    <div className="rounded-md bg-yellow-50 text-yellow-900 text-sm px-3 py-2">
+                      Payment pending. Please complete Stripe payment to finish
+                      signup.
+                    </div>
+                    <StripePayment
+                      selectedPackage={selectedPackage}
+                      packageSettings={packageSettings}
+                      PaymentModalClose={() => setShowPaymentForm(false)}
+                      setShowStripePayment={() => { }}
+                      updateActivePackage={() => { }}
+                      clientSecretOverride={clientSecret}
+                      onPaymentSuccess={handlePaymentSuccess}
+                      amountDue={
+                        orderSummary?.total_amount !== undefined
+                          ? orderSummary.total_amount
+                          : cartTotal
+                      }
+                      billingDetails={{
+                        name: userData?.name || accountState?.name,
+                        email: userData?.email || accountState?.email,
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            )
+          }
 
           {/* Navigation Buttons */}
           <div className="flex justify-between pt-4">
@@ -1908,41 +2159,60 @@ const SellerSignupWizard = ({ onComplete }) => {
               <ArrowLeft className="mr-2" size={16} />
               Back
             </Button>
-            <Button
-              onClick={handleNext}
-              disabled={
-                currentStep === 8 &&
-                (isCreatingPaymentIntent || !packageSettings)
-              }
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 animate-spin" size={16} />
-                  Processing...
-                </>
-              ) : currentStep === 8 ? (
-                <>
-                  {isCreatingPaymentIntent
-                    ? "Preparing Payment..."
-                    : "Complete Signup"}
-                  <ArrowRight className="ml-2" size={16} />
-                </>
-              ) : currentStep === 7 ? (
-                <>
-                  Continue to Payment
-                  <ArrowRight className="ml-2" size={16} />
-                </>
-              ) : (
-                <>
-                  {currentStep === 5 ? "Submit & Continue" : "Next"}
-                  <ArrowRight className="ml-2" size={16} />
-                </>
+            <div className="flex gap-2">
+              {currentStep === 9 && (
+                <Button
+                  variant="outline"
+                  onClick={handleFinalPayLater}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 animate-spin" size={16} />
+                      Processing...
+                    </>
+                  ) : (
+                    "Pay Later"
+                  )}
+                </Button>
               )}
-            </Button>
+              <Button
+                onClick={handleNext}
+                disabled={
+                  loading ||
+                  (currentStep === 10 &&
+                    (isCreatingPaymentIntent || !packageSettings))
+                }
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 animate-spin" size={16} />
+                    Processing...
+                  </>
+                ) : currentStep === 10 ? (
+                  <>
+                    {isCreatingPaymentIntent
+                      ? "Preparing Payment..."
+                      : "Complete Signup"}
+                    <ArrowRight className="ml-2" size={16} />
+                  </>
+                ) : currentStep === 9 ? (
+                  <>
+                    Continue to Payment
+                    <ArrowRight className="ml-2" size={16} />
+                  </>
+                ) : (
+                  <>
+                    {currentStep === 5 || currentStep === 6 || currentStep === 7 ? "Submit & Continue" : "Next"}
+                    <ArrowRight className="ml-2" size={16} />
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </CardContent >
+      </Card >
+    </div >
   );
 };
 

@@ -92,12 +92,12 @@ const ProfileSidebar = () => {
           <span>{t("profile")}</span>
         </CustomLink>
         <CustomLink
-          href="/notifications"
-          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/notifications" ? "profileActiveTab" : ""
+          href="/my-listing"
+          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/my-listing" ? "profileActiveTab" : ""
             }`}
         >
-          <IoMdNotificationsOutline size={24} />
-          <span>{t("notifications")}</span>
+          <LiaAdSolid size={24} />
+          <span>{t("myListing")}</span>
         </CustomLink>
         <CustomLink
           href="/chat"
@@ -108,28 +108,21 @@ const ProfileSidebar = () => {
           <span>{t("chat")}</span>
         </CustomLink>
         <CustomLink
+          href="/notifications"
+          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/notifications" ? "profileActiveTab" : ""
+            }`}
+        >
+          <IoMdNotificationsOutline size={24} />
+          <span>{t("notifications")}</span>
+        </CustomLink>
+
+        <CustomLink
           href="/user-subscription"
           className={`flex items-center gap-1 py-2 px-4 ${pathname === "/user-subscription" ? "profileActiveTab" : ""
             }`}
         >
           <BiDollarCircle size={24} />
           <span>{t("subscription")}</span>
-        </CustomLink>
-        <CustomLink
-          href="/my-listing"
-          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/my-listing" ? "profileActiveTab" : ""
-            }`}
-        >
-          <LiaAdSolid size={24} />
-          <span>{t("myListing")}</span>
-        </CustomLink>
-        <CustomLink
-          href="/favorites"
-          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/favorites" ? "profileActiveTab" : ""
-            }`}
-        >
-          <LuHeart size={24} />
-          <span>{t("favorites")}</span>
         </CustomLink>
         <CustomLink
           href="/transactions"
@@ -139,37 +132,15 @@ const ProfileSidebar = () => {
           <BiReceipt size={24} />
           <span>{t("transaction")}</span>
         </CustomLink>
-        <CustomLink
-          href="/reviews"
-          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/reviews" ? "profileActiveTab" : ""
-            }`}
-        >
-          <MdOutlineRateReview size={24} />
-          <span>{t("myReviews")}</span>
-        </CustomLink>
-        <CustomLink
-          href="/job-applications"
-          className={`flex items-center gap-1 py-2 px-4 ${pathname === "/job-applications" ? "profileActiveTab" : ""
-            }`}
-        >
-          <MdWorkOutline size={24} />
-          <span>{t("jobApplications")}</span>
-        </CustomLink>
 
-        <button
+        {/* <button
           onClick={() => setIsLogout(true)}
           className="flex items-center gap-1 py-2 px-4"
         >
           <RiLogoutCircleLine size={24} />
           <span>{t("signOut")}</span>
-        </button>
-        <button
-          onClick={() => setIsDeleteAccount(true)}
-          className="flex items-center gap-1 py-2 px-4 text-destructive"
-        >
-          <BiTrashAlt size={24} />
-          <span>{t("deleteAccount")}</span>
-        </button>
+        </button> */}
+
       </div>
 
       {/* Logout Alert Dialog */}
