@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   getPaymentSettingsApi,
   membershipPlansApi,
@@ -39,6 +39,7 @@ const ProfileSubscription = () => {
   const [paymentTransactionId, setPaymentTransactionId] = useState(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [selectedPlanDetails, setSelectedPlanDetails] = useState(null);
+  const [billingPeriod, setBillingPeriod] = useState("monthly");
 
   useEffect(() => {
     handleFetchMembershipPlans();
@@ -106,35 +107,52 @@ const ProfileSubscription = () => {
 
   const mapPlanToPackage = (planKey, plans) => {
     if (!plans?.length) return null;
-    const targetType =
-      planKey === "monthly"
-        ? "monthly"
-        : planKey === "yearly"
-          ? "yearly"
-          : "custom";
+    const targetType = planKey;
 
+    // Prefer matching by type if backend uses 'monthly'/'yearly' types
     let plan =
       plans.find((p) => (p?.type || "").toLowerCase() === targetType) || null;
 
+    // Fallback: choose first or last plan by price
     if (!plan) {
       const sorted = [...plans].sort(
         (a, b) => Number(a?.price || 0) - Number(b?.price || 0),
       );
       if (planKey === "monthly") plan = sorted[0];
       else if (planKey === "yearly") plan = sorted[sorted.length - 1];
-      else plan = sorted.find((p) => Number(p?.price) === 79) || sorted[1];
+      else plan = sorted.find(p => Number(p?.price) === 79) || sorted[1];
+    }
+
+    if (!plan && planKey === "custom_yearly") {
+      plan = plans.find(p => (p?.type || "").toLowerCase() === "custom_yearly") || plans.find(p => p?.price == 349) || null;
     }
 
     if (!plan) return null;
 
     return {
       ...plan,
+      // Keep compatibility with existing Stripe/payment UI that expects final_price
       final_price: Number(
         plan.price ??
-        (planKey === "monthly" ? 29 : planKey === "yearly" ? 199 : 79),
+        (planKey === "monthly"
+          ? 29
+          : planKey === "yearly"
+            ? 199
+            : planKey === "custom"
+              ? 79
+              : 349),
       ),
     };
   };
+
+  const planPackages = useMemo(() => {
+    return {
+      monthly: mapPlanToPackage("monthly", membershipPlans),
+      yearly: mapPlanToPackage("yearly", membershipPlans),
+      custom: mapPlanToPackage("custom", membershipPlans),
+      custom_yearly: mapPlanToPackage("custom_yearly", membershipPlans),
+    };
+  }, [membershipPlans]);
 
   const handleInitialPaymentIntent = async () => {
     try {
@@ -203,7 +221,18 @@ const ProfileSubscription = () => {
 
   const handleSelectPlan = (planKey) => {
     setSelectedPlan(planKey);
-    const planDetails = mapPlanToPackage(planKey, membershipPlans);
+
+    let planDetails = null;
+    if (planKey === "monthly") planDetails = planPackages.monthly;
+    else if (planKey === "yearly") planDetails = planPackages.yearly;
+    else if (planKey === "custom") planDetails = planPackages.custom;
+    else if (planKey === "custom_yearly") planDetails = planPackages.custom_yearly;
+
+    if (!planDetails) {
+      // Fallback if useMemo hasn't updated or something
+      planDetails = mapPlanToPackage(planKey, membershipPlans);
+    }
+
     if (planDetails) {
       setSelectedPlanDetails(planDetails);
       setClientSecret(""); // Reset previous secret
@@ -220,94 +249,107 @@ const ProfileSubscription = () => {
         <AddListingPlanCardSkeleton />
       ) : (
         <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-            <Card
-              className={`cursor-pointer transition-all relative box-border border-0 shadow-lg bg-blue-50 ${selectedPlan === "monthly" ? "border-primary border-2" : ""}`}
-              onClick={() => handleSelectPlan("monthly")}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Monthly Package
-                </CardTitle>
-                <CardDescription>
-                  <span className="text-blue-500 text-2xl">$29</span>
-                  /month
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li>✓ FREE 15 days</li>
-                  <li>✓ Billed monthly</li>
-                  <li>✓ 2 Patents posted</li>
-                  <li>✓ Full details of the Patent</li>
-                  <li>✓ Images on posting</li>
-                </ul>
-              </CardContent>
-              <div className="px-3 py-4">
-                <Button className="w-full " >
-                  Select Plan
-                </Button>
-              </div>
-            </Card>
-            <Card
-              className={`cursor-pointer transition-all relative bg-green-50 box-border border-0 shadow-lg ${selectedPlan === "yearly" ? "border-primary border-2" : ""}`}
-              onClick={() => handleSelectPlan("yearly")}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Annual Package
-                </CardTitle>
-                <CardDescription>
-                  <span className="text-blue-500 text-2xl">$199</span>
-                  /annual
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li>✓ FREE 15 days</li>
-                  <li>✓ Billed one time</li>
-                  <li>✓ 2 Patents posted</li>
-                  <li>✓ Full details of the Patent</li>
-                  <li>✓ Images on posting</li>
-                  <li>✓ PDF documents in the posting</li>
-                </ul>
-              </CardContent>
-              <div className="px-3 py-4">
-                <Button className="w-full " >
-                  Select Plan
-                </Button>
-              </div>
-            </Card>
-            <Card
-              className={`cursor-pointer transition-all relative bg-purple-50 box-border border-0 shadow-lg ${selectedPlan === "custom" ? "border-primary border-2" : ""}`}
-              onClick={() => handleSelectPlan("custom")}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Custom Package
-                </CardTitle>
-                <CardDescription>
-                  <span className="text-blue-500 text-2xl">$79</span>
-                  /month
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  <li>✓ FREE 15 days</li>
-                  <li>✓ Billed monthly</li>
-                  <li>✓ Up to 10 Patents posted</li>
-                  <li>✓ Full details of the Patent</li>
-                  <li>✓ Images on posting</li>
-                  <li>✓ PDF documents in the posting</li>
-                  <li>✓ FREE 2D/3D Rendering</li>
-                </ul>
-              </CardContent>
-              <div className="px-3 py-4 ">
-                <Button className="w-full " >
-                  Select Plan
-                </Button>
-              </div>
-            </Card>
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="flex items-center gap-4 bg-muted p-1 rounded-full">
+              <button
+                className={`px-6 py-1.5 rounded-full text-sm font-medium transition-all ${billingPeriod === "monthly" ? "bg-background shadow-sm" : "hover:bg-muted-foreground/10"}`}
+                onClick={() => setBillingPeriod("monthly")}
+              >
+                Monthly
+              </button>
+              <button
+                className={`px-6 py-1.5 rounded-full text-sm font-medium transition-all ${billingPeriod === "yearly" ? "bg-background shadow-sm" : "hover:bg-muted-foreground/10"}`}
+                onClick={() => setBillingPeriod("yearly")}
+              >
+                Annual
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {billingPeriod === "yearly" ? "Save up to 40% with annual billing" : "Flexible monthly billing"}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Standard Tier */}
+            {(() => {
+              const pkg = billingPeriod === "monthly" ? planPackages.monthly : planPackages.yearly;
+              if (!pkg) return null;
+              const isSelected = selectedPlan === pkg.type;
+              return (
+                <Card
+                  key={pkg.id}
+                  className={`cursor-pointer transition-all relative box-border border-0 shadow-lg bg-blue-50/50 ${isSelected ? "ring-2 ring-primary ring-offset-2" : "hover:shadow-xl"}`}
+                  onClick={() => {
+                    handleSelectPlan(pkg.type);
+                  }}
+                >
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between text-xl">
+                      {billingPeriod === "monthly" ? "Monthly Package" : "Annual Package"}
+                    </CardTitle>
+                    <CardDescription>
+                      <span className="text-blue-600 text-3xl font-bold">${pkg.price}</span>
+                      <span className="text-muted-foreground">/{billingPeriod === "monthly" ? "mo" : "yr"}</span>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-3 text-sm">
+                      {pkg.features?.map((f, i) => (
+                        <li key={i} className="flex gap-2">
+                          <span className="text-primary font-bold">✓</span>
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                  {isSelected && (
+                    <CheckCircle2 className="text-primary absolute top-4 right-4 h-6 w-6" />
+                  )}
+                </Card>
+              );
+            })()}
+
+            {/* Custom Tier */}
+            {(() => {
+              const pkg = billingPeriod === "monthly" ? planPackages.custom : planPackages.custom_yearly;
+              if (!pkg) return null;
+              const isSelected = selectedPlan === pkg.type;
+              return (
+                <Card
+                  key={pkg.id}
+                  className={`cursor-pointer transition-all relative box-border border-0 shadow-lg bg-purple-50/50 ${isSelected ? "ring-2 ring-primary ring-offset-2" : "hover:shadow-xl"}`}
+                  onClick={() => {
+                    handleSelectPlan(pkg.type);
+                  }}
+                >
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    Recommended
+                  </div>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between text-xl">
+                      {billingPeriod === "monthly" ? "Custom Package" : "Custom Annual Package"}
+                    </CardTitle>
+                    <CardDescription>
+                      <span className="text-purple-600 text-3xl font-bold">${pkg.price}</span>
+                      <span className="text-muted-foreground">/{billingPeriod === "monthly" ? "mo" : "yr"}</span>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-3 text-sm">
+                      {pkg.features?.map((f, i) => (
+                        <li key={i} className="flex gap-2">
+                          <span className="text-primary font-bold">✓</span>
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                  {isSelected && (
+                    <CheckCircle2 className="text-primary absolute top-4 right-4 h-6 w-6" />
+                  )}
+                </Card>
+              );
+            })()}
           </div>
         </div>
       )}
