@@ -131,6 +131,7 @@ const SellerSignupWizard = ({ onComplete }) => {
   // Step 4: Personal Info
   // Step 6: Membership Plan
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [billingPeriod, setBillingPeriod] = useState("monthly"); // "monthly" or "yearly"
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [listingPackages, setListingPackages] = useState([]); // membership plans from API
   const [packageSettings, setPackageSettings] = useState(null);
@@ -197,6 +198,7 @@ const SellerSignupWizard = ({ onComplete }) => {
 
         // Restore selections
         if (parsedState.selectedPlan) setSelectedPlan(parsedState.selectedPlan);
+        if (parsedState.billingPeriod) setBillingPeriod(parsedState.billingPeriod);
         // selectedPackage is derived from selectedPlan in an effect, so we might skip it or rely on that effect.
         // Actually, selectedPackage is state, but we have logic to set it when selectedPlan changes.
 
@@ -229,6 +231,7 @@ const SellerSignupWizard = ({ onComplete }) => {
       patentData,
       manualPatentData,
       selectedPlan,
+      billingPeriod,
       // selectedPackage: selectedPackage, // derived mostly
       selectedServices,
       pricing,
@@ -253,6 +256,7 @@ const SellerSignupWizard = ({ onComplete }) => {
     patentData,
     manualPatentData,
     selectedPlan,
+    billingPeriod,
     selectedServices,
     contactInfo,
     sellerId,
@@ -341,9 +345,10 @@ const SellerSignupWizard = ({ onComplete }) => {
     if (selectedPlan === "monthly") total += 29;
     if (selectedPlan === "yearly") total += 199;
     if (selectedPlan === "custom") total += 79;
+    if (selectedPlan === "custom_yearly") total += 349;
 
-    // FREE 2D/3D rendering for Custom plan
-    if (selectedServices.drawing2D3D && selectedPlan !== "custom") total += 20;
+    // FREE 2D/3D rendering for Custom plans
+    if (selectedServices.drawing2D3D && !selectedPlan?.includes("custom")) total += 20;
 
     if (selectedServices.evaluation === "good") total += 250;
     if (selectedServices.evaluation === "better") total += 500;
@@ -633,7 +638,7 @@ const SellerSignupWizard = ({ onComplete }) => {
   // We treat membership plans as "packages" by adding a synthetic final_price field.
   const mapPlanToPackage = (planKey, plans) => {
     if (!plans?.length) return null;
-    const targetType = planKey === "monthly" ? "monthly" : planKey === "yearly" ? "yearly" : "custom";
+    const targetType = planKey;
 
     // Prefer matching by type if backend uses 'monthly'/'yearly' types
     let plan =
@@ -649,12 +654,25 @@ const SellerSignupWizard = ({ onComplete }) => {
       else plan = sorted.find(p => Number(p?.price) === 79) || sorted[1];
     }
 
+    if (!plan && planKey === "custom_yearly") {
+      plan = plans.find(p => (p?.type || "").toLowerCase() === "custom_yearly") || plans.find(p => p?.price == 349) || null;
+    }
+
     if (!plan) return null;
 
     return {
       ...plan,
       // Keep compatibility with existing Stripe/payment UI that expects final_price
-      final_price: Number(plan.price ?? (planKey === "monthly" ? 29 : planKey === "yearly" ? 199 : 79)),
+      final_price: Number(
+        plan.price ??
+        (planKey === "monthly"
+          ? 29
+          : planKey === "yearly"
+            ? 199
+            : planKey === "custom"
+              ? 79
+              : 349),
+      ),
     };
   };
 
@@ -663,6 +681,7 @@ const SellerSignupWizard = ({ onComplete }) => {
       monthly: mapPlanToPackage("monthly", listingPackages),
       yearly: mapPlanToPackage("yearly", listingPackages),
       custom: mapPlanToPackage("custom", listingPackages),
+      custom_yearly: mapPlanToPackage("custom_yearly", listingPackages),
     };
   }, [listingPackages]);
 
@@ -672,6 +691,7 @@ const SellerSignupWizard = ({ onComplete }) => {
     if (selectedPlan === "monthly") nextPackage = planPackages.monthly;
     else if (selectedPlan === "yearly") nextPackage = planPackages.yearly;
     else if (selectedPlan === "custom") nextPackage = planPackages.custom;
+    else if (selectedPlan === "custom_yearly") nextPackage = planPackages.custom_yearly;
 
     if (nextPackage && nextPackage !== selectedPackage) {
       setSelectedPackage(nextPackage);
@@ -1755,108 +1775,122 @@ const SellerSignupWizard = ({ onComplete }) => {
             </div>
           )}
 
-          {/* Step 8: Listing Advertising Packages (monthly or annual) */}
-          {
-            currentStep === 8 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {currentStep === 8 && (
+            <div className="space-y-6">
+              <div className="flex flex-col items-center gap-4 py-4">
+                <div className="flex items-center gap-4 bg-muted p-1 rounded-full">
+                  <button
+                    className={`px-6 py-1.5 rounded-full text-sm font-medium transition-all ${billingPeriod === "monthly" ? "bg-background shadow-sm" : "hover:bg-muted-foreground/10"}`}
+                    onClick={() => setBillingPeriod("monthly")}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    className={`px-6 py-1.5 rounded-full text-sm font-medium transition-all ${billingPeriod === "yearly" ? "bg-background shadow-sm" : "hover:bg-muted-foreground/10"}`}
+                    onClick={() => setBillingPeriod("yearly")}
+                  >
+                    Annual
+                  </button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {billingPeriod === "yearly" ? "Save up to 40% with annual billing" : "Flexible monthly billing"}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 {isPackagesLoading ? (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground col-span-full text-center py-10">
                     Loading membership options...
                   </p>
                 ) : (
                   <>
-                    <Card
-                      className={`cursor-pointer transition-all relative box-border border-0 shadow-lg bg-blue-50 ${selectedPlan === "monthly" ? "border-primary border-2" : ""}`}
-                      onClick={() => handleSelectPlan("monthly")}
-                    >
-                      <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          Monthly Package
-                        </CardTitle>
-                        <CardDescription>
-                          <span className="text-blue-500 text-2xl">$29</span>
-                          /month
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className="space-y-2 text-sm">
-                          <li>✓ FREE 15 days</li>
-                          <li>✓ Billed monthly</li>
-                          <li>✓ 2 Patents posted</li>
-                          <li>✓ Full details of the Patent</li>
-                          <li>✓ Images on posting</li>
-                        </ul>
-                      </CardContent>
-                      {selectedPlan === "monthly" ? (
-                        <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                      ) : (
-                        <Circle className="text-gray-500 absolute top-2 right-2 " />
-                      )}
-                    </Card>
-                    <Card
-                      className={`cursor-pointer transition-all relative bg-green-50 box-border border-0 shadow-lg ${selectedPlan === "yearly" ? "border-primary border-2" : ""}`}
-                      onClick={() => handleSelectPlan("yearly")}
-                    >
-                      <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          Annual Package
-                        </CardTitle>
-                        <CardDescription>
-                          <span className="text-blue-500 text-2xl">$199</span>
-                          /annual
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className="space-y-2 text-sm">
-                          <li>✓ FREE 15 days</li>
-                          <li>✓ Billed one time</li>
-                          <li>✓ 2 Patents posted</li>
-                          <li>✓ Full details of the Patent</li>
-                          <li>✓ Images on posting</li>
-                          <li>✓ PDF documents in the posting</li>
-                        </ul>
-                      </CardContent>
-                      {selectedPlan === "yearly" ? (
-                        <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                      ) : (
-                        <Circle className="text-gray-500 absolute top-2 right-2 " />
-                      )}
-                    </Card>
-                    <Card
-                      className={`cursor-pointer transition-all relative bg-purple-50 box-border border-0 shadow-lg ${selectedPlan === "custom" ? "border-primary border-2" : ""}`}
-                      onClick={() => handleSelectPlan("custom")}
-                    >
-                      <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          Custom Package
-                        </CardTitle>
-                        <CardDescription>
-                          <span className="text-blue-500 text-2xl">$79</span>
-                          /month
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className="space-y-2 text-sm">
-                          <li>✓ FREE 15 days</li>
-                          <li>✓ Billed monthly</li>
-                          <li>✓ Up to 10 Patents posted</li>
-                          <li>✓ Full details of the Patent</li>
-                          <li>✓ Images on posting</li>
-                          <li>✓ PDF documents in the posting</li>
-                          <li className="font-semibold text-primary">✓ FREE 2D/ 3D rendering</li>
-                        </ul>
-                      </CardContent>
-                      {selectedPlan === "custom" ? (
-                        <CheckCircle2 className="text-primary absolute top-2 right-2" />
-                      ) : (
-                        <Circle className="text-gray-500 absolute top-2 right-2 " />
-                      )}
-                    </Card>
+                    {/* Standard Tier */}
+                    {(() => {
+                      const pkg = billingPeriod === "monthly" ? planPackages.monthly : planPackages.yearly;
+                      if (!pkg) return null;
+                      const isSelected = selectedPlan === pkg.type;
+                      return (
+                        <Card
+                          key={pkg.id}
+                          className={`cursor-pointer transition-all relative box-border border-0 shadow-lg bg-blue-50/50 ${isSelected ? "ring-2 ring-primary ring-offset-2" : "hover:shadow-xl"}`}
+                          onClick={() => {
+                            setSelectedPlan(pkg.type);
+                            handleSelectPlan(pkg.type);
+                          }}
+                        >
+                          <CardHeader>
+                            <CardTitle className="flex items-center justify-between text-xl">
+                              {billingPeriod === "monthly" ? "Monthly Package" : "Annual Package"}
+                            </CardTitle>
+                            <CardDescription>
+                              <span className="text-blue-600 text-3xl font-bold">${pkg.price}</span>
+                              <span className="text-muted-foreground">/{billingPeriod === "monthly" ? "mo" : "yr"}</span>
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <ul className="space-y-3 text-sm">
+                              {pkg.features?.map((f, i) => (
+                                <li key={i} className="flex gap-2">
+                                  <span className="text-primary font-bold">✓</span>
+                                  {f}
+                                </li>
+                              ))}
+                            </ul>
+                          </CardContent>
+                          {isSelected && (
+                            <CheckCircle2 className="text-primary absolute top-4 right-4 h-6 w-6" />
+                          )}
+                        </Card>
+                      );
+                    })()}
+
+                    {/* Custom Tier */}
+                    {(() => {
+                      const pkg = billingPeriod === "monthly" ? planPackages.custom : planPackages.custom_yearly;
+                      if (!pkg) return null;
+                      const isSelected = selectedPlan === pkg.type;
+                      return (
+                        <Card
+                          key={pkg.id}
+                          className={`cursor-pointer transition-all relative box-border border-0 shadow-lg bg-purple-50/50 ${isSelected ? "ring-2 ring-primary ring-offset-2" : "hover:shadow-xl"}`}
+                          onClick={() => {
+                            setSelectedPlan(pkg.type);
+                            handleSelectPlan(pkg.type);
+                          }}
+                        >
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                            Recommended
+                          </div>
+                          <CardHeader>
+                            <CardTitle className="flex items-center justify-between text-xl">
+                              {billingPeriod === "monthly" ? "Custom Package" : "Custom Annual Package"}
+                            </CardTitle>
+                            <CardDescription>
+                              <span className="text-purple-600 text-3xl font-bold">${pkg.price}</span>
+                              <span className="text-muted-foreground">/{billingPeriod === "monthly" ? "mo" : "yr"}</span>
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <ul className="space-y-3 text-sm">
+                              {pkg.features?.map((f, i) => (
+                                <li key={i} className="flex gap-2">
+                                  <span className="text-primary font-bold">✓</span>
+                                  {f}
+                                </li>
+                              ))}
+                            </ul>
+                          </CardContent>
+                          {isSelected && (
+                            <CheckCircle2 className="text-primary absolute top-4 right-4 h-6 w-6" />
+                          )}
+                        </Card>
+                      );
+                    })()}
                   </>
                 )}
               </div>
-            )
-          }
+            </div>
+          )}
 
           {/* Step 9: What happens next (R) – no status bar; circle image, 1) 2) 3), phone/email on right */}
           {
