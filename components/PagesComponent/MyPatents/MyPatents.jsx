@@ -131,7 +131,7 @@ const MyPatents = () => {
                                         Showing {(pagination.current_page - 1) * pagination.per_page + 1} to {Math.min(pagination.current_page * pagination.per_page, pagination.total)} of {pagination.total} entries
                                     </div>
                                     <div className="flex gap-2">
-                                        <Button
+                                        {/* <Button
                                             variant="outline"
                                             size="sm"
                                             onClick={() => fetchMyPatents(pagination.current_page - 1)}
@@ -139,7 +139,7 @@ const MyPatents = () => {
                                         >
                                             <ChevronLeft className="w-4 h-4 mr-1" />
                                             {t("previous")}
-                                        </Button>
+                                        </Button> */}
                                         <Button
                                             variant="outline"
                                             size="sm"

@@ -183,130 +183,71 @@ const EditPatent = ({ id }) => {
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <form onSubmit={handleSave} className="space-y-6">
-                        <div className="space-y-4">
-                            <div>
-                                <Label>{t("title")}</Label>
-                                <Input
-                                    value={patentData.title}
-                                    onChange={(e) => setPatentData({ ...patentData, title: e.target.value })}
-                                    required
-                                />
-                            </div>
+                        <div>
+                            <Label>{t("title")}</Label>
+                            <Input
+                                value={patentData.title}
+                                onChange={(e) => setPatentData({ ...patentData, title: e.target.value })}
+                                required
+                            />
+                        </div>
 
-                            <div className="space-y-2">
-                                <Label>Inventors</Label>
-                                {patentData.inventors.map((inv, idx) => (
-                                    <div key={idx} className="flex gap-2 items-center">
-                                        <Input
-                                            placeholder="First Name"
-                                            value={inv.first_name}
-                                            onChange={(e) => handleInventorChange(idx, "first_name", e.target.value)}
-                                            required
-                                        />
-                                        <Input
-                                            placeholder="Last Name"
-                                            value={inv.last_name}
-                                            onChange={(e) => handleInventorChange(idx, "last_name", e.target.value)}
-                                            required
-                                        />
-                                        {patentData.inventors.length > 1 && (
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => removeInventor(idx)}
-                                            >
-                                                <X className="w-4 h-4" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                ))}
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={addInventor}
-                                    className="mt-2"
-                                >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    {t("addInventor") || t("Add Inventor")}
-                                </Button>
-                            </div>
-
-                            <div>
-                                <Label>{t("abstract") || "Abstract"}</Label>
-                                <textarea
-                                    className="w-full min-h-[120px] p-3 border rounded-md focus:ring-2 focus:ring-primary outline-none"
-                                    value={patentData.abstract}
-                                    onChange={(e) => setPatentData({ ...patentData, abstract: e.target.value })}
-                                    required
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <Label>{t("issueDate") || "Issue Date"}</Label>
+                        <div className="space-y-2">
+                            <Label>Inventors</Label>
+                            {patentData.inventors.map((inv, idx) => (
+                                <div key={idx} className="flex gap-2 items-center">
                                     <Input
-                                        type="date"
-                                        value={patentData.issue_date}
-                                        onChange={(e) => setPatentData({ ...patentData, issue_date: e.target.value })}
+                                        placeholder="First Name"
+                                        value={inv.first_name}
+                                        onChange={(e) => handleInventorChange(idx, "first_name", e.target.value)}
                                         required
                                     />
-                                </div>
-                                <div>
-                                    <Label>{t("filingDate") || "Filing Date"}</Label>
                                     <Input
-                                        type="date"
-                                        value={patentData.filing_date}
-                                        onChange={(e) => setPatentData({ ...patentData, filing_date: e.target.value })}
+                                        placeholder="Last Name"
+                                        value={inv.last_name}
+                                        onChange={(e) => handleInventorChange(idx, "last_name", e.target.value)}
                                         required
                                     />
+                                    {patentData.inventors.length > 1 && (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => removeInventor(idx)}
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </Button>
+                                    )}
                                 </div>
-                            </div>
+                            ))}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addInventor}
+                                className="mt-2"
+                            >
+                                <Plus className="w-4 h-4 mr-2" />
+                                {t("addInventor") || t("Add Inventor")}
+                            </Button>
+                        </div>
 
-                            <div>
-                                <Label>{t("assignee") || "Assignee"}</Label>
-                                <Input
-                                    value={patentData.assignee}
-                                    onChange={(e) => setPatentData({ ...patentData, assignee: e.target.value })}
-                                    required
-                                />
-                            </div>
+                        <div>
+                            <Label>{t("abstract") || "Abstract (Summary of patent)"}</Label>
+                            <textarea
+                                className="w-full min-h-[120px] p-3 border rounded-md focus:ring-2 focus:ring-primary outline-none"
+                                value={patentData.abstract}
+                                onChange={(e) => setPatentData({ ...patentData, abstract: e.target.value })}
+                                required
+                            />
+                        </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <Label>Patent Class</Label>
-                                    <Input
-                                        value={patentData.patent_class}
-                                        onChange={(e) => setPatentData({ ...patentData, patent_class: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <Label>Patent Type</Label>
-                                    <Select
-                                        value={patentData.patent_type}
-                                        onValueChange={(value) => setPatentData({ ...patentData, patent_type: value })}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Patent Type" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="utility">Utility</SelectItem>
-                                            <SelectItem value="design">Design</SelectItem>
-                                            <SelectItem value="plant">Plant</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <Label>Patent Number</Label>
-                                <Input
-                                    value={patentData.patent_number}
-                                    onChange={(e) => setPatentData({ ...patentData, patent_number: e.target.value })}
-                                    disabled
-                                />
-                            </div>
+                        <div>
+                            <Label>Patent or Application Number</Label>
+                            <Input
+                                value={patentData.patent_number}
+                                onChange={(e) => setPatentData({ ...patentData, patent_number: e.target.value })}
+                            />
                         </div>
 
                         <div className="space-y-6 pt-6 border-t">
