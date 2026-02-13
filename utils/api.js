@@ -1384,6 +1384,13 @@ export const patentsApi = {
       },
     });
   },
+  updatePayLater: (formData) => {
+    return Api.put(PATENTS_PAY_LATER, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
   getPatentDetailsForEdit: (seller_id, patent_id) => {
     return Api.get(`sellers/${seller_id}/patents/${patent_id}/complete-after-login`);
   },

@@ -56,7 +56,7 @@ import "react-phone-input-2/lib/style.css";
 
 const SellerSignupWizard = ({ onComplete }) => {
   const { navigate } = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(9);
   const [loading, setLoading] = useState(false);
   const isLoggedIn = useSelector(getIsLoggedIn);
   const signUpData = useSelector(userSignUpData);
@@ -603,6 +603,42 @@ const SellerSignupWizard = ({ onComplete }) => {
     } catch (error) {
       console.error("Pay later error:", error);
       toast.error("An error occurred while saving information");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinalPayLater = async () => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      const id = persistentUserId || sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id || userData?.id;
+
+      if (id) {
+        formData.append("seller_id", id);
+      }
+
+      if (selectedPlan) {
+        formData.append("membership_plan", selectedPlan);
+      }
+
+      // Add selected services
+      const services = buildSelectedServicesPayload();
+      formData.append("selected_services", JSON.stringify(services));
+
+      // Attempt to PUT to /api/patents/pay-later
+      const response = await patentsApi.updatePayLater(formData);
+
+      if (response.data.error === false || response.data.error === "false") {
+        toast.success("Subscription saved successfully!");
+        localStorage.removeItem(STORAGE_KEY);
+        navigate("/seller-dashboard");
+      } else {
+        toast.error(response.data.message || "Failed to save subscription");
+      }
+    } catch (error) {
+      console.error("Final pay later error:", error);
+      toast.error("An error occurred while saving subscription");
     } finally {
       setLoading(false);
     }
@@ -1898,7 +1934,7 @@ const SellerSignupWizard = ({ onComplete }) => {
               <div className="flex flex-col md:flex-row gap-8 items-start">
                 <div className="flex-1 space-y-4">
                   <p className="font-medium">What happens next?</p>
-                  <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+                  <ol className="space-y-2 text-lg text-muted-foreground list-decimal list-inside">
                     <li>
                       An account manager will be assigned to help you stay
                       engaged.
@@ -2123,38 +2159,56 @@ const SellerSignupWizard = ({ onComplete }) => {
               <ArrowLeft className="mr-2" size={16} />
               Back
             </Button>
-            <Button
-              onClick={handleNext}
-              disabled={
-                loading ||
-                (currentStep === 10 &&
-                  (isCreatingPaymentIntent || !packageSettings))
-              }
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 animate-spin" size={16} />
-                  Processing...
-                </>
-              ) : currentStep === 10 ? (
-                <>
-                  {isCreatingPaymentIntent
-                    ? "Preparing Payment..."
-                    : "Complete Signup"}
-                  <ArrowRight className="ml-2" size={16} />
-                </>
-              ) : currentStep === 9 ? (
-                <>
-                  Continue to Payment
-                  <ArrowRight className="ml-2" size={16} />
-                </>
-              ) : (
-                <>
-                  {currentStep === 5 || currentStep === 6 || currentStep === 7 ? "Submit & Continue" : "Next"}
-                  <ArrowRight className="ml-2" size={16} />
-                </>
+            <div className="flex gap-2">
+              {currentStep === 9 && (
+                <Button
+                  variant="outline"
+                  onClick={handleFinalPayLater}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 animate-spin" size={16} />
+                      Processing...
+                    </>
+                  ) : (
+                    "Pay Later"
+                  )}
+                </Button>
               )}
-            </Button>
+              <Button
+                onClick={handleNext}
+                disabled={
+                  loading ||
+                  (currentStep === 10 &&
+                    (isCreatingPaymentIntent || !packageSettings))
+                }
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 animate-spin" size={16} />
+                    Processing...
+                  </>
+                ) : currentStep === 10 ? (
+                  <>
+                    {isCreatingPaymentIntent
+                      ? "Preparing Payment..."
+                      : "Complete Signup"}
+                    <ArrowRight className="ml-2" size={16} />
+                  </>
+                ) : currentStep === 9 ? (
+                  <>
+                    Continue to Payment
+                    <ArrowRight className="ml-2" size={16} />
+                  </>
+                ) : (
+                  <>
+                    {currentStep === 5 || currentStep === 6 || currentStep === 7 ? "Submit & Continue" : "Next"}
+                    <ArrowRight className="ml-2" size={16} />
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent >
       </Card >
