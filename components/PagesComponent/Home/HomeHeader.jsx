@@ -198,7 +198,7 @@ const HomeHeader = () => {
           <div className="space-between">
             <CustomLink href="/">
               <CustomImage
-                src={settings?.header_logo || "/assets/MustangIPLog01.png"}
+                src={settings?.company_logo || "/assets/MustangIPLog01.png"}
                 alt="MustangIP Logo"
                 width={195}
                 height={52}
