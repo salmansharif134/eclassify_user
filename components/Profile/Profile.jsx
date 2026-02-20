@@ -486,7 +486,7 @@ const Profile = () => {
               />
             </div>
 
-            <div className="labelInputCont">
+            <div className="labelInputCont lg:col-span-1 col-span-2">
               <Label htmlFor="city" className="requiredInputLabel">
                 {t("city")}
               </Label>
@@ -499,7 +499,7 @@ const Profile = () => {
               />
             </div>
 
-            <div className="labelInputCont">
+            <div className="labelInputCont lg:col-span-1 col-span-2">
               <Label htmlFor="state" className="requiredInputLabel">
                 {t("state")}
               </Label>
@@ -512,7 +512,7 @@ const Profile = () => {
               />
             </div>
 
-            <div className="labelInputCont">
+            <div className="labelInputCont lg:col-span-1 col-span-2">
               <Label htmlFor="country" className="requiredInputLabel">
                 {t("country")}
               </Label>

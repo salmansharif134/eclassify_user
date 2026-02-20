@@ -68,15 +68,14 @@ export default function Footer() {
         )}
 
         <div
-          className={`grid grid-1 sm:grid-cols-12 gap-12 ${
-            showDownloadLinks && "mt-[-70px] lg:mt-[-64px] xl:mt-[-75px]"
-          }`}
+          className={`grid grid-1 sm:grid-cols-12 gap-12 ${showDownloadLinks && "mt-[-70px] lg:mt-[-64px] xl:mt-[-75px]"
+            }`}
         >
           {/* Company Info */}
           <div className="space-y-6 sm:col-span-12 lg:col-span-4">
             <CustomLink href="/">
               <CustomImage
-                src={settings?.sidebar_logo || "/assets/MustangIPLog01.png"}
+                src={settings?.company_logo || "/assets/MustangIPLog01.png"}
                 alt="MustangIP Logo"
                 width={195}
                 height={52}

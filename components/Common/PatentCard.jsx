@@ -12,6 +12,24 @@ const PatentCard = ({ item }) => {
     // If patents are treated as ads, it might still be /ad-details, but generic /patent-details is safer given the distinct API.
     // Using id as slug might not be available in the provided JSON snippet.
     const patentLink = `/patent-details/${item?.id}`;
+    const parseInventors = (inventorData) => {
+        if (!inventorData) return "";
+        try {
+            // Check if it's a string that looks like JSON array
+            if (typeof inventorData === "string" && inventorData.trim().startsWith("[")) {
+                const parsed = JSON.parse(inventorData);
+                if (Array.isArray(parsed)) {
+                    return parsed.map(inv => `${inv.first_name || ""} ${inv.last_name || ""}`.trim()).filter(Boolean).join(", ");
+                }
+            }
+            return inventorData; // Fallback if already a string or not JSON
+        } catch (e) {
+            console.warn("Failed to parse inventor data, using as-is:", e);
+            return inventorData;
+        }
+    };
+
+    const inventorsDisplay = useMemo(() => parseInventors(item?.inventor), [item?.inventor]);
 
     return (
         <div className="border p-4 rounded-2xl flex flex-col gap-3 h-full bg-card hover:shadow-md transition-shadow">
@@ -51,10 +69,10 @@ const PatentCard = ({ item }) => {
                             </p>
                         )}
 
-                        {item?.inventor && (
+                        {inventorsDisplay && (
                             <p className="flex items-center gap-2">
                                 <span className="font-medium text-foreground">Inventor:</span>
-                                {item.inventor}
+                                {inventorsDisplay}
                             </p>
                         )}
 

@@ -183,14 +183,14 @@ const Home = () => {
             <PopularCategories categoryType="patents" />
             <div className="mt-12">
               {isPatentsLoading ? (
-                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                   {/* Simple skeleton loading state */}
                   {[...Array(8)].map((_, index) => (
                     <div key={index} className="h-64 bg-gray-100 rounded-2xl animate-pulse"></div>
                   ))}
                 </div>
               ) : patentsData.length > 0 ? (
-                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                   {patentsData.map((item) => (
                     <PatentCard key={item.id} item={item} />
                   ))}

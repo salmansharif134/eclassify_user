@@ -36,7 +36,7 @@ const LandingHeader = () => {
                 className="flex-shrink-0"
               >
                 <CustomImage
-                  src={settings?.header_logo || "/assets/MustangIPLog01.png"}
+                  src={settings?.company_logo || "/assets/MustangIPLog01.png"}
                   className="w-full h-[52px] object-contain ltr:object-left rtl:object-right max-w-[195px]"
                   alt="MustangIP Logo"
                   width={195}

@@ -63,7 +63,7 @@ const fetchCategories = async (langCode) => {
           "Content-Language": langCode || "en",
         },
         next: {
-          revalidate: SEO_REVALIDATE_SECONDS * 60,
+          revalidate: SEO_REVALIDATE_SECONDS,
         },
       }
     );
