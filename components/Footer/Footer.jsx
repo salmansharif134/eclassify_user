@@ -75,7 +75,7 @@ export default function Footer() {
           <div className="space-y-6 sm:col-span-12 lg:col-span-4">
             <CustomLink href="/">
               <CustomImage
-                src={settings?.footer_logo || "/assets/MustangIPLog01.png"}
+                src={settings?.company_logo || "/assets/MustangIPLog01.png"}
                 alt="MustangIP Logo"
                 width={195}
                 height={52}
