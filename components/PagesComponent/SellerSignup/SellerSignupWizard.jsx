@@ -56,7 +56,7 @@ import "react-phone-input-2/lib/style.css";
 
 const SellerSignupWizard = ({ onComplete }) => {
   const { navigate } = useNavigate();
-  const [currentStep, setCurrentStep] = useState(9);
+  const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const isLoggedIn = useSelector(getIsLoggedIn);
   const signUpData = useSelector(userSignUpData);
@@ -179,16 +179,18 @@ const SellerSignupWizard = ({ onComplete }) => {
         if (parsedState.currentStep) setCurrentStep(parsedState.currentStep);
 
         // Restore patent status
-        if (parsedState.hasPatent !== undefined) setHasPatent(parsedState.hasPatent);
+        if (parsedState.hasPatent !== undefined)
+          setHasPatent(parsedState.hasPatent);
         if (parsedState.patentNumber) setPatentNumber(parsedState.patentNumber);
 
         // Restore patent data
         if (parsedState.patentData) setPatentData(parsedState.patentData);
-        if (parsedState.manualPatentData) setManualPatentData(parsedState.manualPatentData);
+        if (parsedState.manualPatentData)
+          setManualPatentData(parsedState.manualPatentData);
 
         // Restore account state (careful with sensitive data)
         if (parsedState.accountState) {
-          setAccountState(prev => ({
+          setAccountState((prev) => ({
             ...prev,
             name: parsedState.accountState.name || prev.name,
             email: parsedState.accountState.email || prev.email,
@@ -198,23 +200,32 @@ const SellerSignupWizard = ({ onComplete }) => {
 
         // Restore selections
         if (parsedState.selectedPlan) setSelectedPlan(parsedState.selectedPlan);
-        if (parsedState.billingPeriod) setBillingPeriod(parsedState.billingPeriod);
+        if (parsedState.billingPeriod)
+          setBillingPeriod(parsedState.billingPeriod);
         // selectedPackage is derived from selectedPlan in an effect, so we might skip it or rely on that effect.
         // Actually, selectedPackage is state, but we have logic to set it when selectedPlan changes.
 
-        if (parsedState.selectedServices) setSelectedServices(parsedState.selectedServices);
+        if (parsedState.selectedServices)
+          setSelectedServices(parsedState.selectedServices);
 
         if (parsedState.pricing) setPricing(parsedState.pricing);
 
         if (parsedState.contactInfo) setContactInfo(parsedState.contactInfo);
         if (parsedState.sellerId) setSellerId(parsedState.sellerId);
-        if (parsedState.persistentUserId || parsedState.userId) setPersistentUserId(parsedState.persistentUserId || parsedState.userId);
-        if (parsedState.paymentTransactionId) setPaymentTransactionId(parsedState.paymentTransactionId);
-        if (parsedState.personalInfoSubmitted) setPersonalInfoSubmitted(parsedState.personalInfoSubmitted);
+        if (parsedState.persistentUserId || parsedState.userId)
+          setPersistentUserId(
+            parsedState.persistentUserId || parsedState.userId,
+          );
+        if (parsedState.paymentTransactionId)
+          setPaymentTransactionId(parsedState.paymentTransactionId);
+        if (parsedState.personalInfoSubmitted)
+          setPersonalInfoSubmitted(parsedState.personalInfoSubmitted);
 
         // Warn about images if step is past 3 (images step)
         if (parsedState.currentStep > 3) {
-          toast.info("Please re-upload your images if they are missing.", { duration: 5000 });
+          toast.info("Please re-upload your images if they are missing.", {
+            duration: 5000,
+          });
         }
       } catch (err) {
         console.error("Failed to parse saved wizard state:", err);
@@ -242,9 +253,9 @@ const SellerSignupWizard = ({ onComplete }) => {
       personalInfoSubmitted,
       accountState: {
         name: accountState.name,
-        email: accountState.email
+        email: accountState.email,
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     // Simple debounce could be good, but this is fine for now
@@ -264,7 +275,7 @@ const SellerSignupWizard = ({ onComplete }) => {
     paymentTransactionId,
     personalInfoSubmitted,
     accountState.name,
-    accountState.email
+    accountState.email,
   ]);
 
   const handlePatentLookup = async () => {
@@ -290,7 +301,7 @@ const SellerSignupWizard = ({ onComplete }) => {
         // Parse inventors if multiple names exist or single string
         const apiInventors = response.data.data.inventor || "";
         // Simple heuristic: split by comma if multiple, or space for first/last
-        // But usually patent data might come as "Last, First" or similar. 
+        // But usually patent data might come as "Last, First" or similar.
         // Let's assume the API returns a string "First Last" or similar.
         // We will create one inventor entry for now, splitting on the last space.
 
@@ -313,7 +324,7 @@ const SellerSignupWizard = ({ onComplete }) => {
           claims: response.data.data.claims || "",
           description: response.data.data.description || "",
           patent_class: response.data.data.patent_class || "",
-          patent_type: response.data.data.patent_type || ""
+          patent_type: response.data.data.patent_type || "",
         });
 
         setCurrentStep(2);
@@ -348,7 +359,8 @@ const SellerSignupWizard = ({ onComplete }) => {
     if (selectedPlan === "custom_yearly") total += 349;
 
     // FREE 2D/3D rendering for Custom plans
-    if (selectedServices.drawing2D3D && !selectedPlan?.includes("custom")) total += 20;
+    if (selectedServices.drawing2D3D && !selectedPlan?.includes("custom"))
+      total += 20;
 
     if (selectedServices.evaluation === "good") total += 250;
     if (selectedServices.evaluation === "better") total += 500;
@@ -439,14 +451,14 @@ const SellerSignupWizard = ({ onComplete }) => {
           toast.error("Please enter Assignee");
           return;
         }
-        if (!filing_date?.trim()) {
-          toast.error("Please enter Filing Date");
-          return;
-        }
-        if (!issue_date?.trim()) {
-          toast.error("Please enter Issue Date");
-          return;
-        }
+        // if (!filing_date?.trim()) {
+        //   toast.error("Please enter Filing Date");
+        //   return;
+        // }
+        // if (!issue_date?.trim()) {
+        //   toast.error("Please enter Issue Date");
+        //   return;
+        // }
         if (!abstract?.trim()) {
           toast.error("Please enter Abstract (Summary of patent)");
           return;
@@ -500,18 +512,26 @@ const SellerSignupWizard = ({ onComplete }) => {
       setLoading(true);
       try {
         const payload = {
-          seller_id: persistentUserId || sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id,
+          seller_id:
+            persistentUserId ||
+            sellerId ||
+            userData?.seller_id ||
+            userData?.seller?.id ||
+            userData?.data?.seller_id,
           is_auction: pricing.isAuction,
           auction_price: pricing.auctionPrice,
           is_listed_price: pricing.isListedPrice,
           listed_price: pricing.listedPrice,
           allow_negotiation: pricing.allowNegotiation,
         };
-        const response = await sellerSignupApi.submitFinancialExpectations(payload);
+        const response =
+          await sellerSignupApi.submitFinancialExpectations(payload);
         if (response.data.error === false || response.data.error === "false") {
           setCurrentStep(8);
         } else {
-          toast.error(response.data.message || "Failed to save financial expectations");
+          toast.error(
+            response.data.message || "Failed to save financial expectations",
+          );
         }
       } catch (error) {
         console.error("Financial expectations submit error:", error);
@@ -582,12 +602,17 @@ const SellerSignupWizard = ({ onComplete }) => {
       const response = await patentsApi.payLater(formData);
 
       if (response.data.error === false || response.data.error === "false") {
-
         const data = response.data.data;
         console.log({ data });
 
         // Aggressively search for any ID returned, mapping it to both fields as requested
-        const id = data?.user_id || data?.seller_id || data?.id || response.data.user_id || response.data.seller_id || response.data.id;
+        const id =
+          data?.user_id ||
+          data?.seller_id ||
+          data?.id ||
+          response.data.user_id ||
+          response.data.seller_id ||
+          response.data.id;
 
         if (id) {
           setSellerId(id);
@@ -612,7 +637,13 @@ const SellerSignupWizard = ({ onComplete }) => {
     setLoading(true);
     try {
       const formData = new FormData();
-      const id = persistentUserId || sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id || userData?.id;
+      const id =
+        persistentUserId ||
+        sellerId ||
+        userData?.seller_id ||
+        userData?.seller?.id ||
+        userData?.data?.seller_id ||
+        userData?.id;
 
       if (id) {
         formData.append("seller_id", id);
@@ -663,11 +694,8 @@ const SellerSignupWizard = ({ onComplete }) => {
   } = {}) => {
     setLoading(true);
     localStorage.removeItem(STORAGE_KEY);
-    toast.success(
-      "Patent added successfully! Redirecting to dashboard...",
-    );
+    toast.success("Patent added successfully! Redirecting to dashboard...");
     if (onComplete) onComplete();
-
   };
 
   // Map selected plan key ("monthly" | "yearly") to a membership plan from API.
@@ -687,11 +715,14 @@ const SellerSignupWizard = ({ onComplete }) => {
       );
       if (planKey === "monthly") plan = sorted[0];
       else if (planKey === "yearly") plan = sorted[sorted.length - 1];
-      else plan = sorted.find(p => Number(p?.price) === 79) || sorted[1];
+      else plan = sorted.find((p) => Number(p?.price) === 79) || sorted[1];
     }
 
     if (!plan && planKey === "custom_yearly") {
-      plan = plans.find(p => (p?.type || "").toLowerCase() === "custom_yearly") || plans.find(p => p?.price == 349) || null;
+      plan =
+        plans.find((p) => (p?.type || "").toLowerCase() === "custom_yearly") ||
+        plans.find((p) => p?.price == 349) ||
+        null;
     }
 
     if (!plan) return null;
@@ -701,13 +732,13 @@ const SellerSignupWizard = ({ onComplete }) => {
       // Keep compatibility with existing Stripe/payment UI that expects final_price
       final_price: Number(
         plan.price ??
-        (planKey === "monthly"
-          ? 29
-          : planKey === "yearly"
-            ? 199
-            : planKey === "custom"
-              ? 79
-              : 349),
+          (planKey === "monthly"
+            ? 29
+            : planKey === "yearly"
+              ? 199
+              : planKey === "custom"
+                ? 79
+                : 349),
       ),
     };
   };
@@ -727,7 +758,8 @@ const SellerSignupWizard = ({ onComplete }) => {
     if (selectedPlan === "monthly") nextPackage = planPackages.monthly;
     else if (selectedPlan === "yearly") nextPackage = planPackages.yearly;
     else if (selectedPlan === "custom") nextPackage = planPackages.custom;
-    else if (selectedPlan === "custom_yearly") nextPackage = planPackages.custom_yearly;
+    else if (selectedPlan === "custom_yearly")
+      nextPackage = planPackages.custom_yearly;
 
     if (nextPackage && nextPackage !== selectedPackage) {
       setSelectedPackage(nextPackage);
@@ -797,7 +829,11 @@ const SellerSignupWizard = ({ onComplete }) => {
         const res = await sellerOrderApi.calculateOrderTotal({
           membership_plan: selectedPlan,
           selected_services: buildSelectedServicesPayload(),
-          seller_id: sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id,
+          seller_id:
+            sellerId ||
+            userData?.seller_id ||
+            userData?.seller?.id ||
+            userData?.data?.seller_id,
           user_id: persistentUserId || userData?.id || userData?.data?.id,
         });
         if (res?.data?.error === false) {
@@ -839,7 +875,13 @@ const SellerSignupWizard = ({ onComplete }) => {
         membership_plan: membershipPlan,
         selected_services: buildSelectedServicesPayload(),
         payment_method: paymentMethod,
-        seller_id: persistentUserId || signUpData?.id || sellerId || userData?.seller_id || userData?.seller?.id || userData?.data?.seller_id,
+        seller_id:
+          persistentUserId ||
+          signUpData?.id ||
+          sellerId ||
+          userData?.seller_id ||
+          userData?.seller?.id ||
+          userData?.data?.seller_id,
         user_id: persistentUserId || userData?.id || userData?.data?.id,
       });
       console.log("Create payment intent response:", res?.data);
@@ -854,7 +896,8 @@ const SellerSignupWizard = ({ onComplete }) => {
           paymentIntentData?.client_secret ||
           res.data.data?.client_secret;
 
-        const transactionId = paymentIntentData?.metadata?.payment_transaction_id ||
+        const transactionId =
+          paymentIntentData?.metadata?.payment_transaction_id ||
           paymentIntentData?.payment_transaction_id ||
           paymentIntentData?.transaction_id ||
           gatewayResponse?.payment_transaction_id ||
@@ -994,7 +1037,7 @@ const SellerSignupWizard = ({ onComplete }) => {
         } else {
           toast.error(
             loginData?.message ||
-            "Account created, but login failed. Please log in to continue.",
+              "Account created, but login failed. Please log in to continue.",
           );
         }
       } else {
@@ -1079,38 +1122,73 @@ const SellerSignupWizard = ({ onComplete }) => {
   return (
     <div className="container max-w-4xl mx-auto py-10 ">
       <Link href="/">
-        <Button variant="outline" className='fixed top-3 left-3'>
+        <Button variant="outline" className="fixed top-3 left-3">
           <ChevronLeft />
         </Button>
       </Link>
       <div className="flex items-center gap-2 justify-center flex-col">
-        <Image src={ToniLexington} alt="Toni Lexington" width={100} height={100} className="rounded-full" />
+        <Image
+          src={ToniLexington}
+          alt="Toni Lexington"
+          width={100}
+          height={100}
+          className="rounded-full"
+        />
         <h1 className="text-2xl font-bold">Hi I'm Toni.</h1>
-        {currentStep === 1 && <p className="text-gray-400">I&apos;ll help you list your idea and/or patent</p>}
-        {currentStep === 2 && <p className="text-gray-400">Ok, now provide some basic information below.</p>}
-        {currentStep === 3 && <p className="text-gray-400">Thanks. Now upload pictures to make your idea stand out.</p>}
-        {currentStep === 4 && <p className="text-gray-400">Who will be the main contact for this listing? </p>}
-        {currentStep === 5 && <p className="text-gray-400">Would you like to know what your idea is worth?</p>}
-        {currentStep === 6 && <p className="text-gray-400">Would you like to add some other services?</p>}
-        {currentStep === 7 && <p className="text-gray-400">Tell us your financial expectations for this listing.</p>}
-
+        {currentStep === 1 && (
+          <p className="text-gray-400">
+            I&apos;ll help you list your idea and/or patent
+          </p>
+        )}
+        {currentStep === 2 && (
+          <p className="text-gray-400">
+            Ok, now provide some basic information below.
+          </p>
+        )}
+        {currentStep === 3 && (
+          <p className="text-gray-400">
+            Thanks. Now upload pictures to make your idea stand out.
+          </p>
+        )}
+        {currentStep === 4 && (
+          <p className="text-gray-400">
+            Who will be the main contact for this listing?{" "}
+          </p>
+        )}
+        {currentStep === 5 && (
+          <p className="text-gray-400">
+            Would you like to know what your idea is worth?
+          </p>
+        )}
+        {currentStep === 6 && (
+          <p className="text-gray-400">
+            Would you like to add some other services?
+          </p>
+        )}
+        {currentStep === 7 && (
+          <p className="text-gray-400">
+            Tell us your financial expectations for this listing.
+          </p>
+        )}
       </div>
       {/* Progress Steps – hide on step 9 (What happens next) per feedback R */}
       <div className="flex items-center justify-between mb-8 hidden">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((step) => (
           <div key={step} className="flex items-center flex-1">
             <div
-              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm ${currentStep >= step
-                ? "bg-primary text-white"
-                : "bg-muted text-muted-foreground"
-                }`}
+              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm ${
+                currentStep >= step
+                  ? "bg-primary text-white"
+                  : "bg-muted text-muted-foreground"
+              }`}
             >
               {currentStep > step ? <CheckCircle2 size={18} /> : step}
             </div>
             {step < 10 && (
               <div
-                className={`flex-1 h-1 mx-1 sm:mx-2 ${currentStep > step ? "bg-primary" : "bg-muted"
-                  }`}
+                className={`flex-1 h-1 mx-1 sm:mx-2 ${
+                  currentStep > step ? "bg-primary" : "bg-muted"
+                }`}
               />
             )}
           </div>
@@ -1136,7 +1214,7 @@ const SellerSignupWizard = ({ onComplete }) => {
           {/* Step 1: Do you already have a patent? Two choices only; no "Signed in as" */}
           {currentStep === 1 && (
             <div className="space-y-6">
-              <div className="flex gap-4">
+              <div className="flex gap-4 flex-wrap">
                 <Button
                   variant={hasPatent === true ? "default" : "outline"}
                   className="flex-1"
@@ -1450,7 +1528,10 @@ const SellerSignupWizard = ({ onComplete }) => {
                       placeholder="john.doe@example.com"
                       value={contactInfo.email}
                       onChange={(e) =>
-                        setContactInfo({ ...contactInfo, email: e.target.value })
+                        setContactInfo({
+                          ...contactInfo,
+                          email: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -1460,7 +1541,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                       country={process.env.NEXT_PUBLIC_DEFAULT_COUNTRY}
                       value={contactInfo.phone}
                       onChange={(phone) => {
-                        setContactInfo({ ...contactInfo, phone })
+                        setContactInfo({ ...contactInfo, phone });
                       }}
                       inputProps={{
                         name: "phone",
@@ -1468,7 +1549,6 @@ const SellerSignupWizard = ({ onComplete }) => {
                       }}
                       enableLongNumbers
                     />
-
                   </div>
                 </div>
               ) : (
@@ -1486,17 +1566,18 @@ const SellerSignupWizard = ({ onComplete }) => {
           {currentStep === 5 && (
             <div className="space-y-4">
               <p className="text-sm font-semibold -mt-4 text-gray-500">
-                Having a professional evaluation would you negotiate with buyers and partners.
+                Having a professional evaluation would you negotiate with buyers
+                and partners.
               </p>
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="col-span-4 space-y-4">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div
-                      className={` p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "good"
-                        ? " border-primary shadow-xl bg-blue-100"
-                        : " bg-gray-50 "
-
-                        }`}
+                      className={` p-3 border-2 rounded-lg cursor-pointer relative ${
+                        selectedServices.evaluation === "good"
+                          ? " border-primary shadow-xl bg-blue-100"
+                          : " bg-gray-50 "
+                      }`}
                       onClick={() =>
                         setSelectedServices({
                           ...selectedServices,
@@ -1513,9 +1594,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                             width={50}
                             height={50}
                           />
-                          <p className="font-medium">
-                            Good - Basic Evaluation
-                          </p>
+                          <p className="font-medium">Good - Basic Evaluation</p>
                           <p className="text-sm text-muted-foreground">
                             $250 • 2 pages
                           </p>
@@ -1528,10 +1607,11 @@ const SellerSignupWizard = ({ onComplete }) => {
                       </div>
                     </div>
                     <div
-                      className={`p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "better"
-                        ? "border-primary shadow-xl bg-blue-100"
-                        : "bg-gray-50"
-                        }`}
+                      className={`p-3 border-2 rounded-lg cursor-pointer relative ${
+                        selectedServices.evaluation === "better"
+                          ? "border-primary shadow-xl bg-blue-100"
+                          : "bg-gray-50"
+                      }`}
                       onClick={() =>
                         setSelectedServices({
                           ...selectedServices,
@@ -1548,9 +1628,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                             width={50}
                             height={50}
                           />
-                          <p className="font-medium">
-                            Better - Comprehensive
-                          </p>
+                          <p className="font-medium">Better - Comprehensive</p>
                           <p className="text-sm text-muted-foreground">
                             $1,750 • 6-20 pages
                           </p>
@@ -1563,10 +1641,11 @@ const SellerSignupWizard = ({ onComplete }) => {
                       </div>
                     </div>
                     <div
-                      className={`p-3 border-2 rounded-lg cursor-pointer relative ${selectedServices.evaluation === "best"
-                        ? "border-primary shadow-xl bg-blue-100"
-                        : "bg-gray-50"
-                        }`}
+                      className={`p-3 border-2 rounded-lg cursor-pointer relative ${
+                        selectedServices.evaluation === "best"
+                          ? "border-primary shadow-xl bg-blue-100"
+                          : "bg-gray-50"
+                      }`}
                       onClick={() =>
                         setSelectedServices({
                           ...selectedServices,
@@ -1583,9 +1662,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                             width={50}
                             height={50}
                           />
-                          <p className="font-medium">
-                            Best - Detailed Report
-                          </p>
+                          <p className="font-medium">Best - Detailed Report</p>
                           <p className="text-sm text-muted-foreground">
                             $5,000 • 15-30 pages
                           </p>
@@ -1615,10 +1692,11 @@ const SellerSignupWizard = ({ onComplete }) => {
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="col-span-4 space-y-4">
                   <Card
-                    className={`cursor-pointer border-2  flex items-stretch gap-2 relative transition-all ${selectedServices.drawing2D3D
-                      ? "border-primary bg-blue-100 shadow-xl "
-                      : " bg-gray-50 "
-                      }`}
+                    className={`cursor-pointer border-2 flex lg:flex-row flex-col items-stretch gap-2 relative transition-all ${
+                      selectedServices.drawing2D3D
+                        ? "border-primary bg-blue-100 shadow-xl "
+                        : " bg-gray-50 "
+                    }`}
                     onClick={() =>
                       setSelectedServices({
                         ...selectedServices,
@@ -1626,13 +1704,13 @@ const SellerSignupWizard = ({ onComplete }) => {
                       })
                     }
                   >
-                    <CardHeader className="p-0 relative aspect-[1/] flex-shrink-0 ">
+                    <CardHeader className="p-0 relative  flex-shrink-0 ">
                       <Image
                         src={D2D3}
                         alt="2D/3D Drawing of Your Idea"
                         height={150}
                         width={300}
-                        className="object-cover rounded-l-lg "
+                        className="object-cover rounded-l-lg w-full lg:w-[300px]"
                       />
                     </CardHeader>
                     <CardContent>
@@ -1655,10 +1733,11 @@ const SellerSignupWizard = ({ onComplete }) => {
                   </Card>
 
                   <Card
-                    className={`cursor-pointer border-2 flex items-stretch gap-2 relative transition-all ${selectedServices.pitchDeck
-                      ? "border-primary bg-blue-100 shadow-xl"
-                      : "bg-gray-50"
-                      }`}
+                    className={`cursor-pointer border-2 flex lg:flex-row flex-col items-stretch gap-2 relative transition-all ${
+                      selectedServices.pitchDeck
+                        ? "border-primary bg-blue-100 shadow-xl"
+                        : "bg-gray-50"
+                    }`}
                     onClick={() =>
                       setSelectedServices({
                         ...selectedServices,
@@ -1666,12 +1745,13 @@ const SellerSignupWizard = ({ onComplete }) => {
                       })
                     }
                   >
-                    <CardHeader className="p-0 relative aspect-[2/1] flex-shrink-0 w-[300px] ">
+                    <CardHeader className="p-0 relative  flex-shrink-0 ">
                       <Image
                         src={PitchDeck}
                         alt="Professional Pitch Deck"
-                        fill
-                        className="object-cover rounded-l-lg"
+                        height={150}
+                        width={300}
+                        className="object-cover rounded-l-lg w-full lg:w-[300px]"
                       />
                     </CardHeader>
                     <CardContent>
@@ -1694,10 +1774,11 @@ const SellerSignupWizard = ({ onComplete }) => {
                   </Card>
 
                   <Card
-                    className={`cursor-pointer border-2 flex items-stretch gap-2 transition-all relative ${selectedServices.attorneySupport
-                      ? "border-primary bg-blue-100 shadow-xl"
-                      : "bg-gray-50"
-                      }`}
+                    className={`cursor-pointer border-2 flex lg:flex-row flex-col items-stretch gap-2 transition-all relative ${
+                      selectedServices.attorneySupport
+                        ? "border-primary bg-blue-100 shadow-xl"
+                        : "bg-gray-50"
+                    }`}
                     onClick={() =>
                       setSelectedServices({
                         ...selectedServices,
@@ -1705,12 +1786,13 @@ const SellerSignupWizard = ({ onComplete }) => {
                       })
                     }
                   >
-                    <CardHeader className="p-0 relative aspect-[2/1] flex-shrink-0 w-[300px]">
+                    <CardHeader className="p-0 relative  flex-shrink-0 ">
                       <Image
                         src={Paperwork}
                         alt="Attorney Support"
-                        fill
-                        className="object-cover rounded-l-lg"
+                        height={150}
+                        width={300}
+                        className="object-cover rounded-l-lg w-full lg:w-[300px]"
                       />
                     </CardHeader>
                     <CardContent>
@@ -1744,22 +1826,31 @@ const SellerSignupWizard = ({ onComplete }) => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold">Auction / Offer</h3>
-                    <p className="text-sm text-gray-500">Set a starting amount and let buyers compete for your item.</p>
+                    <p className="text-sm text-gray-500">
+                      Set a starting amount and let buyers compete for your
+                      item.
+                    </p>
                   </div>
                   <Switch
                     checked={pricing.isAuction}
-                    onCheckedChange={(val) => setPricing({ ...pricing, isAuction: val })}
+                    onCheckedChange={(val) =>
+                      setPricing({ ...pricing, isAuction: val })
+                    }
                   />
                 </div>
                 {pricing.isAuction && (
                   <div className="relative max-w-[200px]">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      $
+                    </span>
                     <Input
                       type="number"
                       className="pl-7"
                       placeholder="0.00"
                       value={pricing.auctionPrice}
-                      onChange={(e) => setPricing({ ...pricing, auctionPrice: e.target.value })}
+                      onChange={(e) =>
+                        setPricing({ ...pricing, auctionPrice: e.target.value })
+                      }
                     />
                   </div>
                 )}
@@ -1769,29 +1860,52 @@ const SellerSignupWizard = ({ onComplete }) => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold">Listed Price</h3>
-                    <p className="text-sm text-gray-500">Buyers can purchase immediately at this price.</p>
+                    <p className="text-sm text-gray-500">
+                      Buyers can purchase immediately at this price.
+                    </p>
                   </div>
                   <Switch
                     checked={pricing.isListedPrice}
-                    onCheckedChange={(val) => setPricing({ ...pricing, isListedPrice: val })}
+                    onCheckedChange={(val) =>
+                      setPricing({ ...pricing, isListedPrice: val })
+                    }
                   />
                 </div>
                 {pricing.isListedPrice && (
                   <div className="bg-gray-50 p-4 rounded-lg flex items-center justify-between gap-4">
                     <div className="flex-1">
                       <p className="text-sm font-medium">Price</p>
-                      <p className="text-xs text-gray-500">Beat the online trending price to maximize your chance of selling.</p>
-                      <p className="text-sm mt-2">Recommended price: <span className="font-semibold">$500 - $1,000</span></p>
-                      <Button variant="link" size="sm" className="p-0 h-auto text-xs">See how other sellers priced it</Button>
+                      <p className="text-xs text-gray-500">
+                        Beat the online trending price to maximize your chance
+                        of selling.
+                      </p>
+                      <p className="text-sm mt-2">
+                        Recommended price:{" "}
+                        <span className="font-semibold">$500 - $1,000</span>
+                      </p>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="p-0 h-auto text-xs"
+                      >
+                        See how other sellers priced it
+                      </Button>
                     </div>
                     <div className="relative max-w-[150px]">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                        $
+                      </span>
                       <Input
                         type="number"
                         className="pl-7"
                         placeholder="0.00"
                         value={pricing.listedPrice}
-                        onChange={(e) => setPricing({ ...pricing, listedPrice: e.target.value })}
+                        onChange={(e) =>
+                          setPricing({
+                            ...pricing,
+                            listedPrice: e.target.value,
+                          })
+                        }
                       />
                     </div>
                   </div>
@@ -1800,12 +1914,18 @@ const SellerSignupWizard = ({ onComplete }) => {
 
               <div className="flex items-center justify-between pt-4 border-t">
                 <div>
-                  <h3 className="text-lg font-semibold">Allow direct messages to me to negotiate</h3>
-                  <p className="text-sm text-gray-500">Choose when you want your listing to appear on MustangIP.</p>
+                  <h3 className="text-lg font-semibold">
+                    Allow direct messages to me to negotiate
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Choose when you want your listing to appear on MustangIP.
+                  </p>
                 </div>
                 <Switch
                   checked={pricing.allowNegotiation}
-                  onCheckedChange={(val) => setPricing({ ...pricing, allowNegotiation: val })}
+                  onCheckedChange={(val) =>
+                    setPricing({ ...pricing, allowNegotiation: val })
+                  }
                 />
               </div>
             </div>
@@ -1829,7 +1949,9 @@ const SellerSignupWizard = ({ onComplete }) => {
                   </button>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {billingPeriod === "yearly" ? "Save up to 40% with annual billing" : "Flexible monthly billing"}
+                  {billingPeriod === "yearly"
+                    ? "Save up to 40% with annual billing"
+                    : "Flexible monthly billing"}
                 </p>
               </div>
 
@@ -1842,7 +1964,10 @@ const SellerSignupWizard = ({ onComplete }) => {
                   <>
                     {/* Standard Tier */}
                     {(() => {
-                      const pkg = billingPeriod === "monthly" ? planPackages.monthly : planPackages.yearly;
+                      const pkg =
+                        billingPeriod === "monthly"
+                          ? planPackages.monthly
+                          : planPackages.yearly;
                       if (!pkg) return null;
                       const isSelected = selectedPlan === pkg.type;
                       return (
@@ -1856,18 +1981,26 @@ const SellerSignupWizard = ({ onComplete }) => {
                         >
                           <CardHeader>
                             <CardTitle className="flex items-center justify-between text-xl">
-                              {billingPeriod === "monthly" ? "Monthly Package" : "Annual Package"}
+                              {billingPeriod === "monthly"
+                                ? "Monthly Package"
+                                : "Annual Package"}
                             </CardTitle>
                             <CardDescription>
-                              <span className="text-blue-600 text-3xl font-bold">${pkg.price}</span>
-                              <span className="text-muted-foreground">/{billingPeriod === "monthly" ? "mo" : "yr"}</span>
+                              <span className="text-blue-600 text-3xl font-bold">
+                                ${pkg.price}
+                              </span>
+                              <span className="text-muted-foreground">
+                                /{billingPeriod === "monthly" ? "mo" : "yr"}
+                              </span>
                             </CardDescription>
                           </CardHeader>
                           <CardContent>
                             <ul className="space-y-3 text-sm">
                               {pkg.features?.map((f, i) => (
                                 <li key={i} className="flex gap-2">
-                                  <span className="text-primary font-bold">✓</span>
+                                  <span className="text-primary font-bold">
+                                    ✓
+                                  </span>
                                   {f}
                                 </li>
                               ))}
@@ -1882,7 +2015,10 @@ const SellerSignupWizard = ({ onComplete }) => {
 
                     {/* Custom Tier */}
                     {(() => {
-                      const pkg = billingPeriod === "monthly" ? planPackages.custom : planPackages.custom_yearly;
+                      const pkg =
+                        billingPeriod === "monthly"
+                          ? planPackages.custom
+                          : planPackages.custom_yearly;
                       if (!pkg) return null;
                       const isSelected = selectedPlan === pkg.type;
                       return (
@@ -1899,18 +2035,26 @@ const SellerSignupWizard = ({ onComplete }) => {
                           </div>
                           <CardHeader>
                             <CardTitle className="flex items-center justify-between text-xl">
-                              {billingPeriod === "monthly" ? "Custom Package" : "Custom Annual Package"}
+                              {billingPeriod === "monthly"
+                                ? "Custom Package"
+                                : "Custom Annual Package"}
                             </CardTitle>
                             <CardDescription>
-                              <span className="text-purple-600 text-3xl font-bold">${pkg.price}</span>
-                              <span className="text-muted-foreground">/{billingPeriod === "monthly" ? "mo" : "yr"}</span>
+                              <span className="text-purple-600 text-3xl font-bold">
+                                ${pkg.price}
+                              </span>
+                              <span className="text-muted-foreground">
+                                /{billingPeriod === "monthly" ? "mo" : "yr"}
+                              </span>
                             </CardDescription>
                           </CardHeader>
                           <CardContent>
                             <ul className="space-y-3 text-sm">
                               {pkg.features?.map((f, i) => (
                                 <li key={i} className="flex gap-2">
-                                  <span className="text-primary font-bold">✓</span>
+                                  <span className="text-primary font-bold">
+                                    ✓
+                                  </span>
                                   {f}
                                 </li>
                               ))}
@@ -1929,242 +2073,237 @@ const SellerSignupWizard = ({ onComplete }) => {
           )}
 
           {/* Step 9: What happens next (R) – no status bar; circle image, 1) 2) 3), phone/email on right */}
-          {
-            currentStep === 9 && (
-              <div className="flex flex-col md:flex-row gap-8 items-start">
-                <div className="flex-1 space-y-4">
-                  <p className="font-medium">What happens next?</p>
-                  <ol className="space-y-2 text-lg text-muted-foreground list-decimal list-inside">
-                    <li>
-                      An account manager will be assigned to help you stay
-                      engaged.
-                    </li>
-                    <li>A sales person will call to confirm everything.</li>
-                    <li>You&apos;ll receive a welcome email with next steps.</li>
-                  </ol>
+          {currentStep === 9 && (
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+              <div className="flex-1 space-y-4">
+                <p className="font-medium">What happens next?</p>
+                <ol className="space-y-2 text-lg text-muted-foreground list-decimal list-inside">
+                  <li>
+                    An account manager will be assigned to help you stay
+                    engaged.
+                  </li>
+                  <li>A sales person will call to confirm everything.</li>
+                  <li>You&apos;ll receive a welcome email with next steps.</li>
+                </ol>
+              </div>
+              <div className="w-full md:w-auto flex flex-col items-center gap-2 shrink-0">
+                <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-primary/20">
+                  <Image
+                    src={UserAvatar}
+                    alt={
+                      userData?.name ||
+                      accountState?.name ||
+                      "Your account manager"
+                    }
+                    height={50}
+                    width={50}
+                    className="object-cover w-full"
+                  />
                 </div>
-                <div className="w-full md:w-auto flex flex-col items-center gap-2 shrink-0">
-                  <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-primary/20">
-                    <Image
-                      src={UserAvatar}
-                      alt={
-                        userData?.name ||
-                        accountState?.name ||
-                        "Your account manager"
-                      }
-                      height={50}
-                      width={50}
-                      className="object-cover w-full"
-                    />
-                  </div>
-                  <div className="text-center text-sm">
-                    <p className="font-medium">
-                      Toni Lexington
-                    </p>
-                    <p>
-                      toni@mustangip.com
-                    </p>
-                    <p>
-                      312-222-1234
-                    </p>
-                  </div>
+                <div className="text-center text-sm">
+                  <p className="font-medium">Toni Lexington</p>
+                  <p>toni@mustangip.com</p>
+                  <p>312-222-1234</p>
                 </div>
               </div>
-            )
-          }
+            </div>
+          )}
           {/* Step 10: Review Order (S) – order summary, edit links, payment at bottom */}
-          {
-            currentStep === 10 && (
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-2 text-sm">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentStep(5)}
-                  >
-                    Edit Evaluation
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentStep(6)}
-                  >
-                    Edit Additional Services
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentStep(7)}
-                  >
-                    Edit Pricing
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentStep(8)}
-                  >
-                    Edit Plan
-                  </Button>
-                </div>
-                <div className="bg-muted p-4 rounded-lg">
-                  <h3 className="font-semibold mb-4">Order Summary</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Membership Plan:</span>
-                      <span>
-                        {orderSummary?.membership_price !== undefined
-                          ? `$${orderSummary.membership_price}/${orderSummary?.membership_plan === "yearly"
-                            ? "year"
-                            : "month"
+          {currentStep === 10 && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2 text-sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(5)}
+                >
+                  Edit Evaluation
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(6)}
+                >
+                  Edit Additional Services
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(7)}
+                >
+                  Edit Pricing
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(8)}
+                >
+                  Edit Plan
+                </Button>
+              </div>
+              <div className="bg-muted p-4 rounded-lg">
+                <h3 className="font-semibold mb-4">Order Summary</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Membership Plan:</span>
+                    <span>
+                      {orderSummary?.membership_price !== undefined
+                        ? `$${orderSummary.membership_price}/${
+                            orderSummary?.membership_plan === "yearly"
+                              ? "year"
+                              : "month"
                           }`
-                          : selectedPlan === "monthly"
-                            ? "$29/month"
-                            : "$199/year"}
-                      </span>
+                        : selectedPlan === "monthly"
+                          ? "$29/month"
+                          : "$199/year"}
+                    </span>
+                  </div>
+                  {isOrderSummaryLoading && (
+                    <div className="text-sm text-muted-foreground">
+                      Calculating order total...
                     </div>
-                    {isOrderSummaryLoading && (
-                      <div className="text-sm text-muted-foreground">
-                        Calculating order total...
+                  )}
+                  {orderSummary?.services?.length > 0 ? (
+                    orderSummary.services.map((service, index) => (
+                      <div className="flex justify-between" key={index}>
+                        <span>{service.name}:</span>
+                        <span>${service.price}</span>
                       </div>
-                    )}
-                    {orderSummary?.services?.length > 0 ? (
-                      orderSummary.services.map((service, index) => (
-                        <div className="flex justify-between" key={index}>
-                          <span>{service.name}:</span>
-                          <span>${service.price}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <>
-                        {selectedServices.drawing2D3D && (
-                          <div className="flex justify-between">
-                            <span>2D/3D Drawing:</span>
-                            <span>$20</span>
-                          </div>
-                        )}
-                        {selectedServices.evaluation && (
-                          <div className="flex justify-between">
-                            <span>
-                              Evaluation ({selectedServices.evaluation}):
-                            </span>
-                            <span>
-                              $
-                              {selectedServices.evaluation === "good"
-                                ? "250"
-                                : selectedServices.evaluation === "better"
-                                  ? "500"
-                                  : "1,999"}
-                            </span>
-                          </div>
-                        )}
-                        {selectedServices.pitchDeck && (
-                          <div className="flex justify-between">
-                            <span>Pitch Deck:</span>
-                            <span>$500</span>
-                          </div>
-                        )}
-                        {selectedServices.attorneySupport && (
-                          <div className="flex justify-between">
-                            <span>Attorney Support:</span>
-                            <span>$750</span>
-                          </div>
-                        )}
-                        <div className="border-t my-2" />
-                        {pricing.isAuction && (
-                          <div className="flex justify-between">
-                            <span>Auction Starting Price:</span>
-                            <span>${pricing.auctionPrice}</span>
-                          </div>
-                        )}
-                        {pricing.isListedPrice && (
-                          <div className="flex justify-between">
-                            <span>Listed Price:</span>
-                            <span>${pricing.listedPrice}</span>
-                          </div>
-                        )}
+                    ))
+                  ) : (
+                    <>
+                      {selectedServices.drawing2D3D && (
                         <div className="flex justify-between">
-                          <span>Allow Negotiation:</span>
-                          <span>{pricing.allowNegotiation ? "Yes" : "No"}</span>
+                          <span>2D/3D Drawing:</span>
+                          <span>$20</span>
                         </div>
-                      </>
-                    )}
-                    {orderSummary?.discount?.eligible && orderSummary.discount.amount > 0 && (
+                      )}
+                      {selectedServices.evaluation && (
+                        <div className="flex justify-between">
+                          <span>
+                            Evaluation ({selectedServices.evaluation}):
+                          </span>
+                          <span>
+                            $
+                            {selectedServices.evaluation === "good"
+                              ? "250"
+                              : selectedServices.evaluation === "better"
+                                ? "500"
+                                : "1,999"}
+                          </span>
+                        </div>
+                      )}
+                      {selectedServices.pitchDeck && (
+                        <div className="flex justify-between">
+                          <span>Pitch Deck:</span>
+                          <span>$500</span>
+                        </div>
+                      )}
+                      {selectedServices.attorneySupport && (
+                        <div className="flex justify-between">
+                          <span>Attorney Support:</span>
+                          <span>$750</span>
+                        </div>
+                      )}
+                      <div className="border-t my-2" />
+                      {pricing.isAuction && (
+                        <div className="flex justify-between">
+                          <span>Auction Starting Price:</span>
+                          <span>${pricing.auctionPrice}</span>
+                        </div>
+                      )}
+                      {pricing.isListedPrice && (
+                        <div className="flex justify-between">
+                          <span>Listed Price:</span>
+                          <span>${pricing.listedPrice}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span>Allow Negotiation:</span>
+                        <span>{pricing.allowNegotiation ? "Yes" : "No"}</span>
+                      </div>
+                    </>
+                  )}
+                  {orderSummary?.discount?.eligible &&
+                    orderSummary.discount.amount > 0 && (
                       <div className="flex justify-between text-green-600">
-                        <span>Discount ({orderSummary.discount.percent}%):</span>
+                        <span>
+                          Discount ({orderSummary.discount.percent}%):
+                        </span>
                         <span>-${orderSummary.discount.amount}</span>
                       </div>
                     )}
-                    <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
-                      <span>Total:</span>
-                      <span>
-                        {orderSummary?.total_amount !== undefined
-                          ? `$${orderSummary.total_amount}`
-                          : `$${cartTotal}`}
-                      </span>
-                    </div>
+                  <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
+                    <span>Total:</span>
+                    <span>
+                      {orderSummary?.total_amount !== undefined
+                        ? `$${orderSummary.total_amount}`
+                        : `$${cartTotal}`}
+                    </span>
                   </div>
                 </div>
-                {paymentInitError && (
-                  <div className="rounded-md bg-red-50 text-red-700 text-sm px-3 py-2">
-                    {paymentInitError}
-                  </div>
-                )}
-                {isCreatingPaymentIntent && (
-                  <div className="rounded-md bg-muted text-sm px-3 py-2">
-                    Initializing payment...
-                  </div>
-                )}
-                {paymentInitError && (
-                  <Button variant="outline" onClick={handleCreatePaymentIntent}>
-                    Retry Payment
-                  </Button>
-                )}
-                {showPaymentForm && clientSecret && (
-                  <div className="rounded-lg border border-muted/60 p-4 space-y-3">
-                    <div className="rounded-md bg-yellow-50 text-yellow-900 text-sm px-3 py-2">
-                      Payment pending. Please complete Stripe payment to finish
-                      signup.
-                    </div>
-                    <StripePayment
-                      selectedPackage={selectedPackage}
-                      packageSettings={packageSettings}
-                      PaymentModalClose={() => setShowPaymentForm(false)}
-                      setShowStripePayment={() => { }}
-                      updateActivePackage={() => { }}
-                      clientSecretOverride={clientSecret}
-                      onPaymentSuccess={handlePaymentSuccess}
-                      amountDue={
-                        orderSummary?.total_amount !== undefined
-                          ? orderSummary.total_amount
-                          : cartTotal
-                      }
-                      billingDetails={{
-                        name: userData?.name || accountState?.name,
-                        email: userData?.email || accountState?.email,
-                      }}
-                    />
-                  </div>
-                )}
               </div>
-            )
-          }
+              {paymentInitError && (
+                <div className="rounded-md bg-red-50 text-red-700 text-sm px-3 py-2">
+                  {paymentInitError}
+                </div>
+              )}
+              {isCreatingPaymentIntent && (
+                <div className="rounded-md bg-muted text-sm px-3 py-2">
+                  Initializing payment...
+                </div>
+              )}
+              {paymentInitError && (
+                <Button variant="outline" onClick={handleCreatePaymentIntent}>
+                  Retry Payment
+                </Button>
+              )}
+              {showPaymentForm && clientSecret && (
+                <div className="rounded-lg border border-muted/60 p-4 space-y-3">
+                  <div className="rounded-md bg-yellow-50 text-yellow-900 text-sm px-3 py-2">
+                    Payment pending. Please complete Stripe payment to finish
+                    signup.
+                  </div>
+                  <StripePayment
+                    selectedPackage={selectedPackage}
+                    packageSettings={packageSettings}
+                    PaymentModalClose={() => setShowPaymentForm(false)}
+                    setShowStripePayment={() => {}}
+                    updateActivePackage={() => {}}
+                    clientSecretOverride={clientSecret}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    amountDue={
+                      orderSummary?.total_amount !== undefined
+                        ? orderSummary.total_amount
+                        : cartTotal
+                    }
+                    billingDetails={{
+                      name: userData?.name || accountState?.name,
+                      email: userData?.email || accountState?.email,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between pt-4">
+          <div className="flex justify-between pt-4 flex-wrap gap-2">
             <Button
               variant="outline"
               onClick={() => setCurrentStep(currentStep - 1)}
               disabled={currentStep === 1 || loading}
             >
-              <ArrowLeft className="mr-2" size={16} />
+              <ArrowLeft className="w-full" size={16} />
               Back
             </Button>
-            <div className="flex gap-2">
+            <div className="flex-1 flex justify-end flex-wrap gap-2">
               {currentStep === 9 && (
                 <Button
                   variant="outline"
                   onClick={handleFinalPayLater}
                   disabled={loading}
+                  className="flex-1 md:flex-none"
                 >
                   {loading ? (
                     <>
@@ -2183,6 +2322,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                   (currentStep === 10 &&
                     (isCreatingPaymentIntent || !packageSettings))
                 }
+                className="flex-1 md:flex-none"
               >
                 {loading ? (
                   <>
@@ -2194,7 +2334,7 @@ const SellerSignupWizard = ({ onComplete }) => {
                     {isCreatingPaymentIntent
                       ? "Preparing Payment..."
                       : "Complete Signup"}
-                    <ArrowRight className="ml-2" size={16} />
+                    <ArrowRight size={16} />
                   </>
                 ) : currentStep === 9 ? (
                   <>
@@ -2203,16 +2343,18 @@ const SellerSignupWizard = ({ onComplete }) => {
                   </>
                 ) : (
                   <>
-                    {currentStep === 5 || currentStep === 6 || currentStep === 7 ? "Submit & Continue" : "Next"}
+                    {currentStep === 5 || currentStep === 6 || currentStep === 7
+                      ? "Submit & Continue"
+                      : "Next"}
                     <ArrowRight className="ml-2" size={16} />
                   </>
                 )}
               </Button>
             </div>
           </div>
-        </CardContent >
-      </Card >
-    </div >
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

@@ -23,7 +23,7 @@ const PopularCategories = ({ categoryType = "products" }) => {
     catLastPage,
     catCurrentPage,
   } = useGetCategories(categoryType); // Pass categoryType to hook for backend filtering
-  
+
   const filteredCategories = cateData || [];
 
   // Fetch categories when component mounts or categoryType changes
@@ -71,9 +71,8 @@ const PopularCategories = ({ categoryType = "products" }) => {
           <div className="flex items-center justify-center gap-2 sm:gap-4">
             <button
               onClick={() => api && api.scrollTo(current - 1)}
-              className={`bg-primary p-1 sm:p-2 rounded-full ${
-                !api?.canScrollPrev() ? "opacity-65 cursor-default" : ""
-              }`}
+              className={`bg-primary p-1 sm:p-2 rounded-full ${!api?.canScrollPrev() ? "opacity-65 cursor-default" : ""
+                }`}
               disabled={!api?.canScrollPrev()}
             >
               <RiArrowLeftLine
@@ -84,9 +83,8 @@ const PopularCategories = ({ categoryType = "products" }) => {
             </button>
             <button
               onClick={handleNext}
-              className={`bg-primary p-1 sm:p-2 rounded-full ${
-                isNextDisabled ? "opacity-65 cursor-default" : ""
-              }`}
+              className={`bg-primary p-1 sm:p-2 rounded-full ${isNextDisabled ? "opacity-65 cursor-default" : ""
+                }`}
               disabled={isNextDisabled}
             >
               {isCatLoadMore ? (

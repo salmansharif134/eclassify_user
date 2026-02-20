@@ -156,6 +156,9 @@ export const categoryApi = {
         page,
         ...(type && { type }) // Add type parameter if provided ('products' or 'patents')
       },
+      next: {
+        revalidate: SEO_REVALIDATE_SECONDS,
+      },
     });
   },
 };
