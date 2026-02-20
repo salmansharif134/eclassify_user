@@ -43,7 +43,7 @@ const LandingMobileMenu = ({ isOpen, setIsOpen, activeSection }) => {
         <SheetHeader className="py-4 px-6 border-b border">
           <SheetTitle>
             <CustomImage
-              src={settings?.header_logo || "/assets/MustangIPLog01.png"}
+              src={settings?.company_logo || "/assets/MustangIPLog01.png"}
               width={195}
               height={52}
               alt="MustangIP Logo"
@@ -54,41 +54,37 @@ const LandingMobileMenu = ({ isOpen, setIsOpen, activeSection }) => {
         <div className="p-6">
           <div className="flex flex-col list-none">
             <li
-              className={`cursor-pointer py-3 border-b border-dashed transition-all duration-200 ${
-                activeSection === "anythingYouWant"
+              className={`cursor-pointer py-3 border-b border-dashed transition-all duration-200 ${activeSection === "anythingYouWant"
                   ? "text-primary"
                   : "hover:text-primary"
-              }`}
+                }`}
               onClick={() => scrollToSection("anythingYouWant")}
             >
               {t("home")}
             </li>
             <li
-              className={`cursor-pointer py-3 border-b border-dashed transition-all duration-200 ${
-                activeSection === "work_process"
+              className={`cursor-pointer py-3 border-b border-dashed transition-all duration-200 ${activeSection === "work_process"
                   ? "text-primary"
                   : "hover:text-primary"
-              }`}
+                }`}
               onClick={() => scrollToSection("work_process")}
             >
               {t("whyChooseUs")}
             </li>
             <li
-              className={`cursor-pointer py-3 border-b border-dashed transition-all duration-200 ${
-                activeSection === "faq"
+              className={`cursor-pointer py-3 border-b border-dashed transition-all duration-200 ${activeSection === "faq"
                   ? "text-primary font-semibold bg-primary/5"
                   : "hover:text-primary"
-              }`}
+                }`}
               onClick={() => scrollToSection("faq")}
             >
               {t("faqs")}
             </li>
             <li
-              className={`cursor-pointer py-3 border-b border-dashed transition-all duration-200 ${
-                activeSection === "ourBlogs"
+              className={`cursor-pointer py-3 border-b border-dashed transition-all duration-200 ${activeSection === "ourBlogs"
                   ? "text-primary font-semibold bg-primary/5"
                   : "hover:text-primary"
-              }`}
+                }`}
               onClick={() => scrollToSection("ourBlogs")}
             >
               {t("blog")}

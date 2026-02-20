@@ -157,7 +157,7 @@ const HomeMobileMenu = ({
         <SheetHeader className="p-4 border-b border">
           <SheetTitle>
             <CustomImage
-              src={settings?.header_logo || "/assets/MustangIPLog01.png"}
+              src={settings?.company_logo || "/assets/MustangIPLog01.png"}
               width={195}
               height={92}
               alt="MustangIP Logo"

@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev-turbo": "next dev --turbo",
-    "dev": "next dev --turbopack -H localhost",
+    "dev-turbo": "node api.js && next dev --turbo",
+    "dev": "node api.js && next dev --turbopack -H localhost",
     "build": "next build",
-    "start": "NODE_ENV=production NODE_PORT=3000 NODE_HOST=localhost node server.js",
-    "start:local": "NODE_ENV=production NODE_PORT=3000 NODE_HOST=localhost node server.js",
+    "start": "node api.js && NODE_ENV=production NODE_PORT=3000 NODE_HOST=localhost node server.js",
+    "start:local": "node api.js && NODE_ENV=production NODE_PORT=3000 NODE_HOST=localhost node server.js",
     "lint": "next lint"
   },
   "dependencies": {
