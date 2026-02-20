@@ -10,7 +10,7 @@ import { getCityData } from "@/redux/reducer/locationSlice";
 import HomeMobileMenu from "./HomeMobileMenu.jsx";
 import MailSentSuccessModal from "@/components/Auth/MailSentSuccessModal.jsx";
 import { useState } from "react";
-import { FiLogIn,FiLogOut  } from "react-icons/fi";
+import { FiLogIn, FiLogOut } from "react-icons/fi";
 import {
   getIsLoggedIn,
   logoutSuccess,
@@ -111,6 +111,9 @@ const HomeHeader = () => {
   // Email Status
   const [IsMailSentSuccess, setIsMailSentSuccess] = useState(false);
 
+  // Ad listing state
+  const [IsAdListingClicked, setIsAdListingClicked] = useState(false);
+
   // 📱 Media Query
   const isLargeScreen = useMediaQuery("(min-width: 992px)");
 
@@ -147,7 +150,11 @@ const HomeHeader = () => {
 
   // List Your Patent: take user to post-patent flow first (no sign-in required); sign-in asked at end of flow
   const handleAdListing = () => {
+    setIsAdListingClicked(true);
     navigate("/seller-signup");
+    setTimeout(() => {
+      setIsAdListingClicked(false);
+    }, 1000);
   };
 
   const handleUpdateProfile = () => {
@@ -182,6 +189,7 @@ const HomeHeader = () => {
       setManageDeleteAccount((prev) => ({ ...prev, IsDeleting: false }));
     }
   };
+  console.log("settings?.sidebar_logo", settings?.sidebar_logo);
 
   return (
     <>
@@ -190,7 +198,7 @@ const HomeHeader = () => {
           <div className="space-between">
             <CustomLink href="/">
               <CustomImage
-                src={settings?.sidebar_logo || "/assets/MustangIPLog01.png"}
+                src={settings?.company_logo || "/assets/MustangIPLog01.png"}
                 alt="MustangIP Logo"
                 width={195}
                 height={52}
@@ -199,56 +207,72 @@ const HomeHeader = () => {
             </CustomLink>
 
             {/* Search field */}
-            <div className="flex items-center border leading-none rounded">
-              <Search />
-            </div>
+            {isLargeScreen && (
+              <div className="flex items-center border leading-none rounded">
+                <Search />
+              </div>
+            )}
 
             {/* Action buttons */}
             <div className="flex items-center gap-4">
-              {!IsLoggedin && (
-                <CustomLink
-                  href="/seller-signup"
-                  className="text-sm sm:text-base font-medium text-primary hover:underline"
-                >
-                  Become a Seller
-                </CustomLink>
-              )}
-              <CustomLink
-                href="/free-evaluation"
-                className="text-sm sm:text-base font-medium text-primary hover:underline"
-              >
-                FREE Evaluation
-              </CustomLink>
-              {IsLoggedin && (
-                  <ProfileDropdown />
-              )}
-              <button
-                className="bg-primary px-2 xl:px-4 py-2 items-center text-white rounded-md flex gap-1"
-                onClick={handleAdListing}
-                title="List Your Patent"
-              >
-                <IoIosAddCircleOutline size={18} />
-                <span className="hidden sm:inline">List Your Patent</span>
-              </button>
-                  {IsLoggedin ? (
-                
-                  <button
-                    type="button"
-                    className="text-sm sm:text-base font-medium text-primary flex gap-2 items-center "
-                    onClick={() => setIsLogout(true)}
+              {isLargeScreen ? (
+                <>
+                  {!IsLoggedin && (
+                    <CustomLink
+                      href="/seller-signup"
+                      className="text-sm sm:text-base font-medium text-primary hover:underline"
+                    >
+                      Become a Seller
+                    </CustomLink>
+                  )}
+                  <CustomLink
+                    href="/free-evaluation"
+                    className="text-sm sm:text-base font-medium text-primary hover:underline"
                   >
-                    <FiLogOut />Logout
+                    FREE Evaluation
+                  </CustomLink>
+                  {IsLoggedin && (
+                    <ProfileDropdown />
+                  )}
+                  <button
+                    className="bg-primary px-2 xl:px-4 py-2 items-center text-white rounded-md flex gap-1"
+                    onClick={handleAdListing}
+                    title="List Your Patent"
+                  >
+                    <IoIosAddCircleOutline size={18} />
+                    <span className="hidden sm:inline">List Your Patent</span>
                   </button>
-              ):
-              <button type='button' onClick={setIsLoginOpen} className="text-sm sm:text-base font-medium text-primary p-4 flex gap-2 items-center">
-                <FiLogIn /> Login
-              </button>
-            }
+                  {IsLoggedin ? (
+
+                    <button
+                      type="button"
+                      className="text-sm sm:text-base font-medium text-primary flex gap-2 items-center "
+                      onClick={() => setIsLogout(true)}
+                    >
+                      <FiLogOut />Logout
+                    </button>
+                  ) :
+                    <button type='button' onClick={setIsLoginOpen} className="text-sm sm:text-base font-medium text-primary p-4 flex gap-2 items-center">
+                      <FiLogIn /> Login
+                    </button>
+                  }
+                </>
+              ) : (
+                <HomeMobileMenu
+                  setIsLocationModalOpen={setIsLocationModalOpen}
+                  setIsRegisterModalOpen={setIsRegisterModalOpen}
+                  setIsLogout={setIsLogout}
+                  locationText={locationText}
+                  handleAdListing={handleAdListing}
+                  IsAdListingClicked={IsAdListingClicked}
+                  setManageDeleteAccount={setManageDeleteAccount}
+                />
+              )}
             </div>
           </div>
         </nav>
       </header>
-      
+
       <LoginModal
         key={IsLoginOpen}
         IsLoginOpen={IsLoginOpen}
