@@ -29,8 +29,13 @@ import { LiaAdSolid } from "react-icons/lia";
 import { LuHeart } from "react-icons/lu";
 import { MdOutlineRateReview, MdWorkOutline } from "react-icons/md";
 import { RiLogoutCircleLine } from "react-icons/ri";
-import { settingsData } from "@/redux/reducer/settingSlice";
 import FilterTree from "@/components/Filter/FilterTree";
+import dynamic from "next/dynamic";
+import { settingsData } from "../../../redux/reducer/settingSlice";
+
+const Search = dynamic(() => import("./Search.jsx"), {
+  ssr: false,
+});
 
 const HomeMobileMenu = ({
   setIsLocationModalOpen,
@@ -136,6 +141,7 @@ const HomeMobileMenu = ({
       </button>
     </div>
   );
+  console.log({ settings });
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen} className="lg:hidden">
@@ -161,6 +167,9 @@ const HomeMobileMenu = ({
           <SheetDescription className="sr-only"></SheetDescription>
         </SheetHeader>
         <div className="p-4 flex flex-col gap-4">
+          <div className="flex items-center border leading-none rounded">
+            <Search />
+          </div>
           <div className="flex items-center justify-between gap-3">
             {UserData ? (
               <CustomLink href="/profile" className="flex items-center gap-2">
@@ -210,6 +219,12 @@ const HomeMobileMenu = ({
             className="flex items-center justify-center gap-2 border border-primary py-2 px-3 text-primary rounded-md"
           >
             Become a Seller
+          </CustomLink>
+          <CustomLink
+            href="/free-evaluation"
+            className="flex items-center justify-center gap-2 border border-primary py-2 px-3 text-primary rounded-md"
+          >
+            FREE Evaluation
           </CustomLink>
           <button
             className="flex items-center justify-center gap-2 bg-primary py-2 px-3 text-white rounded-md"
